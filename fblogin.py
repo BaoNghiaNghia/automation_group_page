@@ -1,123 +1,129 @@
 import random
 import requests
 import base64
-import uuid
 import json
-import os
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+# API Key for CAPTCHA
+API_KEY = 'point_3d0bd505d511c336b6279f4815057b9a'
 
 def image_to_base64(image_url):
     """Convert an image URL to base64."""
     response = requests.get(image_url)
-    image_data = response.content
-    return base64.b64encode(image_data).decode('utf-8')
+    return base64.b64encode(response.content).decode('utf-8')
 
 def solve_captcha(image_url):
     """Solve CAPTCHA by sending the base64 image to the CAPTCHA API."""
-    # Convert the image to base64
     base64_image = image_to_base64(image_url)
-    
-    # Prepare the API payload
-    api_url = 'https://captcha69.com/in.php'
     payload = {
-        'key': 'point_3d0bd505d511c336b6279f4815057b9a',
+        'key': API_KEY,
         'type_captcha': 'Default v.1',
         'method': 'base64',
         'body': base64_image
     }
-
-    # Send the image data to the CAPTCHA API
-    response = requests.post(api_url, data=payload)
+    response = requests.post('https://captcha69.com/in.php', data=payload)
     return response.text
 
 def get_captcha_result(captcha_id):
     """Fetch CAPTCHA result using the provided captcha_id."""
-    # URL for fetching the CAPTCHA result
-    api_url = 'https://captcha69.com/res.php'
-    
-    # Prepare the payload with the CAPTCHA ID
     payload = {
-        'key': 'point_3d0bd505d511c336b6279f4815057b9a',
+        'key': API_KEY,
         'action': 'get',
         'id': captcha_id
     }
-    
-    # Send the request to the API to fetch the result
-    response = requests.post(api_url, data=payload)
-    
-    # Return the response text (this will be either the result or an error message)
-    return response.text
+    response = requests.post('https://captcha69.com/res.php', data=payload)
+    return response.text.split('|')[1]
 
-# OCR API function
 def ocr_space_file(filename, overlay=False, api_key='K82610453088957', language='eng'):
+    """Process image using OCR API."""
     payload = {
         'isOverlayRequired': overlay,
         'apikey': api_key,
         'language': language,
     }
     with open(filename, 'rb') as f:
-        r = requests.post(
-            'https://api.ocr.space/parse/image',
-            files={filename: f},
-            data=payload,
-        )
+        r = requests.post('https://api.ocr.space/parse/image', files={filename: f}, data=payload)
     return r.content.decode()
 
-# Danh sách tài khoản Facebook (user, password)
-accounts = [
-    ("0399988593", "p6+p7N&r%M$#B5b"),
-    # ("Dinh09102002@gmail.com", "Vutuan1985@")
-]
+def login_facebook(username, password):
+    """Login to Facebook using Selenium."""
+    service = Service(executable_path="./chromedriver.exe")
+    browser = webdriver.Chrome(service=service)
+    browser.get("https://facebook.com")
+    WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "email")))
 
-
-# Chọn ngẫu nhiên một tài khoản
-username, password = random.choice(accounts)
-
-# Mở trình duyệt
-service = Service(executable_path="./chromedriver.exe")
-browser = webdriver.Chrome(service=service)
-browser.get("https://facebook.com")
-sleep(2)
-
-# Đăng nhập
-browser.find_element(By.ID, "email").send_keys(username)
-browser.find_element(By.ID, "pass").send_keys(password)
-browser.find_element(By.ID, "pass").send_keys(Keys.ENTER)
-
-# Chờ Facebook phản hồi
-sleep(5)
-
-# Lấy tất cả thẻ <img>
-img_tags = browser.find_elements(By.TAG_NAME, "img")
-
-captcha_img = None
-for img in img_tags:
-    src = img.get_attribute("src")
-    alt = img.get_attribute("alt")
-    if src and "captcha" in src:
-        captcha_img = img
-        break
+    browser.find_element(By.ID, "email").send_keys(username)
+    browser.find_element(By.ID, "pass").send_keys(password)
+    browser.find_element(By.ID, "pass").send_keys(Keys.ENTER)
     
-print(f"----- captcha image : {captcha_img.get_attribute("src")}")
-id_ocr_resolver = solve_captcha(captcha_img.get_attribute("src"))
-captcha_text = get_captcha_result(id_ocr_resolver.split('|')[1] )
-print(f"----- captcha text : {captcha_text}")
+    # Wait for Facebook to respond
+    WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.TAG_NAME, "img")))
+    return browser
 
-# Nếu tìm thấy captcha image
-if captcha_img:
-    captcha_input = browser.find_element(By.TAG_NAME, "input")
+def get_captcha_image(browser):
+    """Retrieve CAPTCHA image if present on Facebook login page."""
+    img_tags = browser.find_elements(By.TAG_NAME, "img")
+    for img in img_tags:
+        src = img.get_attribute("src")
+        if src and "captcha" in src:
+            return img
+    return None
 
-    # Nhập captcha
-    captcha_input.send_keys(captcha_text)
-    captcha_input.send_keys(Keys.ENTER)
-else:
-    print("Không tìm thấy ảnh captcha")
+def submit_captcha(browser):
+    """Click the 'Continue' button after entering the CAPTCHA text."""
+    try:
+        # Locate the div with role="button" and containing a span with the text "Continue"
+        continue_button = WebDriverWait(browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[@role='button']//span[text()='Continue']"))
+        )
+        continue_button.click()
+    except Exception as e:
+        print(f"Error locating or clicking the 'Continue' button: {e}")
 
-# Đợi thêm để xem kết quả
-sleep(100)
-browser.quit()
+def main():
+    # List of Facebook accounts
+    accounts = [
+        ("0399988593", "p6+p7N&r%M$#B5b"),
+        # Add more accounts if needed
+    ]
+
+    # Choose a random account
+    username, password = random.choice(accounts)
+
+    # Login to Facebook
+    browser = login_facebook(username, password)
+
+    # Retrieve CAPTCHA image
+    captcha_img = get_captcha_image(browser)
+    if captcha_img:
+        captcha_img_url = captcha_img.get_attribute("src")
+        print(f"Found CAPTCHA image: {captcha_img_url}")
+
+        # Solve CAPTCHA
+        captcha_id = solve_captcha(captcha_img_url).split('|')[1]
+        captcha_text = get_captcha_result(captcha_id)
+
+        print(f"Captcha Text: {captcha_text}")
+
+        # Enter CAPTCHA in the input field
+        captcha_input = browser.find_element(By.TAG_NAME, "input")
+        captcha_input.send_keys(captcha_text)
+        
+
+        # Click the "Continue" button
+        submit_captcha(browser)
+    else:
+        print("No CAPTCHA image found.")
+
+    # Wait to observe result and then close the browser
+    sleep(30)
+    browser.quit()
+
+if __name__ == "__main__":
+    main()
