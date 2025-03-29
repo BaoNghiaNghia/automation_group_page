@@ -12,6 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # API Key for CAPTCHA
 API_KEY_CAPTCHA = 'point_3d0bd505d511c336b6279f4815057b9a'
+PAGE_REDIRECT_URL = "https://www.facebook.com/DCDarkLegion"
 
 def image_to_base64(image_url):
     """Convert an image URL to base64."""
@@ -40,16 +41,6 @@ def get_captcha_result(captcha_id):
     response = requests.post('https://captcha69.com/res.php', data=payload)
     return response.text.split('|')[1]
 
-def ocr_space_file(filename, overlay=False, api_key='K82610453088957', language='eng'):
-    """Process image using OCR API."""
-    payload = {
-        'isOverlayRequired': overlay,
-        'apikey': api_key,
-        'language': language,
-    }
-    with open(filename, 'rb') as f:
-        r = requests.post('https://api.ocr.space/parse/image', files={filename: f}, data=payload)
-    return r.content.decode()
 
 def login_facebook(username, password):
     """Login to Facebook using Selenium."""
@@ -90,7 +81,21 @@ def submit_captcha(browser):
         
 def wait_for_redirect(browser, expected_url):
     """Wait for the page to redirect to the expected URL."""
-    WebDriverWait(browser, 10).until(EC.url_contains(expected_url))
+    try:
+        # Wait for URL to contain the expected part
+        browser.get(expected_url)
+        print(f"Page has been redirected to: {browser.current_url}")
+    except Exception as e:
+        print(f"Error: Page did not redirect to {expected_url}. Current URL: {browser.current_url}")
+        print(f"Error details: {e}")
+
+def wait_for_page_load(browser):
+    """Wait for the page to load after submitting the CAPTCHA."""
+    # Print the current URL after clicking the 'Continue' button
+    print(f"Current URL before redirect: {browser.current_url}")
+    WebDriverWait(browser, 30).until(
+        EC.url_changes(browser.current_url)  # Wait until the URL changes
+    )
     print(f"Page has been redirected to: {browser.current_url}")
 
 
@@ -127,8 +132,11 @@ def main():
         # Click the "Continue" button
         submit_captcha(browser)
         
-        # Wait for the page to redirect to the expected URL
-        wait_for_redirect(browser, "https://www.facebook.com/DCDarkLegion")
+        # Wait for the page to load and redirect to the expected URL
+        wait_for_page_load(browser)
+
+        # Check if we are on the expected page
+        wait_for_redirect(browser, PAGE_REDIRECT_URL)
     else:
         print("No CAPTCHA image found.")
 
