@@ -9,6 +9,16 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+
+# Setup Chrome options to automatically allow notifications
+chrome_options = Options()
+
+# Automatically allow notifications for the website
+prefs = {
+    "profile.default_content_setting_values.notifications": 1
+}
+chrome_options.add_experimental_option("prefs", prefs)
 
 # API Key for CAPTCHA
 API_KEY_CAPTCHA = 'point_3d0bd505d511c336b6279f4815057b9a'
@@ -45,7 +55,7 @@ def get_captcha_result(captcha_id):
 def login_facebook(username, password):
     """Login to Facebook using Selenium."""
     service = Service(executable_path="./chromedriver.exe")
-    browser = webdriver.Chrome(service=service)
+    browser = webdriver.Chrome(service=service, options=chrome_options)
     browser.get("https://facebook.com")
     WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "email")))
 
