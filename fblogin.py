@@ -11,7 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 # API Key for CAPTCHA
-API_KEY = 'point_3d0bd505d511c336b6279f4815057b9a'
+API_KEY_CAPTCHA = 'point_3d0bd505d511c336b6279f4815057b9a'
 
 def image_to_base64(image_url):
     """Convert an image URL to base64."""
@@ -22,7 +22,7 @@ def solve_captcha(image_url):
     """Solve CAPTCHA by sending the base64 image to the CAPTCHA API."""
     base64_image = image_to_base64(image_url)
     payload = {
-        'key': API_KEY,
+        'key': API_KEY_CAPTCHA,
         'type_captcha': 'Default v.1',
         'method': 'base64',
         'body': base64_image
@@ -33,7 +33,7 @@ def solve_captcha(image_url):
 def get_captcha_result(captcha_id):
     """Fetch CAPTCHA result using the provided captcha_id."""
     payload = {
-        'key': API_KEY,
+        'key': API_KEY_CAPTCHA,
         'action': 'get',
         'id': captcha_id
     }
@@ -75,6 +75,7 @@ def get_captcha_image(browser):
             return img
     return None
 
+
 def submit_captcha(browser):
     """Click the 'Continue' button after entering the CAPTCHA text."""
     try:
@@ -85,6 +86,13 @@ def submit_captcha(browser):
         continue_button.click()
     except Exception as e:
         print(f"Error locating or clicking the 'Continue' button: {e}")
+        
+        
+def wait_for_redirect(browser, expected_url):
+    """Wait for the page to redirect to the expected URL."""
+    WebDriverWait(browser, 10).until(EC.url_contains(expected_url))
+    print(f"Page has been redirected to: {browser.current_url}")
+
 
 def main():
     # List of Facebook accounts
@@ -118,6 +126,9 @@ def main():
 
         # Click the "Continue" button
         submit_captcha(browser)
+        
+        # Wait for the page to redirect to the expected URL
+        wait_for_redirect(browser, "https://www.facebook.com/DCDarkLegion")
     else:
         print("No CAPTCHA image found.")
 
