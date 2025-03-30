@@ -184,7 +184,7 @@ def clonePostContent(driver, postId):
 def download_file(image_url, file_number, post_id, folder_path="/data_crawl/"):
     try:
         # Create the folder for the post if it doesn't exist
-        post_path = os.path.join(os.getcwd(), folder_path, str(post_id))
+        post_path = os.getcwd() + folder_path + str(post_id)
         if not os.path.exists(post_path):
             os.makedirs(post_path)
 
