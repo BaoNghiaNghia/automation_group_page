@@ -10,12 +10,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-from constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, GAME_NAME_URL, API_KEY_CAPTCHA
-
-# API Key for CAPTCHA
-
-
-
+from constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, GAME_NAME_URL, API_KEY_CAPTCHA, DOMAIN_CAPTCHA
 
 
 def image_to_base64(image_url):
@@ -32,7 +27,7 @@ def solve_captcha(image_url):
         'method': 'base64',
         'body': base64_image
     }
-    response = requests.post('https://captcha69.com/in.php', data=payload)
+    response = requests.post(f'{DOMAIN_CAPTCHA}/in.php', data=payload)
     return response.text
 
 def get_captcha_result(captcha_id):
@@ -42,7 +37,7 @@ def get_captcha_result(captcha_id):
         'action': 'get',
         'id': captcha_id
     }
-    response = requests.post('https://captcha69.com/res.php', data=payload)
+    response = requests.post(f'{DOMAIN_CAPTCHA}/res.php', data=payload)
     return response.text.split('|')[1]
 
 
@@ -127,7 +122,7 @@ def wait_for_page_load(browser):
 def get_posts_by_attribute(browser):
     posts = []
     try:
-        post_links = browser.find_elements(By.XPATH, "//a[starts-with(@href, 'https://www.facebook.com/DCDarkLegion/posts')]")
+        post_links = browser.find_elements(By.XPATH, "//a[starts-with(@href, f'{FB_DEFAULT_URL}/{GAME_NAME_URL}/posts')]")
         for link in post_links:
             href = link.get_attribute('href')
             post_id = extract_post_id_from_url(href)
