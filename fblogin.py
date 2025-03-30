@@ -13,7 +13,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-from constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, GAME_NAME_URL, API_KEY_CAPTCHA, DOMAIN_CAPTCHA
+from constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, GAME_NAME_URL, API_KEY_CAPTCHA, DOMAIN_CAPTCHA, FOLDER_PATH_DATA_CRAWLER
 
 
 def image_to_base64(image_url):
@@ -149,7 +149,7 @@ def scroll_down(browser):
 
 def clonePostContent(driver, postId):
     try:
-        driver.get("https://m.facebook.com/" + str(postId))
+        driver.get(f"{FB_DEFAULT_URL}/{str(postId)}")
         
         # Find the parent image container using the full XPath
         parrentImage = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[3]")
@@ -228,7 +228,7 @@ def download_file(image_url, file_number, post_id, folder_path="/data_crawl/"):
 
 
 def crawlPostData(driver, postIds):
-    folderPath = "/data_crawl/"
+    
     for id in postIds:
         try:
             dataPost = clonePostContent(driver, id)
@@ -238,10 +238,10 @@ def crawlPostData(driver, postIds):
                 stt = 0
                 for img in dataPost["images"]:
                     stt += 1
-                    download_file(img, str(stt), postId, folderPath)
-                writeFileTxtPost('content.txt', postContent, postId, folderPath)
+                    download_file(img, str(stt), postId, FOLDER_PATH_DATA_CRAWLER)
+                writeFileTxtPost('content.txt', postContent, postId, FOLDER_PATH_DATA_CRAWLER)
                 
-            sleep(7)
+            sleep(5)
         except Exception as e:
             print(f"Error in crawlPostData: {e}")
 
@@ -305,7 +305,7 @@ def main():
         wait_for_redirect(browser, f"{FB_DEFAULT_URL}/{GAME_NAME_URL}")
         
         all_posts = set()
-        for i in range(1):
+        for i in range(5):
             print(f"\n[Scraping Round {i + 1}]")
             new_posts = get_posts_by_attribute(browser)
             for post in new_posts:
@@ -327,6 +327,7 @@ def main():
         
         # Assuming `postIds` is a list of post IDs from your saved file
         postIds = readData(post_id_file_name)
+        sleep(2)
         crawlPostData(browser, postIds)
     else:
         print("No CAPTCHA image found.")

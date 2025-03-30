@@ -7,3 +7,4 @@ FB_ACCOUNT_LIST = [
 GAME_NAME_URL = "lucdiathanhoa"
 
 DOMAIN_CAPTCHA = "https://captcha69.com"
+FOLDER_PATH_DATA_CRAWLER = "/data_crawler/"
