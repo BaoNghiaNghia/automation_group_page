@@ -176,7 +176,7 @@ def main():
         wait_for_page_load(browser)
 
         # Check if we are on the expected page
-        wait_for_redirect(browser, FB_DEFAULT_URL + GAME_NAME_URL)
+        wait_for_redirect(browser, f"{FB_DEFAULT_URL}/{GAME_NAME_URL}")
         
         all_posts = set()
         for i in range(7):
