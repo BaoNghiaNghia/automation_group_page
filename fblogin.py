@@ -10,16 +10,12 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-
+from constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, GAME_NAME_URL, API_KEY_CAPTCHA
 
 # API Key for CAPTCHA
-API_KEY_CAPTCHA = 'point_3d0bd505d511c336b6279f4815057b9a'
-FB_DEFAULT_URL = "https://www.facebook.com"
-GAME_NAME_URL = "DCDarkLegion"
-FB_ACCOUNT_LIST = [
-    ("0399988593", "p6+p7N&r%M$#B5b"),
-    # Add more accounts if needed
-]
+
+
+
 
 
 def image_to_base64(image_url):
@@ -195,10 +191,10 @@ def main():
         print(f"\nTotal unique posts collected: {len(all_posts)}")
         
         # Save to file
-        with open("facebook_post_ids.txt", "w", encoding="utf-8") as f:
+        with open(f"facebook_{GAME_NAME_URL}_post_ids.txt", "w", encoding="utf-8") as f:
             for post_id in sorted(all_posts):
                 f.write(post_id + "\n")
-        print("Post IDs saved to facebook_post_ids.txt")
+        print(f"Post IDs saved to facebook_{GAME_NAME_URL}_post_ids.txt")
     else:
         print("No CAPTCHA image found.")
 
