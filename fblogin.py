@@ -1,7 +1,7 @@
 import random
+from urllib.parse import urlparse, parse_qs
 import requests
 import base64
-import json
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -77,6 +77,18 @@ def get_captcha_image(browser):
     return None
 
 
+def extract_post_id_from_url(url):
+    """Extract post ID from a Facebook post URL."""
+    try:
+        path = urlparse(url).path
+        if "/posts/" in path:
+            post_id = path.split("/posts/")[1].split("?")[0]
+            return post_id
+    except Exception as e:
+        print(f"Failed to extract post ID from {url}: {e}")
+    return None
+
+
 def submit_captcha(browser):
     """Click the 'Continue' button after entering the CAPTCHA text."""
     try:
@@ -107,6 +119,27 @@ def wait_for_page_load(browser):
         EC.url_changes(browser.current_url)  # Wait until the URL changes
     )
     print(f"Page has been redirected to: {browser.current_url}")
+
+
+def get_posts_by_attribute(browser):
+    posts = []
+    try:
+        # Find all <a> tags with post links
+        post_links = browser.find_elements(By.XPATH, "//a[starts-with(@href, 'https://www.facebook.com/DCDarkLegion/posts')]")
+        for link in post_links:
+            href = link.get_attribute('href')
+            if href not in posts:
+                posts.append(extract_post_id_from_url(href))
+    except Exception as e:
+        print(f"Error retrieving posts: {e}")
+    return posts
+
+
+
+def scroll_down(browser):
+    browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    sleep(5)  # Wait for content to load
+
 
 
 def main():
@@ -147,11 +180,25 @@ def main():
 
         # Check if we are on the expected page
         wait_for_redirect(browser, PAGE_REDIRECT_URL)
+        
+        
+        # Loop to scrape and scroll
+        all_posts = set()
+        # Get the latest 20 posts
+        for i in range(4):
+            print(f"\n[Scraping Round {i + 1}]")
+            new_posts = get_posts_by_attribute(browser)
+            for post in new_posts:
+                all_posts.add(post)
+                print(post)
+            scroll_down(browser)
+            
+        print(f"\nTotal unique posts collected: {len(all_posts)}")
     else:
         print("No CAPTCHA image found.")
 
     # Wait to observe result and then close the browser
-    sleep(30)
+    sleep(500)
     browser.quit()
 
 if __name__ == "__main__":
