@@ -1,6 +1,9 @@
 import random
 from urllib.parse import urlparse, parse_qs
 import requests
+import os
+import shutil
+import requests
 import base64
 from time import sleep
 from selenium import webdriver
@@ -122,7 +125,10 @@ def wait_for_page_load(browser):
 def get_posts_by_attribute(browser):
     posts = []
     try:
-        post_links = browser.find_elements(By.XPATH, "//a[starts-with(@href, f'{FB_DEFAULT_URL}/{GAME_NAME_URL}/posts')]")
+        # Concatenate the URL parts before using them in the XPath
+        base_url = f"{FB_DEFAULT_URL}/{GAME_NAME_URL}/posts"
+        post_links = browser.find_elements(By.XPATH, f"//a[starts-with(@href, '{base_url}')]")
+        
         for link in post_links:
             href = link.get_attribute('href')
             post_id = extract_post_id_from_url(href)
@@ -134,10 +140,114 @@ def get_posts_by_attribute(browser):
 
 
 
+
 def scroll_down(browser):
     browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     sleep(5)  # Wait for content to load
 
+
+
+# Function to extract post content and images based on post ID
+def clonePostContent(driver, postId):
+    try:
+        driver.get("https://m.facebook.com/" + str(postId))
+        parrentImage = driver.find_elements(By.XPATH, "//div[@data-gt='{\"tn\":\"E\"}']")
+        if len(parrentImage) == 0:
+            parrentImage = driver.find_elements(By.XPATH, "//div[@data-ft='{\"tn\":\"E\"}']")
+
+        contentElement = driver.find_elements(By.XPATH, "//div[@data-gt='{\"tn\":\"*s\"}']")
+        if len(contentElement) == 0:
+            contentElement = driver.find_elements(By.XPATH, "//div[@data-ft='{\"tn\":\"*s\"}']")
+
+        # Get Content if available
+        content = ""
+        if len(contentElement):
+            content = contentElement[0].text
+
+        # Get Image links if available
+        linksArr = []
+        if len(parrentImage):
+            childsImage = parrentImage[0].find_elements(By.XPATH, ".//*")
+            for childLink in childsImage:
+                linkImage = childLink.get_attribute('href')
+                if linkImage is not None:
+                    linksArr.append(linkImage.replace("m.facebook", "mbasic.facebook"))
+
+        # Get image details
+        linkImgsArr = []
+        if len(linksArr):
+            for link in linksArr:
+                driver.get(link)
+                linkImg = driver.find_elements(By.XPATH, '//*[@id="MPhotoContent"]/div[1]/div[2]/span/div/span/a[1]')
+                if linkImg:
+                    linkImgsArr.append(linkImg[0].get_attribute('href'))
+
+        postData = {"post_id": postId, "content": content, "images": linkImgsArr}
+
+        print(postData)
+        return postData
+    except Exception as e:
+        print(f"Error in clonePostContent: {e}")
+        return False
+
+# Function to save the content to a file
+def writeFileTxtPost(fileName, content, idPost, pathImg="/img/"):
+    pathImage = os.getcwd() + pathImg + str(idPost)
+    if not os.path.exists(pathImage):
+        os.mkdir(pathImage)
+
+    with open(os.path.join(pathImage, fileName), 'a', encoding="utf-8") as f1:
+        f1.write(content + os.linesep)
+
+# Function to download images
+def download_file(url, localFileNameParam="", idPost="123456", pathName="/data/"):
+    try:
+        if not os.path.exists(pathName.replace('/', '')):
+            os.mkdir(pathName.replace('/', ''))
+
+        local_filename = url.split('/')[-1]
+        if local_filename:
+            local_filename = localFileNameParam
+        with requests.get(url, stream=True) as r:
+            pathImage = os.getcwd() + pathName + str(idPost)
+
+            if not os.path.exists(pathImage):
+                os.mkdir(pathImage)
+
+            with open(os.path.join(pathImage, local_filename), 'wb') as f:
+                shutil.copyfileobj(r.raw, f)
+    except Exception as e:
+        print(f"Error in download_file: {e}")
+
+# Function to crawl post data from the list of post IDs
+def crawlPostData(driver, postIds, type='page'):
+    folderPath = "/data_crawl/"
+    for id in postIds:
+        try:
+            dataPost = clonePostContent(driver, id)
+            dataImage = []
+            if dataPost and len(dataPost["images"]):
+                if type == 'group':
+                    for img in dataPost["images"]:
+                        driver.get(img)
+                        dataImage.append(driver.current_url)
+                else:
+                    dataImage = dataPost["images"]
+
+                postId = str(dataPost['post_id'])
+                postContent = str(dataPost['content'])
+                stt = 0
+                for img in dataImage:
+                    stt += 1
+                    download_file(img, str(stt), postId, folderPath)
+                writeFileTxtPost('content.csv', postContent, postId, folderPath)
+        except Exception as e:
+            print(f"Error in crawlPostData: {e}")
+
+# Read Post IDs from file (assumed function)
+def readData(fileName):
+    with open(fileName, 'r', encoding="utf-8") as f:
+        return [line.strip() for line in f.readlines()]
 
 
 def main():
@@ -174,7 +284,7 @@ def main():
         wait_for_redirect(browser, f"{FB_DEFAULT_URL}/{GAME_NAME_URL}")
         
         all_posts = set()
-        for i in range(7):
+        for i in range(1):
             print(f"\n[Scraping Round {i + 1}]")
             new_posts = get_posts_by_attribute(browser)
             for post in new_posts:
@@ -186,10 +296,17 @@ def main():
         print(f"\nTotal unique posts collected: {len(all_posts)}")
         
         # Save to file
-        with open(f"facebook_{GAME_NAME_URL}_post_ids.txt", "w", encoding="utf-8") as f:
+        post_id_file_name = f"facebook_{GAME_NAME_URL}_post_ids.txt"
+        with open(post_id_file_name, "w", encoding="utf-8") as f:
             for post_id in sorted(all_posts):
                 f.write(post_id + "\n")
-        print(f"Post IDs saved to facebook_{GAME_NAME_URL}_post_ids.txt")
+        print(f"Post IDs saved to {post_id_file_name}")
+        
+        sleep(5)
+        
+        # Assuming `postIds` is a list of post IDs from your saved file
+        postIds = readData(post_id_file_name)
+        crawlPostData(browser, postIds, type='page')
     else:
         print("No CAPTCHA image found.")
 
