@@ -190,48 +190,59 @@ def clonePostContent(driver, postId):
 
 
 
-# Function to save the content to a file
-def writeFileTxtPost(fileName, content, idPost, pathImg="/img/"):
-    pathImage = os.getcwd() + pathImg + str(idPost)
-    if not os.path.exists(pathImage):
-        os.mkdir(pathImage)
-
-    with open(os.path.join(pathImage, fileName), 'a', encoding="utf-8") as f1:
-        f1.write(content + os.linesep)
-
-# Function to download images
-def download_file(url, localFileNameParam="", idPost="123456", pathName="/data/"):
+# Function to download image and save with the correct extension
+def download_file(image_url, file_number, post_id, folder_path="/data_crawl/"):
     try:
-        if not os.path.exists(pathName.replace('/', '')):
-            os.mkdir(pathName.replace('/', ''))
+        # Create the folder for the post if it doesn't exist
+        post_path = os.path.join(os.getcwd(), folder_path, str(post_id))
+        if not os.path.exists(post_path):
+            os.makedirs(post_path)
 
-        local_filename = url.split('/')[-1]
-        if local_filename:
-            local_filename = localFileNameParam
-        with requests.get(url, stream=True) as r:
-            pathImage = os.getcwd() + pathName + str(idPost)
+        # Extract the file name from the URL (or use a default name)
+        image_name = image_url.split("/")[-1]
 
-            if not os.path.exists(pathImage):
-                os.mkdir(pathImage)
+        # Get the file extension (jpeg, png, etc.) from the URL
+        file_extension = os.path.splitext(image_name)[1]
 
-            with open(os.path.join(pathImage, local_filename), 'wb') as f:
-                shutil.copyfileobj(r.raw, f)
+        # If no file extension is found in the URL, request the file to get the content type
+        if not file_extension:
+            response = requests.get(image_url, stream=True)
+            if response.status_code == 200:
+                content_type = response.headers.get('Content-Type', '')
+                if 'image/jpeg' in content_type:
+                    file_extension = '.jpg'
+                elif 'image/png' in content_type:
+                    file_extension = '.png'
+                elif 'image/gif' in content_type:
+                    file_extension = '.gif'
+                else:
+                    print(f"Unknown image format for URL: {image_url}")
+                    return
+            else:
+                print(f"Failed to fetch image headers, Status code: {response.status_code}")
+                return
+
+        # Update the image name with the correct file extension
+        image_name = f"{file_number}.png"
+
+        # Get the image content from the URL and save it to the file
+        img_data = requests.get(image_url).content
+
+        # Save the image
+        with open(os.path.join(post_path, image_name), 'wb') as handler:
+            handler.write(img_data)
+
+        print(f"Image saved as {image_name} in {post_path}")
     except Exception as e:
-        print(f"Error in download_file: {e}")
+        print(f"Error downloading image from {image_url}: {e}")
 
-def crawlPostData(driver, postIds, type='page'):
+def crawlPostData(driver, postIds):
     folderPath = "/data_crawl/"
     for id in postIds:
         try:
             dataPost = clonePostContent(driver, id)
             dataImage = []
             if dataPost and len(dataPost["images"]):
-                if type == 'group':
-                    for img in dataPost["images"]:
-                        driver.get(img)
-                        dataImage.append(driver.current_url)
-                else:
-                    dataImage = dataPost["images"]
 
                 postId = str(dataPost['post_id'])
                 postContent = str(dataPost['content'])
@@ -241,10 +252,19 @@ def crawlPostData(driver, postIds, type='page'):
                     download_file(img, str(stt), postId, folderPath)
                 writeFileTxtPost('content.csv', postContent, postId, folderPath)
                 
-            # Sleep for 5 seconds between each post
-            sleep(7)  # 5-second delay between processing each post
+            sleep(7)
         except Exception as e:
             print(f"Error in crawlPostData: {e}")
+
+# Function to save content to a file
+def writeFileTxtPost(fileName, content, idPost, pathImg="/img/"):
+    post_path = os.path.join(os.getcwd(), pathImg, str(idPost))
+    if not os.path.exists(post_path):
+        os.makedirs(post_path)
+
+    with open(os.path.join(post_path, fileName), 'a', encoding="utf-8") as f1:
+        f1.write(content + os.linesep)
+
 
 # Read Post IDs from file (assumed function)
 def readData(fileName):
@@ -281,7 +301,16 @@ def main():
         sleep(5)
         
         # Wait for the page to load and redirect to the expected URL
-        wait_for_page_load(browser)
+        # wait_for_page_load(browser)
+        
+                # Check if the login form is present again after CAPTCHA submission
+        try:
+            WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "email")))
+            browser.find_element(By.ID, "email").send_keys(username)
+            browser.find_element(By.ID, "pass").send_keys(password)
+            browser.find_element(By.ID, "pass").send_keys(Keys.ENTER)
+        except Exception as e:
+            print("Already logged in or no re-login needed.")
 
         # Check if we are on the expected page
         wait_for_redirect(browser, f"{FB_DEFAULT_URL}/{GAME_NAME_URL}")
@@ -309,7 +338,7 @@ def main():
         
         # Assuming `postIds` is a list of post IDs from your saved file
         postIds = readData(post_id_file_name)
-        crawlPostData(browser, postIds, type='page')
+        crawlPostData(browser, postIds)
     else:
         print("No CAPTCHA image found.")
 
