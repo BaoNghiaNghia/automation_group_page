@@ -4,7 +4,7 @@ FB_ACCOUNT_LIST = [
     ("0399988593", "p6+p7N&r%M$#B5b"),
     # Add more accounts if needed
 ]
-GAME_NAME_URL = "lucdiathanhoa"
+GAME_NAME_URL = "DCDarkLegion"
 
 DOMAIN_CAPTCHA = "https://captcha69.com"
 FOLDER_PATH_DATA_CRAWLER = "/data_crawler/"

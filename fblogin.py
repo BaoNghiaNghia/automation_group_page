@@ -152,15 +152,16 @@ def clonePostContent(driver, postId):
         driver.get(f"{FB_DEFAULT_URL}/{str(postId)}")
         
         # Find the parent image container using the full XPath
-        parrentImage = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[3]")
+        parrentImage = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]")
         
-        contentElement = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div/div/div/span")
+        # Find the content element containing all the text
+        contentElement = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]")
         
         content = ""
-        # Get Content if available
+        # Get all text from contentElement
         if len(contentElement):
-            content = contentElement[0].text
-
+            content = " ".join([elem.text for elem in contentElement])  # Concatenate text from all elements
+        
         # Get all image links inside the parent image element
         linksArr = []
         if len(parrentImage):
@@ -241,7 +242,7 @@ def crawlPostData(driver, postIds):
                     download_file(img, str(stt), postId, FOLDER_PATH_DATA_CRAWLER)
                 writeFileTxtPost('content.txt', postContent, postId, FOLDER_PATH_DATA_CRAWLER)
                 
-            sleep(5)
+            sleep(105)
         except Exception as e:
             print(f"Error in crawlPostData: {e}")
 
