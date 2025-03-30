@@ -146,13 +146,9 @@ def scroll_down(browser):
     sleep(5)  # Wait for content to load
 
 
-
 def clonePostContent(driver, postId):
     try:
         driver.get(f"{FB_DEFAULT_URL}/{str(postId)}")
-        
-        # Find the parent image container using the full XPath
-        parrentImage = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]")
         
         # Find the content element containing all the text
         contentElement = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]")
@@ -162,14 +158,15 @@ def clonePostContent(driver, postId):
         if len(contentElement):
             content = " ".join([elem.text for elem in contentElement])  # Concatenate text from all elements
         
-        # Get all image links inside the parent image element
+
+        # Get all image links inside the specific path provided
         linksArr = []
-        if len(parrentImage):
-            childsImage = parrentImage[0].find_elements(By.TAG_NAME, "img")
-            for childImg in childsImage:
-                linkImage = childImg.get_attribute('src')
-                if linkImage:
-                    linksArr.append(linkImage)
+        image_links = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div//a//img")
+        
+        for img in image_links:
+            linkImage = img.get_attribute('src')
+            if linkImage:
+                linksArr.append(linkImage)
 
         postData = {"post_id": postId, "content": content, "images": linksArr}
 
@@ -185,7 +182,7 @@ def clonePostContent(driver, postId):
 def download_file(image_url, file_number, post_id, folder_path="/data_crawl/"):
     try:
         # Create the folder for the post if it doesn't exist
-        post_path = os.getcwd() + folder_path + str(post_id)
+        post_path = os.getcwd() + folder_path + GAME_NAME_URL  + "_" + str(post_id)
         if not os.path.exists(post_path):
             os.makedirs(post_path)
 
@@ -242,13 +239,13 @@ def crawlPostData(driver, postIds):
                     download_file(img, str(stt), postId, FOLDER_PATH_DATA_CRAWLER)
                 writeFileTxtPost('content.txt', postContent, postId, FOLDER_PATH_DATA_CRAWLER)
                 
-            sleep(105)
+            sleep(5)
         except Exception as e:
             print(f"Error in crawlPostData: {e}")
 
 # Function to save content to a file
 def writeFileTxtPost(fileName, content, idPost, pathImg="/img/"):
-    post_path = os.getcwd() + pathImg.lstrip(os.sep) + str(idPost)
+    post_path = os.getcwd() + pathImg.lstrip(os.sep) + GAME_NAME_URL + "_" + str(idPost)
     if not os.path.exists(post_path):
         os.makedirs(post_path)
 
