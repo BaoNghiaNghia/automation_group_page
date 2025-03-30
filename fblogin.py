@@ -11,18 +11,16 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 
-# Setup Chrome options to automatically allow notifications
-chrome_options = Options()
-
-# Automatically allow notifications for the website
-prefs = {
-    "profile.default_content_setting_values.notifications": 1
-}
-chrome_options.add_experimental_option("prefs", prefs)
 
 # API Key for CAPTCHA
 API_KEY_CAPTCHA = 'point_3d0bd505d511c336b6279f4815057b9a'
-PAGE_REDIRECT_URL = "https://www.facebook.com/DCDarkLegion"
+FB_DEFAULT_URL = "https://www.facebook.com"
+GAME_NAME_URL = "DCDarkLegion"
+FB_ACCOUNT_LIST = [
+    ("0399988593", "p6+p7N&r%M$#B5b"),
+    # Add more accounts if needed
+]
+
 
 def image_to_base64(image_url):
     """Convert an image URL to base64."""
@@ -54,9 +52,18 @@ def get_captcha_result(captcha_id):
 
 def login_facebook(username, password):
     """Login to Facebook using Selenium."""
+    # Setup Chrome options to automatically allow notifications
+    chrome_options = Options()
+
+    # Automatically allow notifications for the website
+    prefs = {
+        "profile.default_content_setting_values.notifications": 1
+    }
+    chrome_options.add_experimental_option("prefs", prefs)
+
     service = Service(executable_path="./chromedriver.exe")
     browser = webdriver.Chrome(service=service, options=chrome_options)
-    browser.get("https://facebook.com")
+    browser.get(FB_DEFAULT_URL)
     WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "email")))
 
     browser.find_element(By.ID, "email").send_keys(username)
@@ -124,12 +131,12 @@ def wait_for_page_load(browser):
 def get_posts_by_attribute(browser):
     posts = []
     try:
-        # Find all <a> tags with post links
         post_links = browser.find_elements(By.XPATH, "//a[starts-with(@href, 'https://www.facebook.com/DCDarkLegion/posts')]")
         for link in post_links:
             href = link.get_attribute('href')
-            if href not in posts:
-                posts.append(extract_post_id_from_url(href))
+            post_id = extract_post_id_from_url(href)
+            if post_id and post_id not in posts:
+                posts.append(post_id)
     except Exception as e:
         print(f"Error retrieving posts: {e}")
     return posts
@@ -143,14 +150,8 @@ def scroll_down(browser):
 
 
 def main():
-    # List of Facebook accounts
-    accounts = [
-        ("0399988593", "p6+p7N&r%M$#B5b"),
-        # Add more accounts if needed
-    ]
-
     # Choose a random account
-    username, password = random.choice(accounts)
+    username, password = random.choice(FB_ACCOUNT_LIST)
 
     # Login to Facebook
     browser = login_facebook(username, password)
@@ -179,21 +180,25 @@ def main():
         wait_for_page_load(browser)
 
         # Check if we are on the expected page
-        wait_for_redirect(browser, PAGE_REDIRECT_URL)
+        wait_for_redirect(browser, FB_DEFAULT_URL + GAME_NAME_URL)
         
-        
-        # Loop to scrape and scroll
         all_posts = set()
-        # Get the latest 20 posts
-        for i in range(4):
+        for i in range(7):
             print(f"\n[Scraping Round {i + 1}]")
             new_posts = get_posts_by_attribute(browser)
             for post in new_posts:
-                all_posts.add(post)
-                print(post)
+                if post not in all_posts:
+                    all_posts.add(post)
+                    print(post)
             scroll_down(browser)
-            
+
         print(f"\nTotal unique posts collected: {len(all_posts)}")
+        
+        # Save to file
+        with open("facebook_post_ids.txt", "w", encoding="utf-8") as f:
+            for post_id in sorted(all_posts):
+                f.write(post_id + "\n")
+        print("Post IDs saved to facebook_post_ids.txt")
     else:
         print("No CAPTCHA image found.")
 
