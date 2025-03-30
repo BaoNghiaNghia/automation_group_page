@@ -165,22 +165,12 @@ def clonePostContent(driver, postId):
         linksArr = []
         if len(parrentImage):
             childsImage = parrentImage[0].find_elements(By.TAG_NAME, "img")
-            print(f"Number of img: {childsImage}")
             for childImg in childsImage:
                 linkImage = childImg.get_attribute('src')
                 if linkImage:
                     linksArr.append(linkImage)
 
-        # Get image details
-        linkImgsArr = []
-        if len(linksArr):
-            for link in linksArr:
-                driver.get(link)
-                linkImg = driver.find_elements(By.XPATH, '//*[@id="MPhotoContent"]/div[1]/div[2]/span/div/span/a[1]')
-                if linkImg:
-                    linkImgsArr.append(linkImg[0].get_attribute('href'))
-
-        postData = {"post_id": postId, "content": content, "images": linkImgsArr}
+        postData = {"post_id": postId, "content": content, "images": linksArr}
 
         print(postData)
         return postData
@@ -236,21 +226,20 @@ def download_file(image_url, file_number, post_id, folder_path="/data_crawl/"):
     except Exception as e:
         print(f"Error downloading image from {image_url}: {e}")
 
+
 def crawlPostData(driver, postIds):
     folderPath = "/data_crawl/"
     for id in postIds:
         try:
             dataPost = clonePostContent(driver, id)
-            dataImage = []
             if dataPost and len(dataPost["images"]):
-
                 postId = str(dataPost['post_id'])
                 postContent = str(dataPost['content'])
                 stt = 0
-                for img in dataImage:
+                for img in dataPost["images"]:
                     stt += 1
                     download_file(img, str(stt), postId, folderPath)
-                writeFileTxtPost('content.csv', postContent, postId, folderPath)
+                writeFileTxtPost('content.txt', postContent, postId, folderPath)
                 
             sleep(7)
         except Exception as e:
@@ -258,7 +247,7 @@ def crawlPostData(driver, postIds):
 
 # Function to save content to a file
 def writeFileTxtPost(fileName, content, idPost, pathImg="/img/"):
-    post_path = os.path.join(os.getcwd(), pathImg, str(idPost))
+    post_path = os.getcwd() + pathImg.lstrip(os.sep) + str(idPost)
     if not os.path.exists(post_path):
         os.makedirs(post_path)
 
