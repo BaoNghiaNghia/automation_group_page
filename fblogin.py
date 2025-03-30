@@ -147,31 +147,29 @@ def scroll_down(browser):
 
 
 
-# Function to extract post content and images based on post ID
 def clonePostContent(driver, postId):
     try:
         driver.get("https://m.facebook.com/" + str(postId))
-        parrentImage = driver.find_elements(By.XPATH, "//div[@data-gt='{\"tn\":\"E\"}']")
-        if len(parrentImage) == 0:
-            parrentImage = driver.find_elements(By.XPATH, "//div[@data-ft='{\"tn\":\"E\"}']")
-
-        contentElement = driver.find_elements(By.XPATH, "//div[@data-gt='{\"tn\":\"*s\"}']")
-        if len(contentElement) == 0:
-            contentElement = driver.find_elements(By.XPATH, "//div[@data-ft='{\"tn\":\"*s\"}']")
-
-        # Get Content if available
+        
+        # Find the parent image container using the full XPath
+        parrentImage = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[3]")
+        
+        contentElement = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div/div/div/span")
+        
         content = ""
+        # Get Content if available
         if len(contentElement):
             content = contentElement[0].text
 
-        # Get Image links if available
+        # Get all image links inside the parent image element
         linksArr = []
         if len(parrentImage):
-            childsImage = parrentImage[0].find_elements(By.XPATH, ".//*")
-            for childLink in childsImage:
-                linkImage = childLink.get_attribute('href')
-                if linkImage is not None:
-                    linksArr.append(linkImage.replace("m.facebook", "mbasic.facebook"))
+            childsImage = parrentImage[0].find_elements(By.TAG_NAME, "img")
+            print(f"Number of img: {childsImage}")
+            for childImg in childsImage:
+                linkImage = childImg.get_attribute('src')
+                if linkImage:
+                    linksArr.append(linkImage)
 
         # Get image details
         linkImgsArr = []
@@ -189,6 +187,8 @@ def clonePostContent(driver, postId):
     except Exception as e:
         print(f"Error in clonePostContent: {e}")
         return False
+
+
 
 # Function to save the content to a file
 def writeFileTxtPost(fileName, content, idPost, pathImg="/img/"):
@@ -219,7 +219,6 @@ def download_file(url, localFileNameParam="", idPost="123456", pathName="/data/"
     except Exception as e:
         print(f"Error in download_file: {e}")
 
-# Function to crawl post data from the list of post IDs
 def crawlPostData(driver, postIds, type='page'):
     folderPath = "/data_crawl/"
     for id in postIds:
@@ -241,6 +240,9 @@ def crawlPostData(driver, postIds, type='page'):
                     stt += 1
                     download_file(img, str(stt), postId, folderPath)
                 writeFileTxtPost('content.csv', postContent, postId, folderPath)
+                
+            # Sleep for 5 seconds between each post
+            sleep(7)  # 5-second delay between processing each post
         except Exception as e:
             print(f"Error in crawlPostData: {e}")
 
@@ -276,6 +278,7 @@ def main():
 
         # Click the "Continue" button
         submit_captcha(browser)
+        sleep(5)
         
         # Wait for the page to load and redirect to the expected URL
         wait_for_page_load(browser)
