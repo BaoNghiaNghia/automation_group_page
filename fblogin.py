@@ -265,11 +265,12 @@ def crawlPostData(driver, postIds):
             if dataPost and len(dataPost["images"]):
                 postId = str(dataPost['post_id'])
                 postContent = str(dataPost['content'])
+                writeFileTxtPost('content.txt', postContent, postId, FOLDER_PATH_DATA_CRAWLER)
+                
                 stt = 0
                 for img in dataPost["images"]:
                     stt += 1
                     download_file(img, str(stt), postId, FOLDER_PATH_DATA_CRAWLER)
-                writeFileTxtPost('content.txt', postContent, postId, FOLDER_PATH_DATA_CRAWLER)
                 
             sleep(5)
         except Exception as e:
@@ -334,7 +335,7 @@ def main():
         # Check if we are on the expected page
         wait_for_redirect(browser, f"{FB_DEFAULT_URL}/{GAME_NAME_URL}")
         
-         # Collect post IDs until we reach 20 unique ones
+        # Collect post IDs until we reach 20 unique ones
         all_posts = set()
         scroll_attempt = 0
         while len(all_posts) < LIMIT_POST_PER_DAY:
@@ -368,7 +369,7 @@ def main():
         
         # Wait to observe result and then close the browser
         sleep(2)
-        print(f"\Done {LIMIT_POST_PER_DAY}: {GAME_NAME_URL} posts")
+        print(f"----- Done {LIMIT_POST_PER_DAY} posts: Game {GAME_NAME_URL} -----")
         browser.quit()
     else:
         print("No CAPTCHA image found.")
