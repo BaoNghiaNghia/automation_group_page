@@ -122,11 +122,11 @@ def wait_for_page_load(browser):
     print(f"Page has been redirected to: {browser.current_url}")
 
 
-def get_posts_by_attribute(browser):
+def get_posts_by_attribute(browser, game_name):
     posts = []
     try:
         # Concatenate the URL parts before using them in the XPath
-        base_url = f"{FB_DEFAULT_URL}/{GAME_NAME_URL}/posts"
+        base_url = f"{FB_DEFAULT_URL}/{game_name}/posts"
         post_links = browser.find_elements(By.XPATH, f"//a[starts-with(@href, '{base_url}')]")
         
         for link in post_links:
@@ -213,10 +213,10 @@ def clonePostContent(driver, postId):
 
 
 # Function to download image and save with the correct extension
-def download_file(image_url, file_number, post_id, folder_path="/data_crawl/"):
+def download_file(image_url, file_number, post_id, folder_path="/data_crawl/", game_name=""):
     try:
         # Create the folder for the post if it doesn't exist
-        post_path = os.path.join(os.getcwd(), folder_path.strip("/\\"), f"{GAME_NAME_URL}_{str(post_id)}")
+        post_path = os.path.join(os.getcwd(), folder_path.strip("/\\"), f"{game_name}_{str(post_id)}")
         if not os.path.exists(post_path):
             os.makedirs(post_path)
 
@@ -259,7 +259,7 @@ def download_file(image_url, file_number, post_id, folder_path="/data_crawl/"):
         print(f"Error downloading image from {image_url}: {e}")
 
 
-def crawlPostData(driver, postIds):
+def crawlPostData(driver, postIds, game_name):
     for id in postIds:
         try:
             dataPost = clonePostContent(driver, id)
@@ -271,16 +271,16 @@ def crawlPostData(driver, postIds):
                 stt = 0
                 for img in dataPost["images"]:
                     stt += 1
-                    download_file(img, str(stt), postId, FOLDER_PATH_DATA_CRAWLER)
+                    download_file(img, str(stt), postId, FOLDER_PATH_DATA_CRAWLER, game_name)
                 
             sleep(5)
         except Exception as e:
             print(f"Error in crawlPostData: {e}")
 
 # Function to save content to a file
-def writeFileTxtPost(fileName, content, idPost, pathImg="/img/"):
+def writeFileTxtPost(fileName, content, idPost, pathImg="/img/", game_name=""):
     # Normalize and build the path properly
-    post_path = os.path.join(os.getcwd(), pathImg.strip("/\\"), f"{GAME_NAME_URL}_{str(idPost)}")
+    post_path = os.path.join(os.getcwd(), pathImg.strip("/\\"), f"{game_name}_{str(idPost)}")
 
     if not os.path.exists(post_path):
         os.makedirs(post_path)
@@ -301,7 +301,7 @@ def readData(fileName):
         return [line.strip() for line in f.readlines()]
 
 
-def main():
+def main(game_name):
     try:
         # Choose a random account and login
         username, password = random.choice(FB_ACCOUNT_LIST)
@@ -333,14 +333,14 @@ def main():
                 print("Already logged in or no re-login needed.")
 
             # Wait for redirect and collect posts
-            wait_for_redirect(browser, f"{FB_DEFAULT_URL}/{GAME_NAME_URL}")
+            wait_for_redirect(browser, f"{FB_DEFAULT_URL}/{game_name}")
 
             all_posts = set()
             last_height = browser.execute_script("return document.body.scrollHeight")
             
             for attempt in range(50):
                 print(f"\n[Scrolling Attempt {attempt + 1}]")
-                current_posts = get_posts_by_attribute(browser)
+                current_posts = get_posts_by_attribute(browser, game_name)
                 all_posts.update(current_posts)
                 
                 if len(all_posts) >= LIMIT_POST_PER_DAY:
@@ -369,17 +369,17 @@ def main():
             print(f"\nTotal unique posts collected: {len(all_posts)}")
 
             # Save posts to file
-            post_id_file_name = f"facebook_{GAME_NAME_URL}_post_ids.txt"
+            post_id_file_name = f"facebook_{game_name}_post_ids.txt"
             with open(post_id_file_name, "w", encoding="utf-8") as f:
                 f.write("\n".join(sorted(all_posts)))
             print(f"Post IDs saved to {post_id_file_name}")
 
             # Process posts
             sleep(5)
-            crawlPostData(browser, readData(post_id_file_name))
+            crawlPostData(browser, readData(post_id_file_name), game_name)
             
             sleep(2)
-            print(f"----- Done {LIMIT_POST_PER_DAY} posts: Game {GAME_NAME_URL} -----")
+            print(f"----- Done {LIMIT_POST_PER_DAY} posts: Game {game_name} -----")
             
         else:
             print("No CAPTCHA image found.")
@@ -391,4 +391,4 @@ def main():
         browser.quit()
 
 if __name__ == "__main__":
-    main()
+    main(GAME_NAME_URL)
