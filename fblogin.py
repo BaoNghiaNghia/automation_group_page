@@ -177,6 +177,38 @@ def clonePostContent(driver, postId):
         return False
 
 
+def clonePostContent(driver, postId):
+    try:
+        driver.get(f"{FB_DEFAULT_URL}/{str(postId)}")
+        
+        # Find the parent image container using the full XPath
+        imageGrElement = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]")
+        
+        # Find the content element containing all the text
+        contentElement = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]")
+        
+        content = ""
+        # Get all text from contentElement
+        if len(contentElement):
+            content = " ".join([elem.text for elem in contentElement])  # Concatenate text from all elements
+        
+        # Get all image links inside the parent image element
+        linksArr = []
+        if len(imageGrElement):
+            childsImage = imageGrElement[0].find_elements(By.TAG_NAME, "img")
+            for childImg in childsImage:
+                linkImage = childImg.get_attribute('src')
+                if linkImage:
+                    linksArr.append(linkImage)
+
+        postData = {"post_id": postId, "content": content, "images": linksArr}
+
+        print(postData)
+        return postData
+    except Exception as e:
+        print(f"Error in clonePostContent: {e}")
+        return False
+
 
 # Function to download image and save with the correct extension
 def download_file(image_url, file_number, post_id, folder_path="/data_crawl/"):
