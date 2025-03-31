@@ -170,7 +170,7 @@ def clonePostContent(driver, postId):
 
         postData = {"post_id": postId, "content": content, "images": linksArr}
 
-        print(postData)
+        # print(postData)
         return postData
     except Exception as e:
         print(f"Error in clonePostContent: {e}")
@@ -214,7 +214,7 @@ def clonePostContent(driver, postId):
 def download_file(image_url, file_number, post_id, folder_path="/data_crawl/"):
     try:
         # Create the folder for the post if it doesn't exist
-        post_path = os.getcwd() + folder_path + GAME_NAME_URL  + "_" + str(post_id)
+        post_path = os.path.join(os.getcwd(), folder_path.strip("/\\"), f"{GAME_NAME_URL}_{str(post_id)}")
         if not os.path.exists(post_path):
             os.makedirs(post_path)
 
@@ -258,15 +258,14 @@ def download_file(image_url, file_number, post_id, folder_path="/data_crawl/"):
 
 
 def crawlPostData(driver, postIds):
-    
     for id in postIds:
         try:
             dataPost = clonePostContent(driver, id)
-            if dataPost and len(dataPost["images"]):
+            if dataPost:
                 postId = str(dataPost['post_id'])
                 postContent = str(dataPost['content'])
                 writeFileTxtPost('content.txt', postContent, postId, FOLDER_PATH_DATA_CRAWLER)
-                
+                print(f"Post ID: {postId} - Content: {postContent}")
                 stt = 0
                 for img in dataPost["images"]:
                     stt += 1
@@ -278,12 +277,20 @@ def crawlPostData(driver, postIds):
 
 # Function to save content to a file
 def writeFileTxtPost(fileName, content, idPost, pathImg="/img/"):
-    post_path = os.getcwd() + pathImg.lstrip(os.sep) + GAME_NAME_URL + "_" + str(idPost)
+    # Normalize and build the path properly
+    post_path = os.path.join(os.getcwd(), pathImg.strip("/\\"), f"{GAME_NAME_URL}_{str(idPost)}")
+
     if not os.path.exists(post_path):
         os.makedirs(post_path)
 
-    with open(os.path.join(post_path, fileName), 'a', encoding="utf-8") as f1:
-        f1.write(content + os.linesep)
+    file_path = os.path.join(post_path, fileName)
+
+    try:
+        with open(file_path, 'a', encoding="utf-8") as f1:
+            f1.write(content + os.linesep)
+        print(f"Content written to {file_path}")
+    except Exception as e:
+        print(f"Error writing to file {file_path}: {e}")
 
 
 # Read Post IDs from file (assumed function)

@@ -8,4 +8,4 @@ GAME_NAME_URL = "lucdiathanhoa"
 
 DOMAIN_CAPTCHA = "https://captcha69.com"
 FOLDER_PATH_DATA_CRAWLER = "/data_crawler/"
-LIMIT_POST_PER_DAY = 20
+LIMIT_POST_PER_DAY = 4
