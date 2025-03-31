@@ -13,7 +13,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-from constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, GAME_NAME_URL, API_KEY_CAPTCHA, DOMAIN_CAPTCHA, FOLDER_PATH_DATA_CRAWLER
+from constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, GAME_NAME_URL, API_KEY_CAPTCHA, DOMAIN_CAPTCHA, FOLDER_PATH_DATA_CRAWLER, LIMIT_POST_PER_DAY
 
 
 def image_to_base64(image_url):
@@ -177,37 +177,37 @@ def clonePostContent(driver, postId):
         return False
 
 
-def clonePostContent(driver, postId):
-    try:
-        driver.get(f"{FB_DEFAULT_URL}/{str(postId)}")
+# def clonePostContent(driver, postId):
+#     try:
+#         driver.get(f"{FB_DEFAULT_URL}/{str(postId)}")
         
-        # Find the parent image container using the full XPath
-        imageGrElement = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]")
+#         # Find the parent image container using the full XPath
+#         imageGrElement = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]")
         
-        # Find the content element containing all the text
-        contentElement = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]")
+#         # Find the content element containing all the text
+#         contentElement = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]")
         
-        content = ""
-        # Get all text from contentElement
-        if len(contentElement):
-            content = " ".join([elem.text for elem in contentElement])  # Concatenate text from all elements
+#         content = ""
+#         # Get all text from contentElement
+#         if len(contentElement):
+#             content = " ".join([elem.text for elem in contentElement])  # Concatenate text from all elements
         
-        # Get all image links inside the parent image element
-        linksArr = []
-        if len(imageGrElement):
-            childsImage = imageGrElement[0].find_elements(By.TAG_NAME, "img")
-            for childImg in childsImage:
-                linkImage = childImg.get_attribute('src')
-                if linkImage:
-                    linksArr.append(linkImage)
+#         # Get all image links inside the parent image element
+#         linksArr = []
+#         if len(imageGrElement):
+#             childsImage = imageGrElement[0].find_elements(By.TAG_NAME, "img")
+#             for childImg in childsImage:
+#                 linkImage = childImg.get_attribute('src')
+#                 if linkImage:
+#                     linksArr.append(linkImage)
 
-        postData = {"post_id": postId, "content": content, "images": linksArr}
+#         postData = {"post_id": postId, "content": content, "images": linksArr}
 
-        print(postData)
-        return postData
-    except Exception as e:
-        print(f"Error in clonePostContent: {e}")
-        return False
+#         print(postData)
+#         return postData
+#     except Exception as e:
+#         print(f"Error in clonePostContent: {e}")
+#         return False
 
 
 # Function to download image and save with the correct extension
@@ -334,15 +334,21 @@ def main():
         # Check if we are on the expected page
         wait_for_redirect(browser, f"{FB_DEFAULT_URL}/{GAME_NAME_URL}")
         
+         # Collect post IDs until we reach 20 unique ones
         all_posts = set()
-        for i in range(5):
-            print(f"\n[Scraping Round {i + 1}]")
+        scroll_attempt = 0
+        while len(all_posts) < LIMIT_POST_PER_DAY:
+            print(f"\n[Scrolling Attempt {scroll_attempt + 1}]")
             new_posts = get_posts_by_attribute(browser)
             for post in new_posts:
                 if post not in all_posts:
                     all_posts.add(post)
                     print(post)
             scroll_down(browser)
+            scroll_attempt += 1
+            if scroll_attempt > 50:  # Safety break in case not enough posts are available
+                print("Too many scroll attempts, exiting.")
+                break
 
         print(f"\nTotal unique posts collected: {len(all_posts)}")
         
@@ -359,12 +365,13 @@ def main():
         postIds = readData(post_id_file_name)
         sleep(2)
         crawlPostData(browser, postIds)
+        
+        # Wait to observe result and then close the browser
+        sleep(2)
+        print(f"\Done {LIMIT_POST_PER_DAY}: {GAME_NAME_URL} posts")
+        browser.quit()
     else:
         print("No CAPTCHA image found.")
-
-    # Wait to observe result and then close the browser
-    sleep(500)
-    browser.quit()
 
 if __name__ == "__main__":
     main()
