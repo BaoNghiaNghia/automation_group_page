@@ -334,7 +334,10 @@ def main():
 
             # Wait for redirect and collect posts
             wait_for_redirect(browser, f"{FB_DEFAULT_URL}/{GAME_NAME_URL}")
+
             all_posts = set()
+            last_height = browser.execute_script("return document.body.scrollHeight")
+            
             for attempt in range(50):
                 print(f"\n[Scrolling Attempt {attempt + 1}]")
                 current_posts = get_posts_by_attribute(browser)
@@ -349,8 +352,17 @@ def main():
                     sleep(10)
                     browser.quit()
                     return
-                    
+                
+                # Scroll down and check if we've reached the bottom
                 scroll_down(browser)
+                new_height = browser.execute_script("return document.body.scrollHeight")
+                
+                if new_height == last_height:
+                    print("Reached end of page, stopping scroll.")
+                    break
+                    
+                last_height = new_height
+                
                 if attempt == 49:
                     print("Too many scroll attempts, exiting.")
 
