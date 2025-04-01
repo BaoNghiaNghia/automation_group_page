@@ -31,7 +31,15 @@ def solve_captcha(image_url):
         'body': base64_image
     }
     response = requests.post(f'{DOMAIN_CAPTCHA}/in.php', data=payload)
-    return response.text
+    response_text = response.text
+    print(f"Captcha solve response: {response}")  # Debugging output
+
+    # Ensure we got a valid captcha_id
+    if response_text.startswith('OK|'):
+        return response_text
+    else:
+        print(f"Error solving CAPTCHA: {response_text}")
+        return None
 
 def get_captcha_result(captcha_id):
     """Fetch CAPTCHA result using the provided captcha_id."""
@@ -41,7 +49,14 @@ def get_captcha_result(captcha_id):
         'id': captcha_id
     }
     response = requests.post(f'{DOMAIN_CAPTCHA}/res.php', data=payload)
-    return response.text.split('|')[1]
+    response_text = response.text
+
+    # Check if the response is valid and contains the expected result
+    if response_text.startswith('OK|'):
+        return response_text.split('|')[1]
+    else:
+        print(f"Error fetching CAPTCHA result: {response_text}")
+        return None
 
 
 def login_facebook(username, password):
@@ -266,7 +281,7 @@ def crawlPostData(driver, postIds, game_name):
             if dataPost:
                 postId = str(dataPost['post_id'])
                 postContent = str(dataPost['content'])
-                writeFileTxtPost('content.txt', postContent, postId, FOLDER_PATH_DATA_CRAWLER)
+                writeFileTxtPost('content.txt', postContent, postId, FOLDER_PATH_DATA_CRAWLER, game_name)
                 print(f"Post ID: {postId} - Content: {postContent}")
                 stt = 0
                 for img in dataPost["images"]:
@@ -315,7 +330,7 @@ def main(game_name):
             # Solve CAPTCHA and submit
             captcha_id = solve_captcha(captcha_img_url).split('|')[1]
             captcha_text = get_captcha_result(captcha_id)
-            print(f"Captcha Text: {captcha_text}")
+            print(f"Captcha Reponse: {captcha_text}")
 
             captcha_input = browser.find_element(By.TAG_NAME, "input")
             captcha_input.send_keys(captcha_text)
