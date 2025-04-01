@@ -316,10 +316,13 @@ def readData(fileName):
 
 
 def run_fb_scraper_posts(game_name):
+    browser = None
     try:
         # Choose a random account and login
         username, password = random.choice(FB_ACCOUNT_LIST)
         browser = login_facebook(username, password)
+        
+        sleep(3)
 
         # Handle CAPTCHA if present
         if captcha_img := get_captcha_image(browser):
