@@ -2,7 +2,6 @@ import random
 from urllib.parse import urlparse, parse_qs
 import requests
 import os
-import shutil
 import requests
 import base64
 from time import sleep
@@ -316,7 +315,7 @@ def readData(fileName):
         return [line.strip() for line in f.readlines()]
 
 
-def main(game_name):
+def run_fb_scraper_posts(game_name):
     try:
         # Choose a random account and login
         username, password = random.choice(FB_ACCOUNT_LIST)
@@ -404,6 +403,3 @@ def main(game_name):
         
     finally:
         browser.quit()
-
-if __name__ == "__main__":
-    main(GAME_NAME_URL)
