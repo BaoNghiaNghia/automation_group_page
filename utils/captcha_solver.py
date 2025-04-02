@@ -29,7 +29,6 @@ def solve_captcha(image_url):
     }
     response = requests.post(f'{DOMAIN_CAPTCHA}/in.php', data=payload)
     response_text = response.text
-    print(f"Captcha solve response: {response}")  # Debugging output
 
     # Ensure we got a valid captcha_id
     if response_text.startswith('OK|'):
