@@ -1,9 +1,8 @@
 import random
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse
 import requests
 import os
 import requests
-import base64
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -12,50 +11,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-from constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, GAME_NAME_URL, API_KEY_CAPTCHA, DOMAIN_CAPTCHA, FOLDER_PATH_DATA_CRAWLER, LIMIT_POST_PER_DAY
-
-
-def image_to_base64(image_url):
-    """Convert an image URL to base64."""
-    response = requests.get(image_url)
-    return base64.b64encode(response.content).decode('utf-8')
-
-def solve_captcha(image_url):
-    """Solve CAPTCHA by sending the base64 image to the CAPTCHA API."""
-    base64_image = image_to_base64(image_url)
-    payload = {
-        'key': API_KEY_CAPTCHA,
-        'type_captcha': 'Default v.1',
-        'method': 'base64',
-        'body': base64_image
-    }
-    response = requests.post(f'{DOMAIN_CAPTCHA}/in.php', data=payload)
-    response_text = response.text
-    print(f"Captcha solve response: {response}")  # Debugging output
-
-    # Ensure we got a valid captcha_id
-    if response_text.startswith('OK|'):
-        return response_text
-    else:
-        print(f"Error solving CAPTCHA: {response_text}")
-        return None
-
-def get_captcha_result(captcha_id):
-    """Fetch CAPTCHA result using the provided captcha_id."""
-    payload = {
-        'key': API_KEY_CAPTCHA,
-        'action': 'get',
-        'id': captcha_id
-    }
-    response = requests.post(f'{DOMAIN_CAPTCHA}/res.php', data=payload)
-    response_text = response.text
-
-    # Check if the response is valid and contains the expected result
-    if response_text.startswith('OK|'):
-        return response_text.split('|')[1]
-    else:
-        print(f"Error fetching CAPTCHA result: {response_text}")
-        return None
+from utils.captcha_solver import get_captcha_image, solve_captcha, get_captcha_result
+from constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, FOLDER_PATH_DATA_CRAWLER, LIMIT_POST_PER_DAY, FOLDER_PATH_POST_ID_CRAWLER
 
 
 def login_facebook(username, password):
@@ -81,15 +38,6 @@ def login_facebook(username, password):
     # Wait for Facebook to respond
     WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.TAG_NAME, "img")))
     return browser
-
-def get_captcha_image(browser):
-    """Retrieve CAPTCHA image if present on Facebook login page."""
-    img_tags = browser.find_elements(By.TAG_NAME, "img")
-    for img in img_tags:
-        src = img.get_attribute("src")
-        if src and "captcha" in src:
-            return img
-    return None
 
 
 def extract_post_id_from_url(url):
@@ -154,9 +102,6 @@ def get_posts_by_attribute(browser, game_name):
         print(f"Error retrieving posts: {e}")
     return posts
 
-
-
-
 def scroll_down(browser):
     browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     sleep(5)  # Wait for content to load
@@ -177,6 +122,7 @@ def clonePostContent(driver, postId):
 
         # Get all image links inside the specific path provided
         linksArr = []
+
         image_links = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div//a//img")
         
         for img in image_links:
@@ -186,45 +132,10 @@ def clonePostContent(driver, postId):
 
         postData = {"post_id": postId, "content": content, "images": linksArr}
 
-        # print(postData)
         return postData
     except Exception as e:
         print(f"Error in clonePostContent: {e}")
         return False
-
-
-# def clonePostContent(driver, postId):
-#     try:
-#         driver.get(f"{FB_DEFAULT_URL}/{str(postId)}")
-        
-#         # Find the parent image container using the full XPath
-#         imageGrElement = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]")
-        
-#         # Find the content element containing all the text
-#         contentElement = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]")
-        
-#         content = ""
-#         # Get all text from contentElement
-#         if len(contentElement):
-#             content = " ".join([elem.text for elem in contentElement])  # Concatenate text from all elements
-        
-#         # Get all image links inside the parent image element
-#         linksArr = []
-#         if len(imageGrElement):
-#             childsImage = imageGrElement[0].find_elements(By.TAG_NAME, "img")
-#             for childImg in childsImage:
-#                 linkImage = childImg.get_attribute('src')
-#                 if linkImage:
-#                     linksArr.append(linkImage)
-
-#         postData = {"post_id": postId, "content": content, "images": linksArr}
-
-#         print(postData)
-#         return postData
-#     except Exception as e:
-#         print(f"Error in clonePostContent: {e}")
-#         return False
-
 
 # Function to download image and save with the correct extension
 def download_file(image_url, file_number, post_id, folder_path="/data_crawl/", game_name=""):
@@ -316,7 +227,6 @@ def readData(fileName):
 
 
 def run_fb_scraper_posts(game_name):
-    browser = None
     try:
         # Choose a random account and login
         username, password = random.choice(FB_ACCOUNT_LIST)
@@ -362,7 +272,7 @@ def run_fb_scraper_posts(game_name):
                 
                 if len(all_posts) >= LIMIT_POST_PER_DAY:
                     break
-                
+
                 # Check if no posts found after 3 attempts
                 if attempt >= 3 and len(all_posts) == 0:
                     print("No posts found after 4 attempts, exiting.")
@@ -379,14 +289,15 @@ def run_fb_scraper_posts(game_name):
                     break
                     
                 last_height = new_height
-                
+
                 if attempt == 49:
                     print("Too many scroll attempts, exiting.")
 
             print(f"\nTotal unique posts collected: {len(all_posts)}")
 
             # Save posts to file
-            post_id_file_name = f"facebook_{game_name}_post_ids.txt"
+            post_id_file_name = os.path.join(FOLDER_PATH_POST_ID_CRAWLER, f"facebook_{game_name}_post_ids.txt")
+            os.makedirs(FOLDER_PATH_POST_ID_CRAWLER, exist_ok=True)
             with open(post_id_file_name, "w", encoding="utf-8") as f:
                 f.write("\n".join(sorted(all_posts)))
             print(f"Post IDs saved to {post_id_file_name}")
@@ -397,7 +308,7 @@ def run_fb_scraper_posts(game_name):
             
             sleep(2)
             print(f"----- Done {LIMIT_POST_PER_DAY} posts: Game {game_name} -----")
-            
+
         else:
             print("No CAPTCHA image found.")
             

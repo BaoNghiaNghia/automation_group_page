@@ -8,4 +8,5 @@ GAME_NAME_URL = "OnceHumanOfficial"
 
 DOMAIN_CAPTCHA = "https://captcha69.com"
 FOLDER_PATH_DATA_CRAWLER = "/data_crawler/"
+FOLDER_PATH_POST_ID_CRAWLER = "/data_posts_id/"
 LIMIT_POST_PER_DAY = 20

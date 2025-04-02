@@ -1,9 +1,6 @@
 from celery import Celery
 from celery.schedules import crontab
 
-# Import the task module to register tasks with Celery
-import tasks  # This ensures that Celery registers the tasks defined in task.py
-
 # Create the Celery app instance and configure it to use Redis as the broker
 celery_app = Celery(
     'backend', 
@@ -23,7 +20,7 @@ celery_app.conf.update(
 celery_app.conf.beat_schedule = {
     'ru-_main-task-minutes': {
         'task': 'tasks.run_main_task_minutes',  # Use the full path to the task function
-        'schedule': crontab(minute="*/3"),  # Run every minute
+        'schedule': crontab(minute="*/1"),  # Run every minute
     },
 }
 
