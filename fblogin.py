@@ -52,6 +52,8 @@ def login_facebook_ubuntu(username, password):
         "profile.default_content_setting_values.notifications": 1
     }
     chrome_options.add_experimental_option("prefs", prefs)
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu")
 
     # Set up the chromedriver service (installed in Docker)
     service = Service("/usr/bin/chromedriver")  # Use chromedriver installed in the Docker container
@@ -77,12 +79,14 @@ def login_facebook_ubuntu(username, password):
 
 
 def extract_post_id_from_url(url):
-    """Extract post ID from a Facebook post URL."""
     try:
         path = urlparse(url).path
         if "/posts/" in path:
-            post_id = path.split("/posts/")[1].split("?")[0]
-            return post_id
+            return path.split("/posts/")[1].split("?")[0]
+        elif "/permalink/" in path:
+            return path.split("/permalink/")[1].split("?")[0]
+        elif "story_fbid=" in url:
+            return url.split("story_fbid=")[1].split("&")[0]
     except Exception as e:
         print(f"Failed to extract post ID from {url}: {e}")
     return None

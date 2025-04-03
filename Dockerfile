@@ -14,8 +14,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
     curl \
-    chromium \
-    chromium-driver \
+    # chromium \
+    # chromium-driver \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
