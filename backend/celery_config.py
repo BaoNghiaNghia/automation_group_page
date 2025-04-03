@@ -18,7 +18,7 @@ celery_app.conf.update(
 
 # Celery Beat schedule to run the task every minute
 celery_app.conf.beat_schedule = {
-    'ru-_main-task-minutes': {
+    'run_main_task_minutes': {
         'task': 'tasks.run_main_task_minutes',  # Use the full path to the task function
         'schedule': crontab(minute="*/1"),  # Run every minute
     },

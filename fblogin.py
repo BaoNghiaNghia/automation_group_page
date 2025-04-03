@@ -40,6 +40,42 @@ def login_facebook(username, password):
     return browser
 
 
+def login_facebook_ubuntu(username, password):
+    """Login to Facebook using Selenium with Chromium in Docker."""
+    chrome_options = Options()
+    
+    # Set the path to the Chromium binary (for Docker container)
+    chrome_options.binary_location = "/usr/bin/chromium"
+
+    # Automatically allow notifications for the website
+    prefs = {
+        "profile.default_content_setting_values.notifications": 1
+    }
+    chrome_options.add_experimental_option("prefs", prefs)
+
+    # Set up the chromedriver service (installed in Docker)
+    service = Service("/usr/bin/chromedriver")  # Use chromedriver installed in the Docker container
+    
+    # Initialize the browser
+    browser = webdriver.Chrome(service=service, options=chrome_options)
+
+    # Navigate to Facebook
+    browser.get(FB_DEFAULT_URL)
+
+    # Wait for login elements to load
+    WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "email")))
+
+    # Enter credentials and log in
+    browser.find_element(By.ID, "email").send_keys(username)
+    browser.find_element(By.ID, "pass").send_keys(password)
+    browser.find_element(By.ID, "pass").send_keys(Keys.ENTER)
+    
+    # Wait for Facebook to respond after login
+    WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.TAG_NAME, "img")))
+    
+    return browser
+
+
 def extract_post_id_from_url(url):
     """Extract post ID from a Facebook post URL."""
     try:
@@ -231,8 +267,9 @@ def run_fb_scraper_posts(game_name):
         # Choose a random account and login
         username, password = random.choice(FB_ACCOUNT_LIST)
         browser = login_facebook(username, password)
+        # browser = login_facebook_ubuntu(username, password)
         
-        sleep(3)
+        sleep(2)
 
         # Handle CAPTCHA if present
         if captcha_img := get_captcha_image(browser):
@@ -294,17 +331,19 @@ def run_fb_scraper_posts(game_name):
                     print("Too many scroll attempts, exiting.")
 
             print(f"\nTotal unique posts collected: {len(all_posts)}")
-
             # Save posts to file
-            post_id_file_name = os.path.join(FOLDER_PATH_POST_ID_CRAWLER, f"facebook_{game_name}_post_ids.txt")
-            os.makedirs(FOLDER_PATH_POST_ID_CRAWLER, exist_ok=True)
-            with open(post_id_file_name, "w", encoding="utf-8") as f:
+            post_id_file_path = os.path.join(os.getcwd(), FOLDER_PATH_POST_ID_CRAWLER.strip("/\\"))
+            if not os.path.exists(post_id_file_path):
+                os.makedirs(post_id_file_path)
+
+            post_id_file_name = f"facebook_{game_name}_post_ids.txt"
+            post_id_full_path = os.path.join(post_id_file_path, post_id_file_name)
+            with open(post_id_full_path, "w", encoding="utf-8") as f:
                 f.write("\n".join(sorted(all_posts)))
-            print(f"Post IDs saved to {post_id_file_name}")
 
             # Process posts
             sleep(5)
-            crawlPostData(browser, readData(post_id_file_name), game_name)
+            crawlPostData(browser, readData(os.path.join(post_id_file_path, post_id_file_name)), game_name)
             
             sleep(2)
             print(f"----- Done {LIMIT_POST_PER_DAY} posts: Game {game_name} -----")

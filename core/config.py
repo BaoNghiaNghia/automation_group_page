@@ -8,7 +8,7 @@ from starlette.datastructures import CommaSeparatedStrings, Secret
 
 API_PREFIX = "/service"
 
-JWT_TOKEN_PREFIX = "Token"  # noqa: S105 在做用户校验时，需要把这个前缀加上，并加空格
+JWT_TOKEN_PREFIX = "Token"
 VERSION = "1.0.0"
 
 config = Config(".env")
