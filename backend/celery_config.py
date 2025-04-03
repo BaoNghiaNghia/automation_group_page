@@ -19,8 +19,12 @@ celery_app.conf.update(
 # Celery Beat schedule to run the task every minute
 celery_app.conf.beat_schedule = {
     'run_main_task_minutes': {
-        'task': 'tasks.run_main_task_minutes',  # Use the full path to the task function
+        'task': 'backend.tasks.run_main_task_minutes',  # Use the full path to the task function
         'schedule': crontab(minute="*/1"),  # Run every minute
+    },
+    'delete_data_folders_daily': {
+        'task': 'backend.tasks.delete_data_folders',  # You'll need to create this task in tasks.py
+        'schedule': crontab(hour=1, minute=0),  # Run at 1:00 AM every day
     },
 }
 

@@ -1,7 +1,7 @@
 import requests
 import base64
 from selenium.webdriver.common.by import By
-from constants import API_KEY_CAPTCHA, DOMAIN_CAPTCHA
+from backend.constants import API_KEY_CAPTCHA, DOMAIN_CAPTCHA
 
 def image_to_base64(image_url):
     """Convert an image URL to base64."""
