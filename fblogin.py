@@ -266,97 +266,136 @@ def readData(fileName):
         return [line.strip() for line in f.readlines()]
 
 
+def handle_captcha_if_present(browser, username, password):
+    """
+    This function handles CAPTCHA challenges that may appear during the login process.
+    If a CAPTCHA is detected, it solves the CAPTCHA, re-enters login credentials if necessary,
+    and continues the browsing session.
+
+    Args:
+        browser (webdriver.Chrome): The browser instance used for Selenium automation.
+        username (str): The username (email) for logging into Facebook.
+        password (str): The password for logging into Facebook.
+
+    Returns:
+        bool: Returns True if CAPTCHA was detected and handled, False otherwise.
+    """
+    try:
+        # Look for CAPTCHA image on the page
+        if captcha_img := get_captcha_image(browser):
+            captcha_img_url = captcha_img.get_attribute("src")
+            print(f"Found CAPTCHA image: {captcha_img_url}")
+
+            # Solve the CAPTCHA and get the solution
+            captcha_id = solve_captcha(captcha_img_url).split('|')[1]
+            captcha_text = get_captcha_result(captcha_id)
+            print(f"Captcha Response: {captcha_text}")
+
+            # Enter the CAPTCHA solution in the input field and submit it
+            captcha_input = browser.find_element(By.TAG_NAME, "input")
+            captcha_input.send_keys(captcha_text)
+
+            # Click the "Continue" button to proceed
+            submit_captcha(browser)
+            sleep(5)
+
+            # Try to re-login if necessary
+            try:
+                WebDriverWait(browser, 10).until(
+                    EC.presence_of_element_located((By.ID, "email"))
+                )
+                # Re-enter login credentials and submit
+                browser.find_element(By.ID, "email").send_keys(username)
+                browser.find_element(By.ID, "pass").send_keys(password + Keys.ENTER)
+            except Exception:
+                print("Re-login not required or already logged in.")
+            
+            return True  # CAPTCHA was handled successfully
+
+    except Exception as e:
+        print(f"Error while handling CAPTCHA: {e}")
+
+    return False  # No CAPTCHA or an error occurred
+
+
+
 def run_fb_scraper_posts(game_name):
     try:
         # Choose a random account and login
         username, password = random.choice(FB_ACCOUNT_LIST)
         browser = login_facebook(username, password)
         # browser = login_facebook_ubuntu(username, password)
-        
+
         sleep(2)
 
         # Handle CAPTCHA if present
-        if captcha_img := get_captcha_image(browser):
-            captcha_img_url = captcha_img.get_attribute("src")
-            print(f"Found CAPTCHA image: {captcha_img_url}")
-
-            # Solve CAPTCHA and submit
-            captcha_id = solve_captcha(captcha_img_url).split('|')[1]
-            captcha_text = get_captcha_result(captcha_id)
-            print(f"Captcha Reponse: {captcha_text}")
-
-            captcha_input = browser.find_element(By.TAG_NAME, "input")
-            captcha_input.send_keys(captcha_text)
-            submit_captcha(browser)
-            sleep(5)
-
-            # Re-login if needed
-            try:
-                login_form = WebDriverWait(browser, 10).until(
-                    EC.presence_of_element_located((By.ID, "email"))
-                )
-                browser.find_element(By.ID, "email").send_keys(username)
-                browser.find_element(By.ID, "pass").send_keys(password + Keys.ENTER)
-            except Exception:
-                print("Already logged in or no re-login needed.")
-
-            # Wait for redirect and collect posts
+        if handle_captcha_if_present(browser, username, password):
+            # Wait for redirect to the game page
             wait_for_redirect(browser, f"{FB_DEFAULT_URL}/{game_name}")
 
             all_posts = set()
             last_height = browser.execute_script("return document.body.scrollHeight")
-            
+
+            # Scroll and collect posts, with a maximum number of attempts
             for attempt in range(50):
                 print(f"\n[Scrolling Attempt {attempt + 1}]")
                 current_posts = get_posts_by_attribute(browser, game_name)
                 all_posts.update(current_posts)
-                
+
                 if len(all_posts) >= LIMIT_POST_PER_DAY:
+                    print("Limit of posts reached.")
                     break
 
                 # Check if no posts found after 3 attempts
                 if attempt >= 3 and len(all_posts) == 0:
-                    print("No posts found after 4 attempts, exiting.")
+                    print("No posts found after 3 attempts, exiting.")
                     sleep(10)
                     browser.quit()
                     return
-                
-                # Scroll down and check if we've reached the bottom
+
+                # Scroll down to load more posts
                 scroll_down(browser)
                 new_height = browser.execute_script("return document.body.scrollHeight")
-                
+
+                # If no new content is loaded, stop scrolling
                 if new_height == last_height:
-                    print("Reached end of page, stopping scroll.")
+                    print("Reached the end of the page, stopping scroll.")
                     break
-                    
+
                 last_height = new_height
 
                 if attempt == 49:
                     print("Too many scroll attempts, exiting.")
 
+            # Output the number of posts collected
             print(f"\nTotal unique posts collected: {len(all_posts)}")
-            # Save posts to file
+
+            # Save the post IDs to a file
             post_id_file_path = os.path.join(os.getcwd(), FOLDER_PATH_POST_ID_CRAWLER.strip("/\\"))
             if not os.path.exists(post_id_file_path):
                 os.makedirs(post_id_file_path)
 
             post_id_file_name = f"facebook_{game_name}_post_ids.txt"
             post_id_full_path = os.path.join(post_id_file_path, post_id_file_name)
+
             with open(post_id_full_path, "w", encoding="utf-8") as f:
                 f.write("\n".join(sorted(all_posts)))
 
-            # Process posts
-            sleep(5)
-            crawlPostData(browser, readData(os.path.join(post_id_file_path, post_id_file_name)), game_name)
-            
-            sleep(2)
+            # Crawl and download post data
+            crawlPostData(browser, readData(post_id_full_path), game_name)
+
             print(f"----- Done {LIMIT_POST_PER_DAY} posts: Game {game_name} -----")
 
         else:
-            print("No CAPTCHA image found.")
-            
+            print("No CAPTCHA image found or failed to handle CAPTCHA.")
+
     except Exception as e:
         print(f"Error in main: {e}")
-        
+
     finally:
-        browser.quit()
+        # Ensure the browser is closed properly
+        try:
+            browser.quit()
+            print("Browser closed successfully.")
+        except Exception as e:
+            print(f"Error closing browser: {e}")
