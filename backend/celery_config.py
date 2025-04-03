@@ -3,14 +3,14 @@ from celery.schedules import crontab
 
 # Create the Celery app instance and configure it to use Redis as the broker
 celery_app = Celery(
-    'backend', 
+    'backend',
     broker='redis://redis:6379/0',
     backend='redis://redis:6379/0'
-)  # Include tasks module explicitly
+)
 
 celery_app.conf.update(
     task_serializer="json",
-    accept_content=["json"], 
+    accept_content=["json"],
     result_serializer="json",
     timezone="Asia/Ho_Chi_Minh",  # Set timezone to Vietnam
     enable_utc=False,  # Disable UTC to use the local timezone
