@@ -1,13 +1,13 @@
 import os
 import shutil
 from celery import shared_task
-from fblogin import run_fb_scraper_posts
+from backend.fblogin import run_fb_scraper_posts
 from backend.constants import FOLDER_PATH_DATA_CRAWLER, FOLDER_PATH_POST_ID_CRAWLER, GAME_NAME_URL
 
 @shared_task(name="backend.tasks.run_main_task_minutes")  # Match the name in celery_config.py
 def run_main_task_minutes():
     try:
-        print("----- run_main_task_minutes -----")
+        print("----- :::: run_main_task_minutes :::: -----")
         run_fb_scraper_posts(GAME_NAME_URL)
     except Exception as e:
         print(f"Unexpected error: {e}")

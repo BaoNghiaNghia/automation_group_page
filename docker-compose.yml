@@ -1,5 +1,17 @@
 version: '3'
 
+x-common-celery: &common-celery
+  build: .
+  depends_on:
+    - redis
+  networks:
+    - app_network
+  environment:
+    - CELERY_BROKER_URL=redis://redis:6379/0
+    - CELERY_RESULT_BACKEND=redis://redis:6379/0
+  volumes:
+    - .:/app
+
 services:
   redis:
     image: redis:6
@@ -10,40 +22,19 @@ services:
       - app_network
 
   celery_worker:
-    build: .
+    <<: *common-celery
     container_name: celery_worker
     command: ["celery", "-A", "backend.celery_config", "worker", "--loglevel=info"]
-    depends_on:
-      - redis
-    networks:
-      - app_network
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
 
   celery_beat:
-    build: .
+    <<: *common-celery
     container_name: celery_beat
     command: ["celery", "-A", "backend.celery_config", "beat", "--loglevel=info"]
-    depends_on:
-      - redis
-    networks:
-      - app_network
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
 
   celery_flower:
-    build: .
+    <<: *common-celery
     container_name: celery_flower
     command: ["celery", "-A", "backend.celery_config", "flower", "--loglevel=info"]
-    depends_on:
-      - redis
-    networks:
-      - app_network
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
 
 networks:
   app_network:

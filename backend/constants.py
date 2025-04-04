@@ -5,6 +5,7 @@ FB_ACCOUNT_LIST = [
     # Add more accounts if needed
 ]
 GAME_NAME_URL = "OnceHumanOfficial"
+SERVICE_URL = "https://boostgamemobile.com/service"
 
 DOMAIN_CAPTCHA = "https://captcha69.com"
 FOLDER_PATH_DATA_CRAWLER = "/data_crawler/"

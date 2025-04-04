@@ -11,7 +11,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-from utils.captcha_solver import get_captcha_image, solve_captcha, get_captcha_result
+from backend.utils.captcha_solver import get_captcha_image, solve_captcha, get_captcha_result
 from backend.constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, FOLDER_PATH_DATA_CRAWLER, LIMIT_POST_PER_DAY, FOLDER_PATH_POST_ID_CRAWLER
 
 
