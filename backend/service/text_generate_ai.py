@@ -66,7 +66,7 @@ def rewrite_paragraph():
                 if line[0].isdigit() and '. ' in line:
                     if current_para:
                         paragraphs.append('\n'.join(current_para))
-                    current_para = [line[line.find('.')+1:].strip()]
+                    current_para = [line[line.find('.')+2:].strip()]  # Add 2 to skip both dot and space
                 else:
                     current_para.append(line)
                     
@@ -83,7 +83,24 @@ def rewrite_paragraph():
                         contents=prompt
                     )
                     new_text = response.text.strip()
-                    new_paras = [p.strip() for p in new_text.split('\n') if p.strip()]
+                    new_paras = []
+                    current_para = []
+                    
+                    for line in new_text.split('\n'):
+                        line = line.strip()
+                        if not line:
+                            continue
+                            
+                        if line[0].isdigit() and '. ' in line:
+                            if current_para:
+                                new_paras.append('\n'.join(current_para))
+                            current_para = [line[line.find('.')+2:].strip()]
+                        else:
+                            current_para.append(line)
+                            
+                    if current_para:
+                        new_paras.append('\n'.join(current_para))
+                        
                     paragraphs.extend(new_paras[:10-len(paragraphs)])
                     sleep(2)
 
