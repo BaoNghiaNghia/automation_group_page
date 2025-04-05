@@ -45,36 +45,46 @@ def rewrite_paragraph():
             )
             rewritten_text = response.text.strip()
 
-            # Process and save rewritten paragraphs
-            current_content = []
-            current_number = None
-
+            # Split text into paragraphs
+            paragraphs = []
+            current_para = []
+            
             for line in rewritten_text.split('\n'):
                 line = line.strip()
                 if not line:
                     continue
                     
-                # Check for new numbered paragraph
                 if line[0].isdigit() and '. ' in line:
-                    # Save previous paragraph if exists
-                    if current_number and current_content:
-                        clone_file = os.path.join(folder_path, f'clone_{current_number}.txt')
-                        with open(clone_file, 'w', encoding='utf-8') as f:
-                            f.write('\n'.join(current_content).strip())
-                    
-                    # Start new paragraph
-                    current_number = line[0]
-                    current_content = [line[line.find('.')+1:].strip()]
+                    if current_para:
+                        paragraphs.append('\n'.join(current_para))
+                    current_para = [line[line.find('.')+1:].strip()]
                 else:
-                    current_content.append(line)
+                    current_para.append(line)
+                    
+            if current_para:
+                paragraphs.append('\n'.join(current_para))
 
-            # Save final paragraph
-            if current_number and current_content:
-                clone_file = os.path.join(folder_path, f'clone_{current_number}.txt')
+            # Ensure we have exactly 10 paragraphs
+            if len(paragraphs) < 10:
+                print(f"Warning: Only generated {len(paragraphs)} paragraphs for {folder}")
+                # Generate remaining paragraphs by repeating the prompt
+                while len(paragraphs) < 10:
+                    response = client.models.generate_content(
+                        model="gemini-2.0-flash",
+                        contents=prompt
+                    )
+                    new_text = response.text.strip()
+                    new_paras = [p.strip() for p in new_text.split('\n') if p.strip()]
+                    paragraphs.extend(new_paras[:10-len(paragraphs)])
+                    sleep(2)
+
+            # Save exactly 10 paragraphs
+            for i in range(10):
+                clone_file = os.path.join(folder_path, f'clone_{i+1}.txt')
                 with open(clone_file, 'w', encoding='utf-8') as f:
-                    f.write('\n'.join(current_content).strip())
+                    f.write(paragraphs[i].strip())
 
-            sleep(3)
+            sleep(4)
             
         return rewritten_text
         
