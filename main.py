@@ -1,13 +1,15 @@
 from pathlib import Path
+import random
+from time import sleep
 from backend.fblogin import run_fb_scraper_posts
 from backend.constants import FOLDER_PATH_DATA_CRAWLER
 from backend.utils.index import get_game_fanpages, should_scrape_game
 import logging
 
+
 if __name__ == "__main__":
     # Set up logging
-    logging.basicConfig(level=logging.INFO, 
-                       format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     logger = logging.getLogger(__name__)
 
     try:
@@ -34,7 +36,10 @@ if __name__ == "__main__":
             logger.info(f"Scraping posts for {game_url}")
             run_fb_scraper_posts(game_url)
             
-            break  # Only process first game URL
+            # Add random delay between game
+            sleep_time = random.randint(200, 400)
+            logger.info(f":::::: Sleeping for {sleep_time} seconds before next game...")
+            sleep(sleep_time)
 
     except Exception as e:
         logger.error(f"Error occurred: {str(e)}")
