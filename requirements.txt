@@ -7,3 +7,4 @@ python-dotenv
 flower
 fastapi
 uvicorn
+google-genai

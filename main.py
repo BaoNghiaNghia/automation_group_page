@@ -1,27 +1,7 @@
-import requests
-import os
 from pathlib import Path
 from backend.fblogin import run_fb_scraper_posts
-from backend.constants import SERVICE_URL, FOLDER_PATH_DATA_CRAWLER
-
-def get_game_fanpages():
-    """Fetch game fanpage URLs from service and extract game names."""
-    try:
-        response = requests.get(f'{SERVICE_URL}/game_fanpages')
-        response.raise_for_status()
-        return [game['fanpage'].split('/')[-1] for game in response.json()]
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching game fanpages: {e}")
-        return []
-
-def should_scrape_game(game_url, base_path):
-    """Check if game should be scraped based on existing folders."""
-    try:
-        game_folders = [f for f in os.listdir(base_path) if f.startswith(f"{game_url}_")]
-        return len(game_folders) == 0
-    except OSError as e:
-        print(f"Error checking game folders: {e}")
-        return False
+from backend.constants import FOLDER_PATH_DATA_CRAWLER
+from backend.utils.index import get_game_fanpages, should_scrape_game
 
 if __name__ == "__main__":
     game_urls = get_game_fanpages()

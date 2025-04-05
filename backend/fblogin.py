@@ -323,8 +323,8 @@ def run_fb_scraper_posts(game_name):
     try:
         # Choose a random account and login
         username, password = random.choice(FB_ACCOUNT_LIST)
-        browser = login_facebook(username, password)
-        # browser = login_facebook_ubuntu(username, password)
+        # browser = login_facebook(username, password)
+        browser = login_facebook_ubuntu(username, password)
 
         sleep(2)
 

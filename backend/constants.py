@@ -11,3 +11,5 @@ DOMAIN_CAPTCHA = "https://captcha69.com"
 FOLDER_PATH_DATA_CRAWLER = "/data_crawler/"
 FOLDER_PATH_POST_ID_CRAWLER = "/data_posts_id/"
 LIMIT_POST_PER_DAY = 20
+
+GEMINI_API_KEY = "AIzaSyDyTN7gBNNvEOghZAUOfyRIu3LGzHpG83Y"
