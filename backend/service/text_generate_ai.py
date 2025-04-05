@@ -23,6 +23,12 @@ def rewrite_paragraph():
             if not os.path.isdir(folder_path) or not os.path.exists(content_file):
                 continue
 
+            # Check if folder already has 10 clone files
+            clone_files = [f for f in os.listdir(folder_path) if f.startswith('clone_') and f.endswith('.txt')]
+            if len(clone_files) >= 10:
+                print(f"Skipping {folder} - already has 10 clone files")
+                continue
+
             # Read original content
             with open(content_file, 'r', encoding='utf-8') as f:
                 content = f.read()
@@ -44,7 +50,10 @@ def rewrite_paragraph():
                 contents=prompt
             )
             rewritten_text = response.text.strip()
-
+            # Print the rewritten text for debugging
+            print("Generated text:")
+            print(rewritten_text)
+            print("-" * 80)
             # Split text into paragraphs
             paragraphs = []
             current_para = []
