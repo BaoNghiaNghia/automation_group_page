@@ -4,6 +4,10 @@ from backend.constants import FOLDER_PATH_DATA_CRAWLER
 from backend.utils.index import get_game_fanpages, should_scrape_game
 
 if __name__ == "__main__":
+    # Create data_crawler directory if it doesn't exist
+    data_crawler_path = Path.cwd() / FOLDER_PATH_DATA_CRAWLER.strip("/\\")
+    data_crawler_path.mkdir(parents=True, exist_ok=True)
+
     game_urls = get_game_fanpages()
     if not game_urls:
         print("No game URLs found. Exiting.")
