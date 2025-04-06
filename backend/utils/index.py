@@ -7,7 +7,8 @@ def get_game_fanpages():
     try:
         response = requests.get(f'{SERVICE_URL}/game_fanpages')
         response.raise_for_status()
-        return [game['fanpage'].split('/')[-1] for game in response.json()]
+        data = response.json()
+        return [game['fanpage'].split('/')[-1] for game in data['items']]
     except requests.exceptions.RequestException as e:
         print(f"Error fetching game fanpages: {e}")
         return []
