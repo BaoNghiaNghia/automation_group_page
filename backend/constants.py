@@ -2,6 +2,7 @@ API_KEY_CAPTCHA = 'point_3d0bd505d511c336b6279f4815057b9a'
 FB_DEFAULT_URL = "https://www.facebook.com"
 FB_ACCOUNT_LIST = [
     ("0399988593", "p6+p7N&r%M$#B5b"),
+    # ("nghancte2@gmail.com", "Haha123@"),
     # Add more accounts if needed
 ]
 GAME_NAME_URL = "OnceHumanOfficial"
@@ -14,3 +15,6 @@ LIMIT_POST_PER_DAY = 20
 
 GEMINI_API_KEY = "AIzaSyCZCzQFbJIoKf4TPaazA7VvmlfiLuQvhSM"
 GEMINI_MODEL = "gemini-2.0-flash"
+
+DEEPSEEK_API_KEY = "sk-e71d03c8c9a44344b3c39ef6db11526c"
+DEEPSEEK_MODEL = "deepseek-chat"

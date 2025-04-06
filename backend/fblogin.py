@@ -297,7 +297,6 @@ def handle_captcha_if_present(browser, username, password):
     return False  # No CAPTCHA or an error occurred
 
 
-
 def run_fb_scraper_single_fanpage_posts(game_name):
     try:
         # Choose a random account and login

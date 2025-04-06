@@ -8,3 +8,4 @@ flower
 fastapi
 uvicorn
 google-genai
+openai

@@ -1,15 +1,15 @@
 import os
 import random
-from google import genai
 from time import sleep
-from backend.constants import GEMINI_API_KEY, FOLDER_PATH_DATA_CRAWLER, GEMINI_MODEL
+from openai import OpenAI
+from backend.constants import DEEPSEEK_API_KEY, FOLDER_PATH_DATA_CRAWLER, DEEPSEEK_MODEL
 
-# Initialize the Gemini client
-client = genai.Client(api_key=GEMINI_API_KEY)
+# Initialize the DeepSeek client
+client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
 
 NUMBER_OF_CLONE_PARAGRAPH = 10
 
-def rewrite_paragraph():
+def rewrite_paragraph_deepseek():
     try:
         # Check if data crawler folder exists
         data_crawler_path = os.path.join(os.getcwd(), FOLDER_PATH_DATA_CRAWLER.strip("/\\"))
@@ -32,30 +32,37 @@ def rewrite_paragraph():
                 print(f"Skipping {folder} - already has {NUMBER_OF_CLONE_PARAGRAPH} clone files")
                 continue
 
-            # Read original content``
+            # Read original content
             with open(content_file, 'r', encoding='utf-8') as f:
                 content = f.read().strip()
 
-            # Generate rewritten paragraphs using Gemini API
-            prompt = f"""Viết lại đoạn văn sau thành {NUMBER_OF_CLONE_PARAGRAPH} đoạn theo nhiều cách khác nhau, vẫn giữ nguyên nội dung chủ đề và không chia nhỏ. Hãy đánh số từ 1-{NUMBER_OF_CLONE_PARAGRAPH} cho mỗi đoạn. Ví dụ:
-                1. [đoạn văn 1]
-                2. [đoạn văn 2]
-                3. [đoạn văn 3]
+            # Generate rewritten paragraphs using DeepSeek API
+            prompt = f"""Viết lại nội dung sau thành đúng {NUMBER_OF_CLONE_PARAGRAPH} phiên bản theo nhiều cách khác nhau, vẫn giữ nguyên nội dung chủ đề. Hãy đánh số từ 1-{NUMBER_OF_CLONE_PARAGRAPH} trước mỗi phiên bản. Ví dụ:
+                1. [phiên bản 1]
+                2. [phiên bản 2]
+                3. [phiên bản 3]
                 ...
-                {NUMBER_OF_CLONE_PARAGRAPH}. [đoạn văn {NUMBER_OF_CLONE_PARAGRAPH}]
+                {NUMBER_OF_CLONE_PARAGRAPH}. [phiên bản {NUMBER_OF_CLONE_PARAGRAPH}]
 
                 Đoạn văn gốc:
+                ```
                 {content}
+                ```
                 """
 
             paragraphs = []
             while len(paragraphs) < NUMBER_OF_CLONE_PARAGRAPH:
-                # Generate content
-                response = client.models.generate_content(
-                    model=GEMINI_MODEL,
-                    contents=prompt
+                # Generate content using DeepSeek
+                response = client.chat.completions.create(
+                    model=DEEPSEEK_MODEL,
+                    messages=[
+                        # {"role": "system", "content": "You are a helpful assistant"},
+                        {"role": "user", "content": prompt}
+                    ]
                 )
-                text = response.text.strip()
+                text = response.choices[0].message.content.strip()
+                
+                print(text)
 
                 # Extract paragraphs
                 for line in text.split('\n'):
@@ -81,5 +88,5 @@ def rewrite_paragraph():
             sleep(random.randint(5, 10))
 
     except Exception as e:
-        print(f"Error in rewrite_paragraph: {str(e)}")
+        print(f"Error in rewrite_paragraph_deepseek: {str(e)}")
         return False
