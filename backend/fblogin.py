@@ -14,68 +14,47 @@ from selenium.webdriver.chrome.options import Options
 from backend.utils.captcha_solver import get_captcha_image, solve_captcha, get_captcha_result
 from backend.constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, FOLDER_PATH_DATA_CRAWLER, LIMIT_POST_PER_DAY, FOLDER_PATH_POST_ID_CRAWLER
 
-
-def login_facebook(username, password):
-    """Login to Facebook using Selenium."""
-    # Setup Chrome options to automatically allow notifications
+def init_browser(is_ubuntu=False):
+    """Initialize Chrome browser with required options."""
     chrome_options = Options()
-
-    # Automatically allow notifications for the website
+    
+    # Common options
     prefs = {
         "profile.default_content_setting_values.notifications": 1
     }
     chrome_options.add_experimental_option("prefs", prefs)
 
-    service = Service(executable_path="./chromedriver.exe")
-    browser = webdriver.Chrome(service=service, options=chrome_options)
-    browser.get(FB_DEFAULT_URL)
-    WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "email")))
+    if is_ubuntu:
+        # Ubuntu-specific options
+        chrome_options.binary_location = "/usr/bin/chromium"
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--disable-gpu")
+        service = Service("/usr/bin/chromedriver")
+    else:
+        # Windows-specific options
+        service = Service(executable_path="./chromedriver.exe")
 
-    browser.find_element(By.ID, "email").send_keys(username)
-    browser.find_element(By.ID, "pass").send_keys(password)
-    browser.find_element(By.ID, "pass").send_keys(Keys.ENTER)
-    
-    # Wait for Facebook to respond
-    WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.TAG_NAME, "img")))
+    browser = webdriver.Chrome(service=service, options=chrome_options)
     return browser
 
-
-def login_facebook_ubuntu(username, password):
-    """Login to Facebook using Selenium with Chromium in Docker."""
-    chrome_options = Options()
-    
-    # Set the path to the Chromium binary (for Docker container)
-    chrome_options.binary_location = "/usr/bin/chromium"
-
-    # Automatically allow notifications for the website
-    prefs = {
-        "profile.default_content_setting_values.notifications": 1
-    }
-    chrome_options.add_experimental_option("prefs", prefs)
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-
-    # Set up the chromedriver service (installed in Docker)
-    service = Service("/usr/bin/chromedriver")  # Use chromedriver installed in the Docker container
-    
-    # Initialize the browser
-    browser = webdriver.Chrome(service=service, options=chrome_options)
-
-    # Navigate to Facebook
+def login_facebook(username, password, is_ubuntu=False):
+    """Login to Facebook using Selenium."""
+    browser = init_browser(is_ubuntu)
     browser.get(FB_DEFAULT_URL)
-
-    # Wait for login elements to load
+    
+    # Wait for login elements and enter credentials
     WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "email")))
-
-    # Enter credentials and log in
     browser.find_element(By.ID, "email").send_keys(username)
     browser.find_element(By.ID, "pass").send_keys(password)
     browser.find_element(By.ID, "pass").send_keys(Keys.ENTER)
     
     # Wait for Facebook to respond after login
     WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.TAG_NAME, "img")))
-    
     return browser
+
+def login_facebook_ubuntu(username, password):
+    """Convenience function for Ubuntu login."""
+    return login_facebook(username, password, is_ubuntu=True)
 
 
 def extract_post_id_from_url(url):
@@ -399,3 +378,92 @@ def run_fb_scraper_single_fanpage_posts(game_name):
             print("Browser closed successfully.")
         except Exception as e:
             print(f"Error closing browser: {e}")
+
+def run_fb_scraper_multiple_fanpages(game_urls):
+    """
+    Run Facebook scraper for multiple fanpages using a single browser session
+    """
+    try:
+        # Choose a random account and login
+        username, password = random.choice(FB_ACCOUNT_LIST)
+        browser = login_facebook(username, password)
+        
+        # Process each game URL with the same browser session
+        for game_url in game_urls:
+            try:
+                print(f"\n----- Starting to scrape: {game_url} -----")
+                
+                # Extract game name from URL
+                game_name = game_url.rstrip("/").split("/")[-1]
+                
+                # Navigate to game page
+                browser.get(f"{FB_DEFAULT_URL}/{game_url}")
+                sleep(5)  # Wait for page load
+                
+                # Handle potential CAPTCHA
+                if handle_captcha_if_present(browser, username, password):
+                    all_posts = set()
+                    last_height = browser.execute_script("return document.body.scrollHeight")
+                    
+                    # Scroll and collect posts
+                    for attempt in range(50):
+                        print(f"\n[Scrolling Attempt {attempt + 1}]")
+                        current_posts = get_posts_by_attribute(browser, game_name)
+                        all_posts.update(current_posts)
+                        
+                        if len(all_posts) >= LIMIT_POST_PER_DAY:
+                            print("Limit of posts reached.")
+                            break
+                            
+                        # Check if no posts found after 3 attempts
+                        if attempt >= 3 and len(all_posts) == 0:
+                            print("No posts found after 3 attempts, exiting.")
+                            break
+                        
+                        # Scroll down to load more posts
+                        scroll_down(browser)
+                        new_height = browser.execute_script("return document.body.scrollHeight")
+                        
+                        if new_height == last_height:
+                            print("Reached the end of the page, stopping scroll.")
+                            break
+                            
+                        last_height = new_height
+                        
+                        if attempt == 49:
+                            print("Too many scroll attempts, exiting.")
+                    
+                    # Save post IDs
+                    post_id_file_path = os.path.join(os.getcwd(), FOLDER_PATH_POST_ID_CRAWLER.strip("/\\"))
+                    if not os.path.exists(post_id_file_path):
+                        os.makedirs(post_id_file_path)
+                        
+                    post_id_file_name = f"facebook_{game_name}_post_ids.txt"
+                    post_id_full_path = os.path.join(post_id_file_path, post_id_file_name)
+                    
+                    with open(post_id_full_path, "w", encoding="utf-8") as f:
+                        f.write("\n".join(sorted(all_posts)))
+                        
+                    # Crawl post data
+                    crawlPostData(browser, readData(post_id_full_path), game_name)
+                    
+                    print(f"----- Done {len(all_posts)} posts: Game {game_name} -----")
+                    
+                else:
+                    print(f"CAPTCHA handling failed for {game_url}")
+                    
+            except Exception as e:
+                print(f"Error processing {game_url}: {e}")
+                continue
+                
+    except Exception as e:
+        print(f"Error in main scraper: {e}")
+        
+    finally:
+        # Close browser after processing all games
+        try:
+            browser.quit()
+            print("Browser closed successfully.")
+        except Exception as e:
+            print(f"Error closing browser: {e}")
+
