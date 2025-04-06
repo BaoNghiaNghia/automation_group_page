@@ -76,9 +76,9 @@ def rewrite_paragraph():
 
             # Show progress
             progress = (idx / total_folders) * 100
-            print(f"Processing folder: {folder} ({progress:.1f}% complete)")
+            print(f"AI content folder: {folder} ({progress:.1f}% complete)")
 
-            sleep(random.randint(4, 8))
+            sleep(random.randint(5, 10))
 
     except Exception as e:
         print(f"Error in rewrite_paragraph: {str(e)}")
