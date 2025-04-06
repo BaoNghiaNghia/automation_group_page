@@ -37,7 +37,7 @@ if __name__ == "__main__":
             run_fb_scraper_single_fanpage_posts(game_url)
             
             # Add random delay between game
-            sleep_time = random.randint(200, 400)
+            sleep_time = random.randint(120, 400)
             logger.info(f":::::: Sleeping for {sleep_time} seconds before next game...")
             sleep(sleep_time)
 
