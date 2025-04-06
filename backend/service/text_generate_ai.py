@@ -54,7 +54,7 @@ def rewrite_paragraph():
                     contents=prompt
                 )
                 text = response.text.strip()
-                
+
                 # Extract paragraphs
                 for line in text.split('\n'):
                     line = line.strip()
@@ -73,7 +73,7 @@ def rewrite_paragraph():
                     f.write(para)
 
             sleep(4)
-        
+
     except Exception as e:
         print(f"Error in rewrite_paragraph: {str(e)}")
         return False

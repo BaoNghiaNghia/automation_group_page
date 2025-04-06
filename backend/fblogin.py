@@ -414,7 +414,7 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                         if len(all_posts) >= LIMIT_POST_PER_DAY:
                             print("Limit of posts reached.")
                             break
-                            
+
                         # Check if no posts found after 3 attempts
                         if attempt >= 3 and len(all_posts) == 0:
                             print("No posts found after 3 attempts, exiting.")
