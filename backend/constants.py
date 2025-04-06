@@ -13,3 +13,4 @@ FOLDER_PATH_POST_ID_CRAWLER = "/data_posts_id/"
 LIMIT_POST_PER_DAY = 20
 
 GEMINI_API_KEY = "AIzaSyCZCzQFbJIoKf4TPaazA7VvmlfiLuQvhSM"
+GEMINI_MODEL = "gemini-2.0-flash"

@@ -1,7 +1,7 @@
 import os
 from google import genai
 from time import sleep
-from backend.constants import GEMINI_API_KEY, FOLDER_PATH_DATA_CRAWLER
+from backend.constants import GEMINI_API_KEY, FOLDER_PATH_DATA_CRAWLER, GEMINI_MODEL
 
 # Initialize the Gemini client
 client = genai.Client(api_key=GEMINI_API_KEY)
@@ -50,7 +50,7 @@ def rewrite_paragraph():
             while len(paragraphs) < NUMBER_OF_CLONE_PARAGRAPH:
                 # Generate content
                 response = client.models.generate_content(
-                    model="gemini-2.0-flash",
+                    model=GEMINI_MODEL,
                     contents=prompt
                 )
                 text = response.text.strip()
