@@ -319,7 +319,7 @@ def handle_captcha_if_present(browser, username, password):
 
 
 
-def run_fb_scraper_posts(game_name):
+def run_fb_scraper_single_fanpage_posts(game_name):
     try:
         # Choose a random account and login
         username, password = random.choice(FB_ACCOUNT_LIST)

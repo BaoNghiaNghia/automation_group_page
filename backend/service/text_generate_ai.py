@@ -58,24 +58,47 @@ def rewrite_paragraph():
             paragraphs = []
             current_para = []
             
-            for line in rewritten_text.split('\n'):
+            # Find start of numbered list
+            lines = rewritten_text.split('\n')
+            start_idx = 0
+            for i, line in enumerate(lines):
+                if line.strip().startswith('1.'):
+                    start_idx = i
+                    break
+                    
+            # Process numbered paragraphs
+            current_number = 1
+            current_para = []
+            
+            for line in lines[start_idx:]:
                 line = line.strip()
                 if not line:
                     continue
-                    
+                
+                # Check if line starts with a number followed by period
                 if line[0].isdigit() and '. ' in line:
-                    if current_para:
-                        paragraphs.append('\n'.join(current_para))
-                    current_para = [line[line.find('.')+2:].strip()]  # Add 2 to skip both dot and space
+                    number = int(line[0:line.find('.')])
+                    
+                    # If this is the next number in sequence, save previous paragraph
+                    if number == current_number + 1:
+                        if current_para:
+                            paragraphs.append('\n'.join(current_para))
+                        current_para = []
+                        current_number = number
+                    
+                    # Start collecting text after the number
+                    current_para.append(line[line.find('.')+2:].strip())
                 else:
                     current_para.append(line)
-                    
+            
+            # Add the final paragraph
             if current_para:
                 paragraphs.append('\n'.join(current_para))
 
             # Ensure we have exactly 10 paragraphs
             if len(paragraphs) < 10:
                 print(f"Warning: Only generated {len(paragraphs)} paragraphs for {folder}")
+                
                 # Generate remaining paragraphs by repeating the prompt
                 while len(paragraphs) < 10:
                     response = client.models.generate_content(
@@ -83,26 +106,19 @@ def rewrite_paragraph():
                         contents=prompt
                     )
                     new_text = response.text.strip()
-                    new_paras = []
-                    current_para = []
                     
+                    # Extract numbered paragraphs
+                    new_paras = []
                     for line in new_text.split('\n'):
                         line = line.strip()
-                        if not line:
-                            continue
-                            
-                        if line[0].isdigit() and '. ' in line:
-                            if current_para:
-                                new_paras.append('\n'.join(current_para))
-                            current_para = [line[line.find('.')+2:].strip()]
-                        else:
-                            current_para.append(line)
-                            
-                    if current_para:
-                        new_paras.append('\n'.join(current_para))
-                        
+                        if line and line[0].isdigit() and '. ' in line:
+                            para_text = line[line.find('.')+2:].strip()
+                            if para_text:
+                                new_paras.append(para_text)
+                    
+                    # Add new paragraphs up to 10 total
                     paragraphs.extend(new_paras[:10-len(paragraphs)])
-                    sleep(2)
+                    sleep(1)
 
             # Save exactly 10 paragraphs
             for i in range(10):

@@ -2,7 +2,7 @@ import os
 import shutil
 from pathlib import Path
 from celery import shared_task
-from backend.fblogin import run_fb_scraper_posts
+from backend.fblogin import run_fb_scraper_single_fanpage_posts
 from backend.constants import FOLDER_PATH_DATA_CRAWLER, FOLDER_PATH_POST_ID_CRAWLER
 from backend.utils.index import get_game_fanpages, should_scrape_game
 
@@ -32,7 +32,7 @@ def run_main_task_minutes():
                 continue
 
             print(f"Scraping posts for {game_url}")
-            run_fb_scraper_posts(game_url)
+            run_fb_scraper_single_fanpage_posts(game_url)
             print(f"Scraping posts for {game_url} DONE")
             break
 

@@ -1,7 +1,7 @@
 from pathlib import Path
 import random
 from time import sleep
-from backend.fblogin import run_fb_scraper_posts
+from backend.fblogin import run_fb_scraper_single_fanpage_posts
 from backend.constants import FOLDER_PATH_DATA_CRAWLER
 from backend.utils.index import get_game_fanpages, should_scrape_game
 import logging
@@ -34,7 +34,7 @@ if __name__ == "__main__":
                 continue
                 
             logger.info(f"Scraping posts for {game_url}")
-            run_fb_scraper_posts(game_url)
+            run_fb_scraper_single_fanpage_posts(game_url)
             
             # Add random delay between game
             sleep_time = random.randint(200, 400)
