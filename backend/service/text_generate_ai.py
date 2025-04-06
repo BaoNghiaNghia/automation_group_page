@@ -1,4 +1,5 @@
 import os
+import random
 from google import genai
 from time import sleep
 from backend.constants import GEMINI_API_KEY, FOLDER_PATH_DATA_CRAWLER, GEMINI_MODEL
@@ -72,7 +73,7 @@ def rewrite_paragraph():
                 with open(clone_file, 'w', encoding='utf-8') as f:
                     f.write(para)
 
-            sleep(4)
+            sleep(random.randint(4, 8))
 
     except Exception as e:
         print(f"Error in rewrite_paragraph: {str(e)}")
