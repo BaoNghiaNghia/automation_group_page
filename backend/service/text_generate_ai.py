@@ -18,7 +18,8 @@ def rewrite_paragraph():
             raise Exception("Data crawler folder does not exist")
         
         # Process each folder in data crawler directory
-        for folder in os.listdir(data_crawler_path):
+        total_folders = len([f for f in os.listdir(data_crawler_path) if os.path.isdir(os.path.join(data_crawler_path, f))])
+        for idx, folder in enumerate(os.listdir(data_crawler_path), 1):
             folder_path = os.path.join(data_crawler_path, folder)
             content_file = os.path.join(folder_path, "content.txt")
             
@@ -72,6 +73,10 @@ def rewrite_paragraph():
                 clone_file = os.path.join(folder_path, f'clone_{i}.txt')
                 with open(clone_file, 'w', encoding='utf-8') as f:
                     f.write(para)
+
+            # Show progress
+            progress = (idx / total_folders) * 100
+            print(f"Processing folder: {folder} ({progress:.1f}% complete)")
 
             sleep(random.randint(4, 8))
 
