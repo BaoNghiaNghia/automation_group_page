@@ -8,16 +8,6 @@ def image_to_base64(image_url):
     response = requests.get(image_url)
     return base64.b64encode(response.content).decode('utf-8')
 
-
-def get_captcha_image(browser):
-    """Retrieve CAPTCHA image if present on Facebook login page."""
-    img_tags = browser.find_elements(By.TAG_NAME, "img")
-    for img in img_tags:
-        src = img.get_attribute("src")
-        if src and "captcha" in src:
-            return img
-    return None
-
 def solve_captcha(image_url):
     """Solve CAPTCHA by sending the base64 image to the CAPTCHA API."""
     base64_image = image_to_base64(image_url)

@@ -11,8 +11,13 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-from backend.utils.captcha_solver import get_captcha_image, solve_captcha, get_captcha_result
+from backend.utils.captcha_solver import solve_captcha, get_captcha_result
 from backend.constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, FOLDER_PATH_DATA_CRAWLER, LIMIT_POST_PER_DAY, FOLDER_PATH_POST_ID_CRAWLER
+import logging
+
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 def init_browser(is_ubuntu=False):
     """Initialize Chrome browser with required options."""
@@ -243,7 +248,15 @@ def writeFileTxtPost(fileName, content, idPost, pathImg="/img/", game_name=""):
 def readData(fileName):
     with open(fileName, 'r', encoding="utf-8") as f:
         return [line.strip() for line in f.readlines()]
-
+    
+def get_captcha_image(browser):
+    """Retrieve CAPTCHA image if present on Facebook login page."""
+    img_tags = browser.find_elements(By.TAG_NAME, "img")
+    for img in img_tags:
+        src = img.get_attribute("src")
+        if src and "captcha" in src:
+            return img
+    return None
 
 def handle_captcha_if_present(browser, username, password):
     """
@@ -261,7 +274,8 @@ def handle_captcha_if_present(browser, username, password):
     """
     try:
         # Look for CAPTCHA image on the page
-        if captcha_img := get_captcha_image(browser):
+        captcha_img = get_captcha_image(browser)
+        if captcha_img:
             captcha_img_url = captcha_img.get_attribute("src")
             print(f"Found CAPTCHA image: {captcha_img_url}")
 
@@ -290,6 +304,8 @@ def handle_captcha_if_present(browser, username, password):
                 print("Re-login not required or already logged in.")
             
             return True  # CAPTCHA was handled successfully
+        else:
+            print("No CAPTCHA image found, continuing process.")
 
     except Exception as e:
         print(f"Error while handling CAPTCHA: {e}")
@@ -390,7 +406,7 @@ def run_fb_scraper_multiple_fanpages(game_urls):
         # Handle potential CAPTCHA after login
         if not handle_captcha_if_present(browser, username, password):
             print("CAPTCHA handling failed, exiting.")
-            return
+            return False
         
         # Process each game URL with the same browser session
         for game_url in game_urls:
@@ -451,12 +467,20 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                 
                 print(f"----- Done {len(all_posts)} posts: Game {game_name} -----")
                 
+                # Add random delay after processing all games
+                sleep_time = random.randint(120, 400)
+                logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
+                sleep(sleep_time)
+                
             except Exception as e:
                 print(f"Error processing {game_url}: {e}")
-                continue
+                return False  # Return false if an error occurs during processing
                 
+        return True  # Return true if all game URLs are processed successfully
+
     except Exception as e:
         print(f"Error in main scraper: {e}")
+        return False
         
     finally:
         # Close browser after processing all games

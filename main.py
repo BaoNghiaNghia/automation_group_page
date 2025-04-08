@@ -46,11 +46,6 @@ if __name__ == "__main__":
         logger.info("Starting to scrape multiple fanpages...")
         run_fb_scraper_multiple_fanpages(game_urls)
 
-        # Add random delay after processing all games
-        sleep_time = random.randint(120, 400)
-        logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
-        sleep(sleep_time)
-
     except Exception as e:
         logger.error(f"Error occurred: {str(e)}")
         exit(1)
