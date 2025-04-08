@@ -1,4 +1,5 @@
 import os
+import re
 import random
 from time import sleep
 from openai import OpenAI
@@ -37,53 +38,44 @@ def rewrite_paragraph_deepseek():
                 content = f.read().strip()
 
             # Generate rewritten paragraphs using DeepSeek API
-            paragraphs_count = 0
-            while paragraphs_count < NUMBER_OF_CLONE_PARAGRAPH:
-                # Generate prompt for 2 versions at a time
-                current_start = paragraphs_count + 1
-                current_end = min(current_start + 1, NUMBER_OF_CLONE_PARAGRAPH)
-                
-                prompt = f"""Viết lại nội dung sau thành {current_end - current_start + 1} phiên bản theo nhiều cách khác nhau, giới hạn lại 10 dòng. Hãy đánh số từ {current_start}-{current_end} trước mỗi phiên bản. Ví dụ:
-                    {current_start}. [phiên bản {current_start}]
-                    {current_end}. [phiên bản {current_end}]
+            prompt = f"""Viết lại nội dung sau thành {NUMBER_OF_CLONE_PARAGRAPH} phiên bản Tiếng Việt theo nhiều cách khác nhau, giới hạn lại 10 dòng. Hãy đánh số từ 1-{NUMBER_OF_CLONE_PARAGRAPH} trước mỗi phiên bản. Ví dụ:
+                1. [phiên bản 1]
+                ...
+                {NUMBER_OF_CLONE_PARAGRAPH}. [phiên bản {NUMBER_OF_CLONE_PARAGRAPH}]
 
-                    Đoạn văn gốc:
-                    ```
-                    {content}
-                    ```
-                """
+                Đoạn văn gốc:
+                ```
+                {content}
+                ```
+            """
 
-                # Generate content using DeepSeek
-                response = client.chat.completions.create(
-                    model=DEEPSEEK_MODEL,
-                    messages=[
-                        {"role": "system", "content": prompt}
-                    ]
-                )
-                text = response.choices[0].message.content.strip()
-                
-                print(text)
+            # Generate content using DeepSeek
+            response = client.chat.completions.create(
+                model=DEEPSEEK_MODEL,
+                messages=[
+                    {"role": "system", "content": prompt}
+                ]
+            )
+            textResponse = response.choices[0].message.content.strip()
+            
+            # Regular expression to match the text between the numbers and remove the numbers
+            pattern = r'(\d+\..*?)(?=\n\d+\.|\Z)'
 
-                # Extract and save paragraphs
-                for line in text.split('\n'):
-                    line = line.strip()
-                    if line and line[0].isdigit() and '. ' in line:
-                        para_text = line[line.find('.')+2:].strip()
-                        if para_text and paragraphs_count < NUMBER_OF_CLONE_PARAGRAPH:
-                            paragraphs_count += 1
-                            # Save paragraph immediately
-                            clone_file = os.path.join(folder_path, f'clone_{paragraphs_count}.txt')
-                            with open(clone_file, 'w', encoding='utf-8') as f:
-                                f.write(para_text)
+            # Find all matches and remove the number at the start of each match
+            matches = re.findall(pattern, textResponse, re.DOTALL)
 
-                if paragraphs_count < NUMBER_OF_CLONE_PARAGRAPH:
-                    sleep(1)
+            # Output the groups
+            for idx, match in enumerate(matches, 1):
+                cleaned_text = re.sub(r'^\d+\.\s*', '', match.strip())
+                clone_file = os.path.join(folder_path, f'clone_{idx}.txt')
+                with open(clone_file, 'w', encoding='utf-8') as f:
+                    f.write(cleaned_text)
 
             # Show progress
             progress = (idx / total_folders) * 100
             print(f"AI content folder: {folder} ({progress:.1f}% complete)")
 
-            sleep(random.randint(5, 10))
+            sleep(random.randint(8, 15))
 
     except Exception as e:
         print(f"Error in rewrite_paragraph_deepseek: {str(e)}")
