@@ -123,7 +123,7 @@ def get_posts_by_attribute(browser, game_name):
 
 def scroll_down(browser):
     browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    sleep(5)  # Wait for content to load
+    sleep(random.randint(5, 9))  # Wait for content to load
 
 
 def clonePostContent(driver, postId):
@@ -276,7 +276,7 @@ def handle_captcha_if_present(browser, username, password):
 
             # Click the "Continue" button to proceed
             submit_captcha(browser)
-            sleep(5)
+            sleep(random.randint(5, 9))
 
             # Try to re-login if necessary
             try:
@@ -304,7 +304,7 @@ def run_fb_scraper_single_fanpage_posts(game_name):
         browser = login_facebook(username, password)
         # browser = login_facebook_ubuntu(username, password)
 
-        sleep(2)
+        sleep(random.randint(2, 5))
 
         # Handle CAPTCHA if present
         if handle_captcha_if_present(browser, username, password):
@@ -327,7 +327,7 @@ def run_fb_scraper_single_fanpage_posts(game_name):
                 # Check if no posts found after 3 attempts
                 if attempt >= 3 and len(all_posts) == 0:
                     print("No posts found after 3 attempts, exiting.")
-                    sleep(10)
+                    sleep(random.randint(10, 15))
                     browser.quit()
                     return
 
@@ -402,7 +402,7 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                 
                 # Navigate to game page
                 browser.get(f"{FB_DEFAULT_URL}/{game_url}")
-                sleep(5)  # Wait for page load
+                sleep(random.randint(5, 9))  # Wait for page load
                 
                 all_posts = set()
                 last_height = browser.execute_script("return document.body.scrollHeight")
