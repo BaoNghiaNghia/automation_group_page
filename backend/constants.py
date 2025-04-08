@@ -1,8 +1,8 @@
 API_KEY_CAPTCHA = 'point_3d0bd505d511c336b6279f4815057b9a'
 FB_DEFAULT_URL = "https://www.facebook.com"
 FB_ACCOUNT_LIST = [
-    # ("0399988593", "p6+p7N&r%M$#B5b"),
-    ("Lemaingoc1975@gmail.com", "Vutuan1985@"),
+    ("0399988593", "p6+p7N&r%M$#B5b"),
+    # ("Lemaingoc1975@gmail.com", "Vutuan1985@"),
 ]
 GAME_NAME_URL = "OnceHumanOfficial"
 SERVICE_URL = "https://boostgamemobile.com/service"

@@ -217,7 +217,7 @@ def crawlPostData(driver, postIds, game_name):
                     stt += 1
                     download_file(img, str(stt), postId, FOLDER_PATH_DATA_CRAWLER, game_name)
                 
-            sleep(5)
+            sleep(random.randint(8, 12))
         except Exception as e:
             print(f"Error in crawlPostData: {e}")
 
@@ -386,6 +386,11 @@ def run_fb_scraper_multiple_fanpages(game_urls):
         # Choose a random account and login
         username, password = random.choice(FB_ACCOUNT_LIST)
         browser = login_facebook(username, password)
+
+        # Handle potential CAPTCHA after login
+        if not handle_captcha_if_present(browser, username, password):
+            print("CAPTCHA handling failed, exiting.")
+            return
         
         # Process each game URL with the same browser session
         for game_url in game_urls:
@@ -399,58 +404,53 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                 browser.get(f"{FB_DEFAULT_URL}/{game_url}")
                 sleep(5)  # Wait for page load
                 
-                # Handle potential CAPTCHA
-                if handle_captcha_if_present(browser, username, password):
-                    all_posts = set()
-                    last_height = browser.execute_script("return document.body.scrollHeight")
+                all_posts = set()
+                last_height = browser.execute_script("return document.body.scrollHeight")
+                
+                # Scroll and collect posts
+                for attempt in range(50):
+                    print(f"\n[Scrolling Attempt {attempt + 1}]")
+                    current_posts = get_posts_by_attribute(browser, game_name)
+                    all_posts.update(current_posts)
                     
-                    # Scroll and collect posts
-                    for attempt in range(50):
-                        print(f"\n[Scrolling Attempt {attempt + 1}]")
-                        current_posts = get_posts_by_attribute(browser, game_name)
-                        all_posts.update(current_posts)
-                        
-                        if len(all_posts) >= LIMIT_POST_PER_DAY:
-                            print("Limit of posts reached.")
-                            break
+                    if len(all_posts) >= LIMIT_POST_PER_DAY:
+                        print("Limit of posts reached.")
+                        break
 
-                        # Check if no posts found after 3 attempts
-                        if attempt >= 3 and len(all_posts) == 0:
-                            print("No posts found after 3 attempts, exiting.")
-                            break
-                        
-                        # Scroll down to load more posts
-                        scroll_down(browser)
-                        new_height = browser.execute_script("return document.body.scrollHeight")
-                        
-                        if new_height == last_height:
-                            print("Reached the end of the page, stopping scroll.")
-                            break
-                            
-                        last_height = new_height
-                        
-                        if attempt == 49:
-                            print("Too many scroll attempts, exiting.")
+                    # Check if no posts found after 3 attempts
+                    if attempt >= 3 and len(all_posts) == 0:
+                        print("No posts found after 3 attempts, exiting.")
+                        break
                     
-                    # Save post IDs
-                    post_id_file_path = os.path.join(os.getcwd(), FOLDER_PATH_POST_ID_CRAWLER.strip("/\\"))
-                    if not os.path.exists(post_id_file_path):
-                        os.makedirs(post_id_file_path)
+                    # Scroll down to load more posts
+                    scroll_down(browser)
+                    new_height = browser.execute_script("return document.body.scrollHeight")
+                    
+                    if new_height == last_height:
+                        print("Reached the end of the page, stopping scroll.")
+                        break
                         
-                    post_id_file_name = f"facebook_{game_name}_post_ids.txt"
-                    post_id_full_path = os.path.join(post_id_file_path, post_id_file_name)
+                    last_height = new_height
                     
-                    with open(post_id_full_path, "w", encoding="utf-8") as f:
-                        f.write("\n".join(sorted(all_posts)))
-                        
-                    # Crawl post data
-                    crawlPostData(browser, readData(post_id_full_path), game_name)
+                    if attempt == 49:
+                        print("Too many scroll attempts, exiting.")
+                
+                # Save post IDs
+                post_id_file_path = os.path.join(os.getcwd(), FOLDER_PATH_POST_ID_CRAWLER.strip("/\\"))
+                if not os.path.exists(post_id_file_path):
+                    os.makedirs(post_id_file_path)
                     
-                    print(f"----- Done {len(all_posts)} posts: Game {game_name} -----")
+                post_id_file_name = f"facebook_{game_name}_post_ids.txt"
+                post_id_full_path = os.path.join(post_id_file_path, post_id_file_name)
+                
+                with open(post_id_full_path, "w", encoding="utf-8") as f:
+                    f.write("\n".join(sorted(all_posts)))
                     
-                else:
-                    print(f"CAPTCHA handling failed for {game_url}")
-                    
+                # Crawl post data
+                crawlPostData(browser, readData(post_id_full_path), game_name)
+                
+                print(f"----- Done {len(all_posts)} posts: Game {game_name} -----")
+                
             except Exception as e:
                 print(f"Error processing {game_url}: {e}")
                 continue
@@ -465,4 +465,3 @@ def run_fb_scraper_multiple_fanpages(game_urls):
             print("Browser closed successfully.")
         except Exception as e:
             print(f"Error closing browser: {e}")
-
