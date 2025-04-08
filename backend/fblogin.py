@@ -392,8 +392,6 @@ def handle_captcha_if_present(browser, username, password):
     except Exception as e:
         print(f"Error while handling CAPTCHA: {e}")
 
-    return False  # No CAPTCHA or an error occurred
-
 
 def run_fb_scraper_multiple_fanpages(game_urls):
     """
@@ -403,12 +401,13 @@ def run_fb_scraper_multiple_fanpages(game_urls):
         # Choose a random account and login
         username, password = random.choice(FB_ACCOUNT_LIST)
         browser = login_facebook(username, password)
-
-        # Handle potential CAPTCHA after login
-        if not handle_captcha_if_present(browser, username, password):
-            print("CAPTCHA handling failed, exiting.")
-            return False
         
+        current_url = browser.current_url
+        if current_url.startswith("https://www.facebook.com/two_step_verification/authentication"):
+            if not handle_captcha_if_present(browser, username, password):
+                print("CAPTCHA handling failed, exiting.")
+                return  # Exit if CAPTCHA handling fails
+
         # Process each game URL with the same browser session
         for game_url in game_urls:
             try:
@@ -475,13 +474,11 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                 
             except Exception as e:
                 print(f"Error processing {game_url}: {e}")
-                return False  # Return false if an error occurs during processing
-                
-        return True  # Return true if all game URLs are processed successfully
+                continue  # Proceed to next game if error occurs in current game
 
     except Exception as e:
         print(f"Error in main scraper: {e}")
-        return False
+        return  # Exit if an error occurs during the main scraper execution
         
     finally:
         # Close browser after processing all games
