@@ -43,6 +43,9 @@ def rewrite_paragraph_deepseek():
             # Read original content
             with open(content_file, 'r', encoding='utf-8') as f:
                 content = f.read().strip()
+                if not content:
+                    print(f"Warning: {content_file} is empty.")
+                    continue
 
             # Generate rewritten paragraphs using DeepSeek API
             prompt = f"""Viết lại nội dung sau thành {NUMBER_OF_CLONE_PARAGRAPH} phiên bản Tiếng Việt theo nhiều cách khác nhau, giới hạn lại 10 dòng. Hãy đánh số từ 1-{NUMBER_OF_CLONE_PARAGRAPH} trước mỗi phiên bản. Ví dụ:
@@ -76,7 +79,8 @@ def rewrite_paragraph_deepseek():
                 cleaned_text = re.sub(r'^\d+\.\s*', '', match.strip())
                 game_name = folder.split('_')[0]  # Extract game name from folder
                 hashtag = hashtag_by_game.get(game_name, "")  # Get hashtag by game name
-                cleaned_text += f" {hashtag}" if hashtag else ""
+                if hashtag:
+                    cleaned_text += f"\n{hashtag}"
                 clone_file = os.path.join(folder_path, f'clone_{clone_idx}.txt')
                 with open(clone_file, 'w', encoding='utf-8') as f:
                     f.write(cleaned_text)
