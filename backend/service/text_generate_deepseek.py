@@ -4,6 +4,7 @@ import random
 from time import sleep
 from openai import OpenAI
 from backend.constants import DEEPSEEK_API_KEY, FOLDER_PATH_DATA_CRAWLER, DEEPSEEK_MODEL
+from backend.utils.index import get_all_game_fanpages
 
 # Initialize the DeepSeek client
 client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
@@ -12,14 +13,20 @@ NUMBER_OF_CLONE_PARAGRAPH = 10
 
 def rewrite_paragraph_deepseek():
     try:
+        game_fanpages = get_all_game_fanpages()
+        if not game_fanpages:
+            raise Exception("No game URLs found from get_game_fanpages")
+        
+        hashtag_by_game = {item['fanpage'].split('/')[-1]: item['hashtag'] for item in game_fanpages}
+        
         # Check if data crawler folder exists
         data_crawler_path = os.path.join(os.getcwd(), FOLDER_PATH_DATA_CRAWLER.strip("/\\"))
-        print(f"Data crawler path: {data_crawler_path}")
         if not os.path.exists(data_crawler_path):
             raise Exception("Data crawler folder does not exist")
         
         # Process each folder in data crawler directory
         total_folders = len([f for f in os.listdir(data_crawler_path) if os.path.isdir(os.path.join(data_crawler_path, f))])
+
         for idx, folder in enumerate(os.listdir(data_crawler_path), 1):
             folder_path = os.path.join(data_crawler_path, folder)
             content_file = os.path.join(folder_path, "content.txt")
@@ -65,9 +72,12 @@ def rewrite_paragraph_deepseek():
             matches = re.findall(pattern, textResponse, re.DOTALL)
 
             # Output the groups
-            for idx, match in enumerate(matches, 1):
+            for clone_idx, match in enumerate(matches, 1):
                 cleaned_text = re.sub(r'^\d+\.\s*', '', match.strip())
-                clone_file = os.path.join(folder_path, f'clone_{idx}.txt')
+                game_name = folder.split('_')[0]  # Extract game name from folder
+                hashtag = hashtag_by_game.get(game_name, "")  # Get hashtag by game name
+                cleaned_text += f" {hashtag}" if hashtag else ""
+                clone_file = os.path.join(folder_path, f'clone_{clone_idx}.txt')
                 with open(clone_file, 'w', encoding='utf-8') as f:
                     f.write(cleaned_text)
 
