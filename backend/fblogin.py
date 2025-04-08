@@ -445,7 +445,7 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                     if new_height == last_height:
                         print("Reached the end of the page, stopping scroll.")
                         break
-                        
+
                     last_height = new_height
                     
                     if attempt == 49:
@@ -461,7 +461,7 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                 
                 with open(post_id_full_path, "w", encoding="utf-8") as f:
                     f.write("\n".join(sorted(all_posts)))
-                    
+
                 # Crawl post data
                 crawlPostData(browser, readData(post_id_full_path), game_name)
                 
@@ -480,7 +480,7 @@ def run_fb_scraper_multiple_fanpages(game_urls):
     except Exception as e:
         print(f"Error in main scraper: {e}")
         return  # Exit if an error occurs during the main scraper execution
-        
+
     finally:
         # Close browser after processing all games
         try:

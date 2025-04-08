@@ -97,7 +97,7 @@ def rewrite_paragraph_deepseek():
             progress = (idx / total_folders) * 100
             logger.info(f"AI content: {folder} ({progress:.1f}%)")
 
-            sleep(random.randint(8, 15))
+            sleep(random.randint(5, 8))
 
     except KeyboardInterrupt:
         logger.info("Process interrupted by user.")
