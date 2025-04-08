@@ -441,7 +441,7 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                     # Scroll down to load more posts
                     scroll_down(browser)
                     new_height = browser.execute_script("return document.body.scrollHeight")
-                    
+
                     if new_height == last_height:
                         print("Reached the end of the page, stopping scroll.")
                         break
