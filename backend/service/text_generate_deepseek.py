@@ -2,6 +2,7 @@ import os
 import re
 import random
 from time import sleep
+import logging
 from openai import OpenAI
 from backend.constants import DEEPSEEK_API_KEY, FOLDER_PATH_DATA_CRAWLER, DEEPSEEK_MODEL
 from backend.utils.index import get_all_game_fanpages
@@ -9,12 +10,17 @@ from backend.utils.index import get_all_game_fanpages
 # Initialize the DeepSeek client
 client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
 
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 NUMBER_OF_CLONE_PARAGRAPH = 10
 
 def rewrite_paragraph_deepseek():
     try:
         game_fanpages = get_all_game_fanpages()
         if not game_fanpages:
+            logger.error("No game URLs found from get_game_fanpages")
             raise Exception("No game URLs found from get_game_fanpages")
         
         hashtag_by_game = {item['fanpage'].split('/')[-1]: item['hashtag'] for item in game_fanpages}
@@ -22,6 +28,7 @@ def rewrite_paragraph_deepseek():
         # Check if data crawler folder exists
         data_crawler_path = os.path.join(os.getcwd(), FOLDER_PATH_DATA_CRAWLER.strip("/\\"))
         if not os.path.exists(data_crawler_path):
+            logger.error("Data crawler folder does not exist")
             raise Exception("Data crawler folder does not exist")
         
         # Process each folder in data crawler directory
@@ -33,18 +40,19 @@ def rewrite_paragraph_deepseek():
             
             # Skip if not a directory or content.txt doesn't exist
             if not os.path.isdir(folder_path) or not os.path.exists(content_file):
+                logger.warning(f"Skipping {folder} - not a valid directory or content.txt does not exist")
                 continue
 
             clone_files = [f for f in os.listdir(folder_path) if f.startswith('clone_') and f.endswith('.txt')]
             if len(clone_files) >= NUMBER_OF_CLONE_PARAGRAPH:
-                print(f"Skipping {folder} - already has {NUMBER_OF_CLONE_PARAGRAPH} clone files")
+                logger.info(f"Skipping {folder} - already has {NUMBER_OF_CLONE_PARAGRAPH} clone files")
                 continue
 
             # Read original content
             with open(content_file, 'r', encoding='utf-8') as f:
                 content = f.read().strip()
                 if not content:
-                    print(f"Warning: {content_file} is empty.")
+                    logger.warning(f"Warning: {content_file} is empty.")
                     continue
 
             # Generate rewritten paragraphs using DeepSeek API
@@ -87,10 +95,10 @@ def rewrite_paragraph_deepseek():
 
             # Show progress
             progress = (idx / total_folders) * 100
-            print(f"AI content: {folder} ({progress:.1f}%)")
+            logger.info(f"AI content: {folder} ({progress:.1f}%)")
 
             sleep(random.randint(8, 15))
 
     except Exception as e:
-        print(f"Error in rewrite_paragraph_deepseek: {str(e)}")
+        logger.error(f"Error in rewrite_paragraph_deepseek: {str(e)}")
         return False
