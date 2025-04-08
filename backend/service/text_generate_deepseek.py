@@ -37,49 +37,47 @@ def rewrite_paragraph_deepseek():
                 content = f.read().strip()
 
             # Generate rewritten paragraphs using DeepSeek API
-            prompt = f"""Viết lại nội dung sau thành đúng {NUMBER_OF_CLONE_PARAGRAPH} phiên bản theo nhiều cách khác nhau, vẫn giữ nguyên nội dung chủ đề. Hãy đánh số từ 1-{NUMBER_OF_CLONE_PARAGRAPH} trước mỗi phiên bản. Ví dụ:
-                1. [phiên bản 1]
-                2. [phiên bản 2]
-                3. [phiên bản 3]
-                ...
-                {NUMBER_OF_CLONE_PARAGRAPH}. [phiên bản {NUMBER_OF_CLONE_PARAGRAPH}]
+            paragraphs_count = 0
+            while paragraphs_count < NUMBER_OF_CLONE_PARAGRAPH:
+                # Generate prompt for 2 versions at a time
+                current_start = paragraphs_count + 1
+                current_end = min(current_start + 1, NUMBER_OF_CLONE_PARAGRAPH)
+                
+                prompt = f"""Viết lại nội dung sau thành {current_end - current_start + 1} phiên bản theo nhiều cách khác nhau, vẫn giữ nguyên nội dung chủ đề. Hãy đánh số từ {current_start}-{current_end} trước mỗi phiên bản. Ví dụ:
+                    {current_start}. [phiên bản {current_start}]
+                    {current_end}. [phiên bản {current_end}]
 
-                Đoạn văn gốc:
-                ```
-                {content}
-                ```
+                    Đoạn văn gốc:
+                    ```
+                    {content}
+                    ```
                 """
 
-            paragraphs = []
-            while len(paragraphs) < NUMBER_OF_CLONE_PARAGRAPH:
                 # Generate content using DeepSeek
                 response = client.chat.completions.create(
                     model=DEEPSEEK_MODEL,
                     messages=[
-                        # {"role": "system", "content": "You are a helpful assistant"},
-                        {"role": "user", "content": prompt}
+                        {"role": "system", "content": prompt}
                     ]
                 )
                 text = response.choices[0].message.content.strip()
                 
                 print(text)
 
-                # Extract paragraphs
+                # Extract and save paragraphs
                 for line in text.split('\n'):
                     line = line.strip()
                     if line and line[0].isdigit() and '. ' in line:
                         para_text = line[line.find('.')+2:].strip()
-                        if para_text and len(paragraphs) < NUMBER_OF_CLONE_PARAGRAPH:
-                            paragraphs.append(para_text)
-                
-                if len(paragraphs) < NUMBER_OF_CLONE_PARAGRAPH:
-                    sleep(1)
+                        if para_text and paragraphs_count < NUMBER_OF_CLONE_PARAGRAPH:
+                            paragraphs_count += 1
+                            # Save paragraph immediately
+                            clone_file = os.path.join(folder_path, f'clone_{paragraphs_count}.txt')
+                            with open(clone_file, 'w', encoding='utf-8') as f:
+                                f.write(para_text)
 
-            # Save paragraphs
-            for i, para in enumerate(paragraphs, 1):
-                clone_file = os.path.join(folder_path, f'clone_{i}.txt')
-                with open(clone_file, 'w', encoding='utf-8') as f:
-                    f.write(para)
+                if paragraphs_count < NUMBER_OF_CLONE_PARAGRAPH:
+                    sleep(1)
 
             # Show progress
             progress = (idx / total_folders) * 100
