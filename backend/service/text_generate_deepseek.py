@@ -87,7 +87,7 @@ def rewrite_paragraph_deepseek():
 
             # Show progress
             progress = (idx / total_folders) * 100
-            print(f"AI content folder: {folder} ({progress:.1f}% complete)")
+            print(f"AI content: {folder} ({progress:.1f}%)")
 
             sleep(random.randint(8, 15))
 
