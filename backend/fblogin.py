@@ -409,7 +409,7 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                 return  # Exit if CAPTCHA handling fails
 
         # Process each game URL with the same browser session
-        for game_url in game_urls:
+        for index, game_url in enumerate(game_urls):
             try:
                 print(f"\n----- Starting to scrape: {game_url} -----")
                 
@@ -418,7 +418,7 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                 
                 # Navigate to game page
                 browser.get(f"{FB_DEFAULT_URL}/{game_url}")
-                sleep(random.randint(5, 9))  # Wait for page load
+                sleep(random.randint(5, 9) if index < len(game_urls) - 1 else 0)  # Wait for page load
                 
                 all_posts = set()
                 last_height = browser.execute_script("return document.body.scrollHeight")
@@ -468,9 +468,10 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                 print(f"----- Done {len(all_posts)} posts: Game {game_name} -----")
                 
                 # Add random delay after processing all games
-                sleep_time = random.randint(120, 400)
-                logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
-                sleep(sleep_time)
+                if index < len(game_urls) - 1:  # Only sleep if not the last game
+                    sleep_time = random.randint(120, 400)
+                    logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
+                    sleep(sleep_time)
                 
             except Exception as e:
                 print(f"Error processing {game_url}: {e}")

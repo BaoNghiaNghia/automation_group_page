@@ -37,7 +37,7 @@ def rewrite_paragraph_deepseek():
         for idx, folder in enumerate(os.listdir(data_crawler_path), 1):
             folder_path = os.path.join(data_crawler_path, folder)
             content_file = os.path.join(folder_path, "content.txt")
-            
+
             # Skip if not a directory or content.txt doesn't exist
             if not os.path.isdir(folder_path) or not os.path.exists(content_file):
                 logger.warning(f"Skipping {folder} - not a valid directory or content.txt does not exist")
