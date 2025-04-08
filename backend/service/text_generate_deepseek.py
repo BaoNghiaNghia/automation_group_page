@@ -43,7 +43,7 @@ def rewrite_paragraph_deepseek():
                 current_start = paragraphs_count + 1
                 current_end = min(current_start + 1, NUMBER_OF_CLONE_PARAGRAPH)
                 
-                prompt = f"""Viết lại nội dung sau thành {current_end - current_start + 1} phiên bản theo nhiều cách khác nhau, vẫn giữ nguyên nội dung chủ đề. Hãy đánh số từ {current_start}-{current_end} trước mỗi phiên bản. Ví dụ:
+                prompt = f"""Viết lại nội dung sau thành {current_end - current_start + 1} phiên bản theo nhiều cách khác nhau, giới hạn lại 10 dòng. Hãy đánh số từ {current_start}-{current_end} trước mỗi phiên bản. Ví dụ:
                     {current_start}. [phiên bản {current_start}]
                     {current_end}. [phiên bản {current_end}]
 
