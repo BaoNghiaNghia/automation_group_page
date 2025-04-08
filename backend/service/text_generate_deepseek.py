@@ -99,6 +99,9 @@ def rewrite_paragraph_deepseek():
 
             sleep(random.randint(8, 15))
 
+    except KeyboardInterrupt:
+        logger.info("Process interrupted by user.")
+        return False
     except Exception as e:
         logger.error(f"Error in rewrite_paragraph_deepseek: {str(e)}")
         return False
