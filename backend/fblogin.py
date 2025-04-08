@@ -249,70 +249,7 @@ def readData(fileName):
     with open(fileName, 'r', encoding="utf-8") as f:
         return [line.strip() for line in f.readlines()]
     
-def get_captcha_image(browser):
-    """Retrieve CAPTCHA image if present on Facebook login page."""
-    img_tags = browser.find_elements(By.TAG_NAME, "img")
-    for img in img_tags:
-        src = img.get_attribute("src")
-        if src and "captcha" in src:
-            return img
-    return None
-
-def handle_captcha_if_present(browser, username, password):
-    """
-    This function handles CAPTCHA challenges that may appear during the login process.
-    If a CAPTCHA is detected, it solves the CAPTCHA, re-enters login credentials if necessary,
-    and continues the browsing session.
-
-    Args:
-        browser (webdriver.Chrome): The browser instance used for Selenium automation.
-        username (str): The username (email) for logging into Facebook.
-        password (str): The password for logging into Facebook.
-
-    Returns:
-        bool: Returns True if CAPTCHA was detected and handled, False otherwise.
-    """
-    try:
-        # Look for CAPTCHA image on the page
-        captcha_img = get_captcha_image(browser)
-        if captcha_img:
-            captcha_img_url = captcha_img.get_attribute("src")
-            print(f"Found CAPTCHA image: {captcha_img_url}")
-
-            # Solve the CAPTCHA and get the solution
-            captcha_id = solve_captcha(captcha_img_url).split('|')[1]
-            captcha_text = get_captcha_result(captcha_id)
-            print(f"Captcha Response: {captcha_text}")
-
-            # Enter the CAPTCHA solution in the input field and submit it
-            captcha_input = browser.find_element(By.TAG_NAME, "input")
-            captcha_input.send_keys(captcha_text)
-
-            # Click the "Continue" button to proceed
-            submit_captcha(browser)
-            sleep(random.randint(5, 9))
-
-            # Try to re-login if necessary
-            try:
-                WebDriverWait(browser, 10).until(
-                    EC.presence_of_element_located((By.ID, "email"))
-                )
-                # Re-enter login credentials and submit
-                browser.find_element(By.ID, "email").send_keys(username)
-                browser.find_element(By.ID, "pass").send_keys(password + Keys.ENTER)
-            except Exception:
-                print("Re-login not required or already logged in.")
-            
-            return True  # CAPTCHA was handled successfully
-        else:
-            print("No CAPTCHA image found, continuing process.")
-
-    except Exception as e:
-        print(f"Error while handling CAPTCHA: {e}")
-
-    return False  # No CAPTCHA or an error occurred
-
-
+    
 def run_fb_scraper_single_fanpage_posts(game_name):
     try:
         # Choose a random account and login
@@ -393,6 +330,70 @@ def run_fb_scraper_single_fanpage_posts(game_name):
             print("Browser closed successfully.")
         except Exception as e:
             print(f"Error closing browser: {e}")
+    
+def get_captcha_image(browser):
+    """Retrieve CAPTCHA image if present on Facebook login page."""
+    img_tags = browser.find_elements(By.TAG_NAME, "img")
+    for img in img_tags:
+        src = img.get_attribute("src")
+        if src and "captcha" in src:
+            return img
+    return None
+
+def handle_captcha_if_present(browser, username, password):
+    """
+    This function handles CAPTCHA challenges that may appear during the login process.
+    If a CAPTCHA is detected, it solves the CAPTCHA, re-enters login credentials if necessary,
+    and continues the browsing session.
+
+    Args:
+        browser (webdriver.Chrome): The browser instance used for Selenium automation.
+        username (str): The username (email) for logging into Facebook.
+        password (str): The password for logging into Facebook.
+
+    Returns:
+        bool: Returns True if CAPTCHA was detected and handled, False otherwise.
+    """
+    try:
+        # Look for CAPTCHA image on the page
+        captcha_img = get_captcha_image(browser)
+        if captcha_img:
+            captcha_img_url = captcha_img.get_attribute("src")
+            print(f"Found CAPTCHA image: {captcha_img_url}")
+
+            # Solve the CAPTCHA and get the solution
+            captcha_id = solve_captcha(captcha_img_url).split('|')[1]
+            captcha_text = get_captcha_result(captcha_id)
+            print(f"Captcha Response: {captcha_text}")
+
+            # Enter the CAPTCHA solution in the input field and submit it
+            captcha_input = browser.find_element(By.TAG_NAME, "input")
+            captcha_input.send_keys(captcha_text)
+
+            # Click the "Continue" button to proceed
+            submit_captcha(browser)
+            sleep(random.randint(5, 9))
+
+            # Try to re-login if necessary
+            try:
+                WebDriverWait(browser, 10).until(
+                    EC.presence_of_element_located((By.ID, "email"))
+                )
+                # Re-enter login credentials and submit
+                browser.find_element(By.ID, "email").send_keys(username)
+                browser.find_element(By.ID, "pass").send_keys(password + Keys.ENTER)
+            except Exception:
+                print("Re-login not required or already logged in.")
+            
+            return True  # CAPTCHA was handled successfully
+        else:
+            print("No CAPTCHA image found, continuing process.")
+
+    except Exception as e:
+        print(f"Error while handling CAPTCHA: {e}")
+
+    return False  # No CAPTCHA or an error occurred
+
 
 def run_fb_scraper_multiple_fanpages(game_urls):
     """
