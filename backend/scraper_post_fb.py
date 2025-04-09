@@ -450,7 +450,8 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                     
                     if attempt == 49:
                         print("Too many scroll attempts, exiting.")
-                
+
+
                 # Save post IDs
                 post_id_file_path = os.path.join(os.getcwd(), FOLDER_PATH_POST_ID_CRAWLER.strip("/\\"))
                 if not os.path.exists(post_id_file_path):
@@ -461,6 +462,7 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                 
                 with open(post_id_full_path, "w", encoding="utf-8") as f:
                     f.write("\n".join(sorted(all_posts)))
+
 
                 # Crawl post data
                 crawlPostData(browser, readData(post_id_full_path), game_name)

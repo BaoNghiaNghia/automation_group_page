@@ -7,6 +7,8 @@ from openai import OpenAI
 from backend.constants import DEEPSEEK_API_KEY, FOLDER_PATH_DATA_CRAWLER, DEEPSEEK_MODEL
 from backend.utils.index import get_all_game_fanpages
 
+import re
+
 # Initialize the DeepSeek client
 client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
 
@@ -16,6 +18,17 @@ logger = logging.getLogger(__name__)
 
 NUMBER_OF_CLONE_PARAGRAPH = 10
 
+
+# Check for Facebook group links in the content and replace them with the specified URL
+def replace_facebook_links(content, group_by_game):
+    # Regex pattern to match Facebook group links
+    pattern = r'https://www\.facebook\.com/groups/[^ ]+'
+    updated_content = re.sub(pattern, group_by_game, content)  # Replace all matches with the specified URL
+    
+    # Return the updated content
+    return updated_content
+
+
 def rewrite_paragraph_deepseek():
     try:
         game_fanpages = get_all_game_fanpages()
@@ -24,6 +37,7 @@ def rewrite_paragraph_deepseek():
             raise Exception("No game URLs found from get_game_fanpages")
         
         hashtag_by_game = {item['fanpage'].split('/')[-1]: item['hashtag'] for item in game_fanpages}
+        group_by_game = {item['fanpage'].split('/')[-1]: item['hashtag'] for item in game_fanpages}
         
         # Check if data crawler folder exists
         data_crawler_path = os.path.join(os.getcwd(), FOLDER_PATH_DATA_CRAWLER.strip("/\\"))
@@ -37,6 +51,8 @@ def rewrite_paragraph_deepseek():
         for idx, folder in enumerate(os.listdir(data_crawler_path), 1):
             folder_path = os.path.join(data_crawler_path, folder)
             content_file = os.path.join(folder_path, "content.txt")
+            
+            game_name = folder.split('_')[0]  # Extract game name from folder
 
             # Skip if not a directory or content.txt doesn't exist
             if not os.path.isdir(folder_path) or not os.path.exists(content_file):
@@ -54,6 +70,9 @@ def rewrite_paragraph_deepseek():
                 if not content:
                     logger.warning(f"Warning: {content_file} is empty.")
                     continue
+
+            # Replace links in the original content
+            content = replace_facebook_links(content, group_by_game.get(game_name, ""))
 
             # Generate rewritten paragraphs using DeepSeek API
             prompt = f"""Viết lại nội dung sau thành {NUMBER_OF_CLONE_PARAGRAPH} phiên bản Tiếng Việt theo nhiều cách khác nhau, giới hạn lại 10 dòng. Hãy đánh số từ 1-{NUMBER_OF_CLONE_PARAGRAPH} trước mỗi phiên bản. Ví dụ:
@@ -85,7 +104,6 @@ def rewrite_paragraph_deepseek():
             # Output the groups
             for clone_idx, match in enumerate(matches, 1):
                 cleaned_text = re.sub(r'^\d+\.\s*', '', match.strip())
-                game_name = folder.split('_')[0]  # Extract game name from folder
                 hashtag = hashtag_by_game.get(game_name, "")  # Get hashtag by game name
                 if hashtag:
                     cleaned_text += f"\n{hashtag}"

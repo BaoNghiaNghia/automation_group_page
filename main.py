@@ -1,7 +1,7 @@
 from pathlib import Path
 import random
 from time import sleep
-from backend.fblogin import run_fb_scraper_single_fanpage_posts, run_fb_scraper_multiple_fanpages
+from backend.scraper_post_fb import run_fb_scraper_single_fanpage_posts, run_fb_scraper_multiple_fanpages
 from backend.constants import FOLDER_PATH_DATA_CRAWLER
 from backend.utils.index import get_game_fanpages, should_scrape_game
 import logging
