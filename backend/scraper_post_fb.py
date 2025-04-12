@@ -1,16 +1,16 @@
 import random
-from urllib.parse import urlparse
 import requests
 import os
 import requests
 from time import sleep
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
+from urllib.parse import urlparse
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.options import Options
 from backend.utils.captcha_solver import solve_captcha, get_captcha_result
 from backend.constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, FOLDER_PATH_DATA_CRAWLER, LIMIT_POST_PER_DAY, FOLDER_PATH_POST_ID_CRAWLER
 import logging
