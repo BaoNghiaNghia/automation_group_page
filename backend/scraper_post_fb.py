@@ -209,22 +209,41 @@ def download_file(image_url, file_number, post_id, folder_path="/data_crawl/", g
 
 
 def crawlPostData(driver, postIds, game_name):
+    empty_post_count = 0  # Counter for empty posts
+    written_post_count = 0  # Counter for posts written to file
+
     for id in postIds:
         try:
             dataPost = clonePostContent(driver, id)
             if dataPost:
                 postId = str(dataPost['post_id'])
                 postContent = str(dataPost['content'])
-                writeFileTxtPost('content.txt', postContent, postId, FOLDER_PATH_DATA_CRAWLER, game_name)
-                print(f"Post ID: {postId} - Content: {postContent}")
+
+                # Check if postContent is not empty
+                if postContent.strip() == "":
+                    empty_post_count += 1
+                    print(f"Skipping post with ID {postId} because content is empty.")
+                    continue  # Skip this post and move to the next one
+                else:
+                    # Save post content to file
+                    writeFileTxtPost('content.txt', postContent, postId, FOLDER_PATH_DATA_CRAWLER, game_name)
+                    written_post_count += 1
+                    print(f"Post ID: {postId} - Content: {postContent}")
+
                 stt = 0
                 for img in dataPost["images"]:
                     stt += 1
                     download_file(img, str(stt), postId, FOLDER_PATH_DATA_CRAWLER, game_name)
-                
+
             sleep(random.randint(8, 12))
         except Exception as e:
             print(f"Error in crawlPostData: {e}")
+
+    # Print total counts after processing
+    print(f"\nTotal empty posts skipped: {empty_post_count}")
+    print(f"Total posts written to file: {written_post_count}")
+
+
 
 # Function to save content to a file
 def writeFileTxtPost(fileName, content, idPost, pathImg="/img/", game_name=""):
@@ -462,7 +481,6 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                 
                 with open(post_id_full_path, "w", encoding="utf-8") as f:
                     f.write("\n".join(sorted(all_posts)))
-
 
                 # Crawl post data
                 crawlPostData(browser, readData(post_id_full_path), game_name)
