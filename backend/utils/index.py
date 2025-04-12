@@ -3,12 +3,12 @@ import os
 from backend.constants import SERVICE_URL
 
 def get_game_fanpages():
-    """Fetch game fanpage URLs from service and extract game names."""
+    """Fetch active game fanpage URLs from service and extract game names."""
     try:
         response = requests.get(f'{SERVICE_URL}/game_fanpages')
         response.raise_for_status()
         data = response.json()
-        return [game['fanpage'].split('/')[-1] for game in data['items']]
+        return [game['fanpage'].split('/')[-1] for game in data['items'] if game.get('status') == 'active']
     except requests.exceptions.RequestException as e:
         print(f"Error fetching game fanpages: {e}")
         return []

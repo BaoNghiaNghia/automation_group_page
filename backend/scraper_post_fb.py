@@ -430,16 +430,6 @@ def run_fb_scraper_multiple_fanpages(game_urls):
         # Process each game URL with the same browser session
         for index, game_url in enumerate(game_urls):
             try:
-                # Check if game is active
-                if isinstance(game_url, dict):
-                    # Handle case where game_url is a dictionary with status
-                    if game_url.get('status') != 'active':
-                        print(f"Skipping inactive game: {game_url.get('fanpage')}")
-                        continue
-                    
-                    # Extract the actual URL from the dictionary
-                    game_url = game_url.get('fanpage', '').split('/')[-1]
-                
                 print(f"\n----- Starting to scrape: {game_url} -----")
                 
                 # Extract game name from URL
