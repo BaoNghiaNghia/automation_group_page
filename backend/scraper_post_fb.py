@@ -478,7 +478,7 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                     print(f"Mouse movement failed: {e}")
         
         # Pause briefly before starting the actual scraping
-        final_pause = random.uniform(4, 6)
+        final_pause = random.uniform(5, 8)
         print(f"Finished initial browsing behavior, pausing for {final_pause:.2f} seconds before scraping...")
         sleep(final_pause)
 
@@ -544,7 +544,7 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                 
                 # Add random delay after processing all games
                 if index < len(game_urls) - 1:  # Only sleep if not the last game
-                    sleep_time = random.randint(120, 400)
+                    sleep_time = random.randint(150, 400)
                     logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
                     sleep(sleep_time)
                 
