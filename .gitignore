@@ -10,4 +10,4 @@ facebook_cookies.pkl
 **/__pycache__/
 celerybeat-schedule
 
-response.json
+all_post_today.json
