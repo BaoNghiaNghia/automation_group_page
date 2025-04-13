@@ -29,7 +29,6 @@ if __name__ == "__main__":
                 logger.error(f"Error in Step 2: {str(e)}")
                 print(f"Step 2 failed: {str(e)}")
         else:
-            logger.warnininsert_paragraph_to_db()g("Step 1 failed. Cannot proceed to step 2.")
             print("Step 1 failed. Cannot proceed to step 2.")
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
