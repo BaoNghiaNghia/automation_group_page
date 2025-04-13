@@ -47,6 +47,8 @@ def rewrite_paragraph_deepseek():
         
         # Process each folder in data crawler directory
         total_folders = len([f for f in os.listdir(data_crawler_path) if os.path.isdir(os.path.join(data_crawler_path, f))])
+        processed_folders = 0
+        skipped_folders = 0
 
         for idx, folder in enumerate(os.listdir(data_crawler_path), 1):
             folder_path = os.path.join(data_crawler_path, folder)
@@ -57,11 +59,13 @@ def rewrite_paragraph_deepseek():
             # Skip if not a directory or content.txt doesn't exist
             if not os.path.isdir(folder_path) or not os.path.exists(content_file):
                 logger.warning(f"Skipping {folder} - not a valid directory or content.txt does not exist")
+                skipped_folders += 1
                 continue
 
             clone_files = [f for f in os.listdir(folder_path) if f.startswith('clone_') and f.endswith('.txt')]
             if len(clone_files) >= NUMBER_OF_CLONE_PARAGRAPH:
                 logger.info(f"Skipping {folder} - already has {NUMBER_OF_CLONE_PARAGRAPH} clone files")
+                skipped_folders += 1
                 continue
 
             # Read original content
@@ -69,6 +73,7 @@ def rewrite_paragraph_deepseek():
                 content = f.read().strip()
                 if not content:
                     logger.warning(f"Warning: {content_file} is empty.")
+                    skipped_folders += 1
                     continue
 
             # Replace links in the original content
@@ -112,17 +117,23 @@ def rewrite_paragraph_deepseek():
                 with open(clone_file, 'w', encoding='utf-8') as f:
                     f.write(cleaned_text)
 
+            processed_folders += 1
             # Show progress
             progress = (idx / total_folders) * 100
             logger.info(f"AI content: {folder} ({progress:.1f}%)")
 
             sleep(random.randint(5, 8))
 
-        return True  # Return True when process completes successfully
+        logger.info(f"Process completed: {processed_folders} folders processed, {skipped_folders} folders skipped")
+        logger.info(f"Status: {'DONE' if processed_folders > 0 else 'NOT DONE'}")
+        
+        return processed_folders > 0  # Return True when at least one folder was processed successfully
 
     except KeyboardInterrupt:
         logger.info("Process interrupted by user.")
+        logger.info("Status: NOT DONE")
         return False
     except Exception as e:
         logger.error(f"Error in rewrite_paragraph_deepseek: {str(e)}")
+        logger.info("Status: NOT DONE")
         return False

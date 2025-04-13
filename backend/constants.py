@@ -1,3 +1,5 @@
+import os
+
 API_KEY_CAPTCHA = 'point_3d0bd505d511c336b6279f4815057b9a'
 FB_DEFAULT_URL = "https://www.facebook.com"
 FB_ACCOUNT_LIST = [
@@ -8,9 +10,8 @@ FB_ACCOUNT_LIST = [
     # ("0921747844", "vutuan1985@"),
     # ("0928618253", "vutuan1985@"),
 ]
-GAME_NAME_URL = "OnceHumanOfficial"
-SERVICE_URL = "https://boostgamemobile.com/service"
-# SERVICE_URL = "http://127.0.0.1:8080/service"
+
+SERVICE_URL = os.getenv("SERVICE_URL", "https://boostgamemobile.com/service")
 
 DOMAIN_CAPTCHA = "https://captcha69.com"
 FOLDER_PATH_DATA_CRAWLER = "/data_crawler/"
