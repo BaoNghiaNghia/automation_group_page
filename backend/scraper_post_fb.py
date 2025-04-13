@@ -229,7 +229,7 @@ def crawlPostData(driver, postIds, game_name):
                     # Save post content to file
                     writeFileTxtPost('content.txt', postContent, postId, FOLDER_PATH_DATA_CRAWLER, game_name)
                     written_post_count += 1
-                    print(f"Post ID: {postId} - Content: {postContent}")
+                    print(f"Post ID: {postId} - Content: {postContent[:50]}{'...' if len(postContent) > 50 else ''}")
 
                 stt = 0
                 for img in dataPost["images"]:
