@@ -436,7 +436,7 @@ def run_fb_scraper_multiple_fanpages(game_urls):
         print("Simulating human-like browsing behavior before scraping...")
         
         # Perform some initial scrolls to mimic a person browsing
-        initial_scroll_count = random.randint(2, 5)  # Random number of initial scrolls
+        initial_scroll_count = random.randint(3, 7)  # Random number of initial scrolls
         
         for i in range(initial_scroll_count):
             # Scroll down with varying speeds
