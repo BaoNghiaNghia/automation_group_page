@@ -2,6 +2,8 @@ import random
 import requests
 import os
 import requests
+from PIL import Image
+from io import BytesIO
 from time import sleep
 from selenium import webdriver
 from urllib.parse import urlparse
@@ -194,17 +196,28 @@ def download_file(image_url, file_number, post_id, folder_path="/data_crawl/", g
                 print(f"Failed to fetch image headers, Status code: {response.status_code}")
                 return
 
-        # Update the image name with the correct file extension
-        image_name = f"{file_number}.png"
-
-        # Get the image content from the URL and save it to the file
-        img_data = requests.get(image_url).content
-
-        # Save the image
-        with open(os.path.join(post_path, image_name), 'wb') as handler:
-            handler.write(img_data)
-
-        print(f"Image saved as {image_name} in {post_path}")
+        # Check image dimensions before downloading
+        response = requests.get(image_url, stream=True)
+        if response.status_code == 200:
+            img = Image.open(BytesIO(response.content))
+            width, height = img.size
+            
+            # Only download if width or height is greater than 100px
+            if width <= 100 and height <= 100:
+                print(f"Skipping small image (dimensions: {width}x{height}) from URL: {image_url}")
+                return
+            
+            # Update the image name with the correct file extension
+            image_name = f"{file_number}.png"
+            
+            # Save the image
+            with open(os.path.join(post_path, image_name), 'wb') as handler:
+                handler.write(response.content)
+            
+            print(f"Image saved as {image_name} in {post_path} (dimensions: {width}x{height})")
+        else:
+            print(f"Failed to fetch image, Status code: {response.status_code}")
+            
     except Exception as e:
         print(f"Error downloading image from {image_url}: {e}")
 
