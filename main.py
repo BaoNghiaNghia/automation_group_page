@@ -1,9 +1,12 @@
 from pathlib import Path
 import random
+import time
 from time import sleep
 from backend.scraper_post_fb import run_fb_scraper_single_fanpage_posts, run_fb_scraper_multiple_fanpages
 from backend.constants import FOLDER_PATH_DATA_CRAWLER
 from backend.utils.index import get_game_fanpages, should_scrape_game
+from backend.service.migrate_db import insert_paragraph_to_db
+from backend.service.text_generate_deepseek import rewrite_paragraph_deepseek
 import logging
 
 
@@ -42,9 +45,47 @@ if __name__ == "__main__":
         # logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
         # sleep(sleep_time)
         
-        # Multiple Fanpages
-        logger.info("Starting to scrape multiple fanpages...")
-        run_fb_scraper_multiple_fanpages(game_urls)
+        # Step 1: Scrape multiple fanpages
+        logger.info("Starting Step 1: Scraping multiple fanpages...")
+        result = run_fb_scraper_multiple_fanpages(game_urls)
+        
+        # Add a delay between Step 1 and Step 2
+        logger.info("Adding a 4-second delay between steps...")
+        time.sleep(5)
+        
+        # Wait for step 1 to complete before proceeding
+        if result:
+            logger.info("Step 1 completed successfully.")
+            
+            try:
+                # Step 2: Rewrite paragraphs with DeepSeek
+                logger.info("Starting Step 2: Rewriting paragraphs with DeepSeek")
+                rewrite_result = rewrite_paragraph_deepseek()
+                
+                # Add a delay between Step 2 and Step 3
+                logger.info("Adding a 4-second delay between steps...")
+                time.sleep(5)
+                
+                if rewrite_result:
+                    logger.info("Step 2 completed successfully.")
+                    
+                    try:
+                        # Step 3: Insert paragraph to database
+                        logger.info("Starting Step 3: Inserting paragraphs to database")
+                        insert_paragraph_to_db()
+                        logger.info("Step 3 completed: Paragraphs inserted to database.")
+                    except Exception as e:
+                        logger.error(f"Error in Step 3: {str(e)}")
+                        print(f"Step 3 failed: {str(e)}")
+                else:
+                    logger.warning("Step 2 failed. Cannot proceed to step 3.")
+                    print("Step 2 failed. Cannot proceed to step 3.")
+            except Exception as e:
+                logger.error(f"Error in Step 2: {str(e)}")
+                print(f"Step 2 failed: {str(e)}")
+        else:
+            logger.warning("Step 1 failed. Cannot proceed to step 2.")
+            print("Step 1 failed. Cannot proceed to step 2.")
 
     except Exception as e:
         logger.error(f"Error occurred: {str(e)}")
