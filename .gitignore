@@ -9,3 +9,5 @@ facebook_cookies.pkl
 *$py.class
 **/__pycache__/
 celerybeat-schedule
+
+response.json

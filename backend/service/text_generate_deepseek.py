@@ -75,7 +75,7 @@ def rewrite_paragraph_deepseek():
             content = replace_facebook_links(content, group_by_game.get(game_name, ""))
 
             # Generate rewritten paragraphs using DeepSeek API
-            prompt = f"""Viết lại nội dung sau thành {NUMBER_OF_CLONE_PARAGRAPH} phiên bản Tiếng Việt theo nhiều cách khác nhau, giới hạn lại 10 dòng. Hãy đánh số từ 1-{NUMBER_OF_CLONE_PARAGRAPH} trước mỗi phiên bản. Ví dụ:
+            prompt = f"""Viết lại nội dung sau thành {NUMBER_OF_CLONE_PARAGRAPH} phiên bản Tiếng Việt theo nhiều cách khác nhau, giới hạn lại 10 dòng. Hãy đánh số từ 1-{NUMBER_OF_CLONE_PARAGRAPH} trước mỗi phiên bản. Ví dụ:
                 1. [phiên bản 1]
                 ...
                 {NUMBER_OF_CLONE_PARAGRAPH}. [phiên bản {NUMBER_OF_CLONE_PARAGRAPH}]
@@ -93,6 +93,7 @@ def rewrite_paragraph_deepseek():
                     {"role": "system", "content": prompt}
                 ]
             )
+
             textResponse = response.choices[0].message.content.strip()
             
             # Regular expression to match the text between the numbers and remove the numbers
@@ -116,6 +117,8 @@ def rewrite_paragraph_deepseek():
             logger.info(f"AI content: {folder} ({progress:.1f}%)")
 
             sleep(random.randint(5, 8))
+
+        return True  # Return True when process completes successfully
 
     except KeyboardInterrupt:
         logger.info("Process interrupted by user.")
