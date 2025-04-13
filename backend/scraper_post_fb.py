@@ -50,6 +50,8 @@ def login_facebook(username, password, is_ubuntu=False):
     browser = init_browser(is_ubuntu)
     browser.get(FB_DEFAULT_URL)
     
+    sleep(random.randint(6, 12))
+    
     # Wait for login elements and enter credentials
     WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "email")))
     browser.find_element(By.ID, "email").send_keys(username)
