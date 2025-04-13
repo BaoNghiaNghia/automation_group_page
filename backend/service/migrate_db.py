@@ -109,8 +109,8 @@ def insert_paragraph_to_db():
                     logger.error(f"Error sending batch {batch_num}: {str(e)}")
                 
                 # Add a small delay between batches to prevent overwhelming the API
-                logger.info(f"Adding 4 second delay between batches")
-                time.sleep(4)
+                logger.info(f"Adding 5 second delay between batches")
+                time.sleep(5)
             
             logger.info(f"Completed sending all {total_batches} batches to API")
         
