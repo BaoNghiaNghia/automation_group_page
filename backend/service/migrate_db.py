@@ -7,6 +7,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+
 def insert_paragraph_to_db():
     
     try:
@@ -24,9 +25,9 @@ def insert_paragraph_to_db():
         batch_data = []
         
         with open(output_file, 'w', encoding='utf-8') as f:
-            f.write('[\n')
-            
+            # Initialize flag for first item
             first_item = True
+            
             for folder in os.listdir(data_crawler_path):
                 folder_path = os.path.join(data_crawler_path, folder)
                 
@@ -50,11 +51,11 @@ def insert_paragraph_to_db():
                             if content:
                                 file_name = os.path.splitext(txt_file)[0]
                                 batch_data.append({
-                                    'game_name': game_name,
+                                    'fanpage': game_name,
                                     'post_id': post_id,
-                                    'file_name': file_name,
+                                    'clone_version': file_name,
                                     'content': content,
-                                    'image_path': image_path
+                                    'img_path': image_path
                                 })
                                 
                                 # When batch is full, write and reset batch
@@ -62,7 +63,7 @@ def insert_paragraph_to_db():
                                     if first_item:
                                         first_item = False
                                     else:
-                                        f.write(',\n')
+                                        f.write(',\n')  # Write a comma to separate objects
                                     json.dump(batch_data, f, ensure_ascii=False, indent=4)
                                     batch_data.clear()
                     except Exception as e:
@@ -73,11 +74,9 @@ def insert_paragraph_to_db():
                 if first_item:
                     first_item = False
                 else:
-                    f.write(',\n')
+                    f.write(',\n')  # Write a comma to separate objects
                 json.dump(batch_data, f, ensure_ascii=False, indent=4)
                 
-            f.write('\n]')
-        
         logger.info(f"Data saved to {output_file}")
         return "Processing complete"
 
