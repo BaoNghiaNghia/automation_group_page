@@ -60,23 +60,11 @@ def insert_paragraph_to_db():
                                     'img_path': image_path
                                 })
                                 
-                                # When batch is full, write and reset batch
-                                if len(batch_data) >= batch_size:
-                                    if first_item:
-                                        first_item = False
-                                    else:
-                                        f.write(',\n')  # Write a comma to separate objects
-                                    json.dump(batch_data, f, ensure_ascii=False, indent=4)
-                                    batch_data.clear()
                     except Exception as e:
                         logger.error(f"Error reading {file_path}: {str(e)}")
             
             # Write any remaining data in the final batch
             if batch_data:
-                if first_item:
-                    first_item = False
-                else:
-                    f.write(',\n')  # Write a comma to separate objects
                 json.dump(batch_data, f, ensure_ascii=False, indent=4)
                 
         logger.info(f"Data saved to {output_file}")
@@ -112,7 +100,7 @@ def insert_paragraph_to_db():
                 try:
                     response = requests.post(api_url, headers=headers, data=json.dumps(batch))
                     
-                    if response.status_code == 200:
+                    if response.status_code in [200, 201]:
                         logger.info(f"Batch {batch_num} successfully sent. Response: {response.text}")
                     else:
                         logger.error(f"Failed to send batch {batch_num}. Status code: {response.status_code}, Response: {response.text}")
