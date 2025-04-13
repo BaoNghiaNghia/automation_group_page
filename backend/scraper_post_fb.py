@@ -494,7 +494,7 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                 
                 # Navigate to game page
                 browser.get(f"{FB_DEFAULT_URL}/{game_url}")
-                sleep(random.randint(5, 9) if index < len(game_urls) - 1 else 0)  # Wait for page load
+                sleep(random.randint(7, 13) if index < len(game_urls) - 1 else 0)  # Wait for page load
                 
                 all_posts = set()
                 last_height = browser.execute_script("return document.body.scrollHeight")
