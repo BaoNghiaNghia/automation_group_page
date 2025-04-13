@@ -204,7 +204,7 @@ def download_file(image_url, file_number, post_id, folder_path="/data_crawl/", g
             
             # Only download if width or height is greater than 100px
             if width <= 100 and height <= 100:
-                print(f"Skipping small image (dimensions: {width}x{height}) from URL: {image_url}")
+                # print(f"Skipping small image (dimensions: {width}x{height}) from URL: {image_url}")
                 return
             
             # Update the image name with the correct file extension
