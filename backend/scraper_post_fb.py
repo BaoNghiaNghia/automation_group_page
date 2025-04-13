@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -426,6 +427,43 @@ def run_fb_scraper_multiple_fanpages(game_urls):
             if not handle_captcha_if_present(browser, username, password):
                 print("CAPTCHA handling failed, exiting.")
                 return  # Exit if CAPTCHA handling fails
+
+        sleep_time = random.randint(3, 8)
+        logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
+        sleep(sleep_time)
+            
+        # Add human-like behavior before starting to scrape
+        print("Simulating human-like browsing behavior before scraping...")
+        
+        # Perform some initial scrolls to mimic a person browsing
+        initial_scroll_count = random.randint(2, 5)  # Random number of initial scrolls
+        
+        for i in range(initial_scroll_count):
+            # Scroll down with varying speeds
+            scroll_height = random.randint(300, 800)  # Random scroll distance
+            browser.execute_script(f"window.scrollBy(0, {scroll_height});")
+            
+            # Add a random delay between scrolls (1-3 seconds)
+            delay = random.uniform(4, 10)
+            print(f"Initial scroll {i+1}/{initial_scroll_count}, waiting {delay:.2f} seconds...")
+            sleep(delay)
+            
+            # Sometimes move mouse to random positions (simulating human behavior)
+            if random.random() > 0.7:  # 30% chance to move mouse
+                try:
+                    # Find a random element to hover over
+                    elements = browser.find_elements(By.TAG_NAME, "div")
+                    if elements:
+                        random_element = random.choice(elements[:20])  # Choose from first 20 elements
+                        ActionChains(browser).move_to_element(random_element).perform()
+                        print("Moving mouse to random element...")
+                except Exception as e:
+                    print(f"Mouse movement failed: {e}")
+        
+        # Pause briefly before starting the actual scraping
+        final_pause = random.uniform(4, 6)
+        print(f"Finished initial browsing behavior, pausing for {final_pause:.2f} seconds before scraping...")
+        sleep(final_pause)
 
         # Process each game URL with the same browser session
         for index, game_url in enumerate(game_urls):

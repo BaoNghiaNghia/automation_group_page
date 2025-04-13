@@ -11,3 +11,5 @@ facebook_cookies.pkl
 celerybeat-schedule
 
 all_post_today.json
+
+.env

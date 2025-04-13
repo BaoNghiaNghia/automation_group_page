@@ -11,6 +11,7 @@ FB_ACCOUNT_LIST = [
     # ("0928618253", "vutuan1985@"),
 ]
 
+# SERVICE_URL = os.getenv("SERVICE_URL", "http://127.0.0.1:8080/service")
 SERVICE_URL = os.getenv("SERVICE_URL", "https://boostgamemobile.com/service")
 
 DOMAIN_CAPTCHA = "https://captcha69.com"
