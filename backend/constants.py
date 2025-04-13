@@ -9,7 +9,8 @@ FB_ACCOUNT_LIST = [
     # ("0928618253", "vutuan1985@"),
 ]
 GAME_NAME_URL = "OnceHumanOfficial"
-SERVICE_URL = "https://boostgamemobile.com/service"
+# SERVICE_URL = "https://boostgamemobile.com/service"
+SERVICE_URL = "http://127.0.0.1:8080/service"
 
 DOMAIN_CAPTCHA = "https://captcha69.com"
 FOLDER_PATH_DATA_CRAWLER = "/data_crawler/"
@@ -21,6 +22,3 @@ GEMINI_MODEL = "gemini-2.0-flash"
 
 DEEPSEEK_API_KEY = "sk-e71d03c8c9a44344b3c39ef6db11526c"
 DEEPSEEK_MODEL = "deepseek-chat"
-
-# adb -s emulator-5554 shell input tap 456.9 168.5
-# adb -s emulator-5554 shell input text "Danh Tướng Origin ✅ Group Chính Thức"

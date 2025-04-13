@@ -2,6 +2,8 @@ import os
 import logging
 import json
 
+from backend.constants import SERVICE_URL
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -78,6 +80,53 @@ def insert_paragraph_to_db():
                 json.dump(batch_data, f, ensure_ascii=False, indent=4)
                 
         logger.info(f"Data saved to {output_file}")
+        
+        # Add a 5-second delay to prevent overwhelming the system
+        import time
+        time.sleep(5)
+        logger.info("Added 5-second delay before completing the process")
+
+        # Now read the output file and send data in batches to the API
+        logger.info("Starting to send data to API in batches")
+        
+        try:
+            with open(output_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            # Process data in batches of 10
+            batch_size = 10
+            total_records = len(data)
+            total_batches = (total_records + batch_size - 1) // batch_size  # Ceiling division
+            
+            import requests
+            
+            api_url = f'{SERVICE_URL}/daily_posts_content/insert-batch'
+            headers = {'Content-Type': 'application/json'}
+            
+            for i in range(0, total_records, batch_size):
+                batch = data[i:i+batch_size]
+                batch_num = i // batch_size + 1
+                
+                logger.info(f"Sending batch {batch_num}/{total_batches} ({len(batch)} records)")
+                
+                try:
+                    response = requests.post(api_url, headers=headers, data=json.dumps(batch))
+                    
+                    if response.status_code == 200:
+                        logger.info(f"Batch {batch_num} successfully sent. Response: {response.text}")
+                    else:
+                        logger.error(f"Failed to send batch {batch_num}. Status code: {response.status_code}, Response: {response.text}")
+                
+                except Exception as e:
+                    logger.error(f"Error sending batch {batch_num}: {str(e)}")
+                
+                # Add a small delay between batches to prevent overwhelming the API
+                time.sleep(3)
+            
+            logger.info(f"Completed sending all {total_batches} batches to API")
+        
+        except Exception as e:
+            logger.error(f"Error processing output file for API: {str(e)}")
         return "Processing complete"
 
     except Exception as e:
