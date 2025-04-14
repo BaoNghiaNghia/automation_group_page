@@ -23,7 +23,7 @@ if __name__ == "__main__":
             try:
                 # Step 2: Insert paragraph to database
                 logger.info("Starting Step 2: Inserting paragraphs to database")
-                
+                insert_paragraph_to_db()
                 logger.info("Step 2 completed: Paragraphs inserted to database.")
             except Exception as e:
                 logger.error(f"Error in Step 2: {str(e)}")
