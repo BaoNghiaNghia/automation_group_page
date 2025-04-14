@@ -34,7 +34,7 @@ def main():
 
     # Extract player names from all .config files in the specified folder
     player_names = extract_player_names(config_folder, key_to_search)
-
+    print(f"Tổng cộng: {len(player_names)} thiết bị")
     # Print the result as an array of strings
     print(player_names)
 
