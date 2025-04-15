@@ -1,10 +1,9 @@
-from pathlib import Path
-import random
 import time
+from pathlib import Path
 from time import sleep
-from backend.scraper_post_fb import run_fb_scraper_single_fanpage_posts, run_fb_scraper_multiple_fanpages
+from backend.scraper_post_fb import run_fb_scraper_multiple_fanpages
 from backend.constants import FOLDER_PATH_DATA_CRAWLER
-from backend.utils.index import get_game_fanpages, should_scrape_game
+from backend.utils.index import get_game_fanpages
 from backend.service.migrate_db import insert_paragraph_to_db
 from backend.service.text_generate_deepseek import rewrite_paragraph_deepseek
 from backend.service.update_ld_devices import main as check_ld_devices
