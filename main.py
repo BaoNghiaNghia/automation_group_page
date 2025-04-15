@@ -1,13 +1,25 @@
 import time
+import logging
 from pathlib import Path
-from time import sleep
 from backend.scraper_post_fb import run_fb_scraper_multiple_fanpages
 from backend.constants import FOLDER_PATH_DATA_CRAWLER, CONFIG_LDPLAYER_FOLDER
 from backend.utils.index import get_game_fanpages
 from backend.service.migrate_db import insert_paragraph_to_db
 from backend.service.text_generate_deepseek import rewrite_paragraph_deepseek
 from backend.service.update_ld_devices import main as check_ld_devices
-import logging
+
+
+def run_step(step_num, step_name, func, *args, **kwargs):
+    """Execute a step with proper logging and error handling"""
+    logger.info(f"Starting Step {step_num}: {step_name}...")
+    try:
+        result = func(*args, **kwargs)
+        logger.info(f"Step {step_num} completed successfully.")
+        return result
+    except Exception as e:
+        logger.error(f"Error in Step {step_num} ({step_name}): {str(e)}")
+        print(f"Step {step_num} failed: {str(e)}")
+        return None
 
 
 if __name__ == "__main__":
@@ -27,61 +39,30 @@ if __name__ == "__main__":
             
         logger.info(f"Found {len(game_urls)} game URLs: {game_urls}")
 
-
-        # Step 0: Check LDPlayer devices
-        logger.info("Starting Step 0: Checking LDPlayer devices...")
-        try:
-            check_ld_devices(CONFIG_LDPLAYER_FOLDER)
-            logger.info("Step 0 completed: LDPlayer devices checked successfully.")
-        except Exception as e:
-            logger.error(f"Error in Step 0 (checking LDPlayer devices): {str(e)}")
-            print(f"Step 0 failed: {str(e)}")
+        # ------------------------ Step 0: Check LDPlayer devices ------------------------
+        run_step(0, "Checking LDPlayer devices", check_ld_devices, CONFIG_LDPLAYER_FOLDER)
+        time.sleep(4)  # Delay before proceeding to next step
         
-        # Add a delay before proceeding to Step 1
-        logger.info("Adding a 4-second delay between steps...")
-        time.sleep(4)
+        # ------------------------ Step 1: Scrape multiple fanpages ------------------------
+        result = run_step(1, "Scraping multiple fanpages", run_fb_scraper_multiple_fanpages, game_urls)
+        time.sleep(5)  # Delay between steps
         
-        # Step 1: Scrape multiple fanpages
-        logger.info("Starting Step 1: Scraping multiple fanpages...")
-        result = run_fb_scraper_multiple_fanpages(game_urls)
-        
-        # Add a delay between Step 1 and Step 2
-        logger.info("Adding a 4-second delay between steps...")
-        time.sleep(5)
-        
-        # Wait for step 1 to complete before proceeding
-        if result:
-            logger.info("Step 1 completed successfully.")
-            
-            try:
-                # Step 2: Rewrite paragraphs with DeepSeek
-                logger.info("Starting Step 2: Rewriting paragraphs with DeepSeek")
-                rewrite_result = rewrite_paragraph_deepseek()
-                
-                # Add a delay between Step 2 and Step 3
-                logger.info("Adding a 4-second delay between steps...")
-                time.sleep(5)
-                
-                if rewrite_result:
-                    logger.info("Step 2 completed successfully.")
-                    
-                    try:
-                        # Step 3: Insert paragraph to database
-                        logger.info("Starting Step 3: Inserting paragraphs to database")
-                        insert_paragraph_to_db()
-                        logger.info("Step 3 completed: Paragraphs inserted to database.")
-                    except Exception as e:
-                        logger.error(f"Error in Step 3: {str(e)}")
-                        print(f"Step 3 failed: {str(e)}")
-                else:
-                    logger.warning("Step 2 failed. Cannot proceed to step 3.")
-                    print("Step 2 failed. Cannot proceed to step 3.")
-            except Exception as e:
-                logger.error(f"Error in Step 2: {str(e)}")
-                print(f"Step 2 failed: {str(e)}")
-        else:
+        if not result:
             logger.warning("Step 1 failed. Cannot proceed to step 2.")
             print("Step 1 failed. Cannot proceed to step 2.")
+            exit(1)
+            
+        # ------------------------ Step 2: Rewrite paragraphs with DeepSeek ------------------------
+        rewrite_result = run_step(2, "Rewriting paragraphs with DeepSeek", rewrite_paragraph_deepseek)
+        time.sleep(5)  # Delay between steps
+        
+        if not rewrite_result:
+            logger.warning("Step 2 failed. Cannot proceed to step 3.")
+            print("Step 2 failed. Cannot proceed to step 3.")
+            exit(1)
+            
+        # ------------------------ Step 3: Insert paragraph to database ------------------------
+        run_step(3, "Inserting paragraphs to database", insert_paragraph_to_db)
 
     except Exception as e:
         logger.error(f"Error occurred: {str(e)}")
