@@ -1,7 +1,7 @@
 import time
 import logging
 from pathlib import Path
-from backend.scraper_post_fb import run_fb_scraper_multiple_fanpages
+from backend.service.scraper_post_fb import run_fb_scraper_multiple_fanpages
 from backend.constants import FOLDER_PATH_DATA_CRAWLER, CONFIG_LDPLAYER_FOLDER
 from backend.utils.index import get_game_fanpages
 from backend.service.migrate_db import insert_paragraph_to_db

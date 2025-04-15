@@ -2,7 +2,7 @@ import os
 import shutil
 from pathlib import Path
 from celery import shared_task
-from backend.scraper_post_fb import run_fb_scraper_single_fanpage_posts
+from backend.service.scraper_post_fb import run_fb_scraper_single_fanpage_posts
 from backend.constants import FOLDER_PATH_DATA_CRAWLER, FOLDER_PATH_POST_ID_CRAWLER
 from backend.utils.index import get_game_fanpages, should_scrape_game
 
