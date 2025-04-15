@@ -2,7 +2,7 @@ import time
 from pathlib import Path
 from time import sleep
 from backend.scraper_post_fb import run_fb_scraper_multiple_fanpages
-from backend.constants import FOLDER_PATH_DATA_CRAWLER
+from backend.constants import FOLDER_PATH_DATA_CRAWLER, CONFIG_LDPLAYER_FOLDER
 from backend.utils.index import get_game_fanpages
 from backend.service.migrate_db import insert_paragraph_to_db
 from backend.service.text_generate_deepseek import rewrite_paragraph_deepseek
@@ -31,7 +31,7 @@ if __name__ == "__main__":
         # Step 0: Check LDPlayer devices
         logger.info("Starting Step 0: Checking LDPlayer devices...")
         try:
-            check_ld_devices(r"C:\LDPlayer\LDPlayer9\vms\config")
+            check_ld_devices(CONFIG_LDPLAYER_FOLDER)
             logger.info("Step 0 completed: LDPlayer devices checked successfully.")
         except Exception as e:
             logger.error(f"Error in Step 0 (checking LDPlayer devices): {str(e)}")

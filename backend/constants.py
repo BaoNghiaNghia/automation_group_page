@@ -19,8 +19,8 @@ FOLDER_PATH_DATA_CRAWLER = "/data_crawler/"
 FOLDER_PATH_POST_ID_CRAWLER = "/data_posts_id/"
 LIMIT_POST_PER_DAY = 20
 
-# CONFIG_LDPLAYER_FOLDER = "C:\LDPlayer\LDPlayer9\vms\config"
-CONFIG_LDPLAYER_FOLDER = "D:\\LDPlayer\\LDPlayer3.0\\vms\\config"
+# CONFIG_LDPLAYER_FOLDER = r"C:\LDPlayer\LDPlayer9\vms\config"
+CONFIG_LDPLAYER_FOLDER = r"D:\LDPlayer\LDPlayer3.0\vms\config"
 
 GEMINI_API_KEY = "AIzaSyCZCzQFbJIoKf4TPaazA7VvmlfiLuQvhSM"
 GEMINI_MODEL = "gemini-2.0-flash"
