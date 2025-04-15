@@ -439,42 +439,48 @@ def simulate_human_behavior(browser):
         logger.info("Navigating to Facebook Watch...")
         browser.get(f"{FB_DEFAULT_URL}/watch")
         
-        # Scroll on Watch page for 1 minute
-        logger.info("Scrolling on Watch page for 1 minute...")
+        # Scroll on Watch page for 2-3 minutes
+        watch_duration = random.randint(120, 180)  # 2-3 minutes
+        logger.info(f"Scrolling on Watch page for {watch_duration} seconds...")
         start_time = time.time()
         last_height = browser.execute_script("return document.body.scrollHeight")
         
-        while time.time() - start_time < 60:  # 1 minute
+        while time.time() - start_time < watch_duration:
             # Random scroll amount
-            scroll_amount = random.randint(300, 700)
+            scroll_amount = random.randint(300, 800)
             browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
             
             # Random pause between scrolls
-            time.sleep(random.uniform(1.5, 4.0))
+            time.sleep(random.uniform(2.5, 6.0))
             
-            # Occasionally pause for longer
-            if random.random() < 0.2:
-                time.sleep(random.uniform(3.0, 7.0))
+            # Occasionally pause for longer (simulating watching a video)
+            if random.random() < 0.25:
+                long_pause = random.uniform(8.0, 15.0)
+                logger.info(f"Taking a longer pause for {long_pause:.1f} seconds...")
+                time.sleep(long_pause)
         
         # Navigate to Facebook homepage
         logger.info("Navigating to Facebook homepage...")
         browser.get(FB_DEFAULT_URL)
         
-        # Scroll on homepage for 50 seconds
-        logger.info("Scrolling on homepage for 50 seconds...")
+        # Scroll on homepage for 1.5-2.5 minutes
+        homepage_duration = random.randint(90, 150)  # 1.5-2.5 minutes
+        logger.info(f"Scrolling on homepage for {homepage_duration} seconds...")
         start_time = time.time()
         
-        while time.time() - start_time < 50:  # 50 seconds
+        while time.time() - start_time < homepage_duration:
             # Random scroll amount
-            scroll_amount = random.randint(200, 600)
+            scroll_amount = random.randint(200, 700)
             browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
             
             # Random pause between scrolls
-            time.sleep(random.uniform(1.0, 3.5))
+            time.sleep(random.uniform(2.0, 5.5))
             
-            # Occasionally pause for longer
-            if random.random() < 0.15:
-                time.sleep(random.uniform(2.5, 5.0))
+            # Occasionally pause for longer (simulating reading a post)
+            if random.random() < 0.2:
+                long_pause = random.uniform(6.0, 12.0)
+                logger.info(f"Reading content for {long_pause:.1f} seconds...")
+                time.sleep(long_pause)
         
         logger.info("Human behavior simulation completed")
         
