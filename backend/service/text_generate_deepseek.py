@@ -35,7 +35,7 @@ def rewrite_paragraph_deepseek():
         if not game_fanpages:
             logger.error("No game URLs found from get_game_fanpages")
             raise Exception("No game URLs found from get_game_fanpages")
-        
+
         hashtag_by_game = {item['fanpage'].split('/')[-1]: item['hashtag'] for item in game_fanpages}
         group_by_game = {item['fanpage'].split('/')[-1]: item['hashtag'] for item in game_fanpages}
         
@@ -53,7 +53,7 @@ def rewrite_paragraph_deepseek():
         for idx, folder in enumerate(os.listdir(data_crawler_path), 1):
             folder_path = os.path.join(data_crawler_path, folder)
             content_file = os.path.join(folder_path, "content.txt")
-            
+
             game_name = folder.split('_')[0]  # Extract game name from folder
 
             # Skip if not a directory or content.txt doesn't exist
@@ -100,7 +100,7 @@ def rewrite_paragraph_deepseek():
             )
 
             textResponse = response.choices[0].message.content.strip()
-            
+
             # Regular expression to match the text between the numbers and remove the numbers
             pattern = r'(\d+\..*?)(?=\n\d+\.|\Z)'
 

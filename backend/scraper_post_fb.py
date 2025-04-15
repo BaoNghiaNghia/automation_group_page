@@ -1,6 +1,7 @@
-import random
-import requests
 import os
+import time
+import requests
+import random
 import requests
 from PIL import Image
 from io import BytesIO
@@ -15,7 +16,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from backend.utils.captcha_solver import solve_captcha, get_captcha_result
-from backend.constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, FOLDER_PATH_DATA_CRAWLER, LIMIT_POST_PER_DAY, FOLDER_PATH_POST_ID_CRAWLER
+from backend.constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, FOLDER_PATH_DATA_CRAWLER, LIMIT_POST_PER_DAY, FOLDER_PATH_POST_ID_CRAWLER, FB_DEFAULT_URL
 import logging
 
 
@@ -427,6 +428,58 @@ def handle_captcha_if_present(browser, username, password):
 
     except Exception as e:
         print(f"Error while handling CAPTCHA: {e}")
+        
+
+# Simulate human behavior between scraping games
+def simulate_human_behavior(browser):
+    try:
+        logger.info("Simulating human behavior...")
+        
+        # Navigate to Facebook Watch
+        logger.info("Navigating to Facebook Watch...")
+        browser.get(f"{FB_DEFAULT_URL}/watch")
+        
+        # Scroll on Watch page for 1 minute
+        logger.info("Scrolling on Watch page for 1 minute...")
+        start_time = time.time()
+        last_height = browser.execute_script("return document.body.scrollHeight")
+        
+        while time.time() - start_time < 60:  # 1 minute
+            # Random scroll amount
+            scroll_amount = random.randint(300, 700)
+            browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
+            
+            # Random pause between scrolls
+            time.sleep(random.uniform(1.5, 4.0))
+            
+            # Occasionally pause for longer
+            if random.random() < 0.2:
+                time.sleep(random.uniform(3.0, 7.0))
+        
+        # Navigate to Facebook homepage
+        logger.info("Navigating to Facebook homepage...")
+        browser.get(FB_DEFAULT_URL)
+        
+        # Scroll on homepage for 50 seconds
+        logger.info("Scrolling on homepage for 50 seconds...")
+        start_time = time.time()
+        
+        while time.time() - start_time < 50:  # 50 seconds
+            # Random scroll amount
+            scroll_amount = random.randint(200, 600)
+            browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
+            
+            # Random pause between scrolls
+            time.sleep(random.uniform(1.0, 3.5))
+            
+            # Occasionally pause for longer
+            if random.random() < 0.15:
+                time.sleep(random.uniform(2.5, 5.0))
+        
+        logger.info("Human behavior simulation completed")
+        
+    except Exception as e:
+        logger.error(f"Error during human behavior simulation: {e}")
 
 
 def run_fb_scraper_multiple_fanpages(game_urls):
@@ -442,7 +495,7 @@ def run_fb_scraper_multiple_fanpages(game_urls):
         browser = login_facebook(username, password)
         
         current_url = browser.current_url
-        if current_url.startswith("https://www.facebook.com/two_step_verification/authentication"):
+        if current_url.startswith(f"{FB_DEFAULT_URL}/two_step_verification/authentication"):
             if not handle_captcha_if_present(browser, username, password):
                 print("CAPTCHA handling failed, exiting.")
                 return False  # Exit if CAPTCHA handling fails
@@ -546,8 +599,10 @@ def run_fb_scraper_multiple_fanpages(game_urls):
                 
                 # Add random delay after processing all games
                 if index < len(game_urls) - 1:  # Only sleep if not the last game
-                    sleep_time = random.randint(150, 400)
+                    sleep_time = random.randint(70, 100)
                     logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
+                    sleep(sleep_time)
+                    simulate_human_behavior(browser)
                     sleep(sleep_time)
                 
             except Exception as e:
