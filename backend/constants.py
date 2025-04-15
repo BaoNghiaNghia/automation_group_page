@@ -4,7 +4,7 @@ API_KEY_CAPTCHA = 'point_3d0bd505d511c336b6279f4815057b9a'
 FB_DEFAULT_URL = "https://www.facebook.com"
 FB_ACCOUNT_LIST = [
     ("0399988593", "p6+p7N&r%M$#B5b"),
-    ("Cdy006947@gmail.com", "Haha123@"),
+    # ("Cdy006947@gmail.com", "Haha123@"),
     
     # ("0928649691", "vutuan1985@"),
     # ("0921747844", "vutuan1985@"),
