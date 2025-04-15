@@ -7,6 +7,7 @@ from backend.constants import FOLDER_PATH_DATA_CRAWLER
 from backend.utils.index import get_game_fanpages, should_scrape_game
 from backend.service.migrate_db import insert_paragraph_to_db
 from backend.service.text_generate_deepseek import rewrite_paragraph_deepseek
+from backend.service.update_ld_devices import main as check_ld_devices
 import logging
 
 
@@ -26,24 +27,20 @@ if __name__ == "__main__":
             exit(1)
             
         logger.info(f"Found {len(game_urls)} game URLs: {game_urls}")
-        
-        # Single Fanpage
-        # for i, game_url in enumerate(game_urls):
-        #     game_path = base_path / game_url
-        #     logger.info(f"Processing: {game_path}")
 
-        #     if not should_scrape_game(game_url, base_path):
-        #         logger.info(f"Skipping {game_url} - folder exists")
-        #         continue
-                
-        #     logger.info(f"Scraping posts for {game_url}")
-        #     run_fb_scraper_single_fanpage_posts(game_url)
-            
-        #     # Add random delay between games, except for last game
-        #     if i < len(game_urls) - 1:
-        #         sleep_time = random.randint(120, 400)
-        # logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
-        # sleep(sleep_time)
+
+        # Step 0: Check LDPlayer devices
+        logger.info("Starting Step 0: Checking LDPlayer devices...")
+        try:
+            check_ld_devices(r"C:\LDPlayer\LDPlayer9\vms\config")
+            logger.info("Step 0 completed: LDPlayer devices checked successfully.")
+        except Exception as e:
+            logger.error(f"Error in Step 0 (checking LDPlayer devices): {str(e)}")
+            print(f"Step 0 failed: {str(e)}")
+        
+        # Add a delay before proceeding to Step 1
+        logger.info("Adding a 4-second delay between steps...")
+        time.sleep(4)
         
         # Step 1: Scrape multiple fanpages
         logger.info("Starting Step 1: Scraping multiple fanpages...")
