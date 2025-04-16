@@ -3,6 +3,7 @@ import time
 import requests
 import random
 import requests
+import pickle
 from PIL import Image
 from io import BytesIO
 from time import sleep
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 def init_browser(is_ubuntu=False):
     """Initialize Chrome browser with required options."""
     chrome_options = Options()
-    
+
     # Common options
     prefs = {
         "profile.default_content_setting_values.notifications": 1
@@ -46,11 +47,34 @@ def init_browser(is_ubuntu=False):
     browser = webdriver.Chrome(service=service, options=chrome_options)
     return browser
 
-def login_facebook(username, password, is_ubuntu=False):
-    """Login to Facebook using Selenium."""
+def login_facebook(username, password, is_ubuntu=False, use_cookies=False, cookies_path=None):
+    """Login to Facebook using Selenium with option to use saved cookies."""
     browser = init_browser(is_ubuntu)
-    browser.get(FB_DEFAULT_URL)
     
+    if use_cookies and cookies_path and os.path.exists(cookies_path):
+        # Load cookies if available
+        browser.get(FB_DEFAULT_URL)
+        try:
+            with open(cookies_path, 'rb') as cookiesfile:
+                cookies = pickle.load(cookiesfile)
+                for cookie in cookies:
+                    browser.add_cookie(cookie)
+            
+            # Refresh page to apply cookies
+            browser.refresh()
+            sleep(random.randint(3, 6))
+            
+            # Check if login was successful
+            if is_logged_in(browser):
+                logger.info(f"Successfully logged in using cookies for {username}")
+                return browser
+            else:
+                logger.info("Cookie login failed, proceeding with normal login")
+        except Exception as e:
+            logger.error(f"Error loading cookies: {e}")
+    
+    # Normal login if cookies not available or failed
+    browser.get(FB_DEFAULT_URL)
     sleep(random.randint(6, 12))
     
     # Wait for login elements and enter credentials
@@ -61,11 +85,47 @@ def login_facebook(username, password, is_ubuntu=False):
     
     # Wait for Facebook to respond after login
     WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.TAG_NAME, "img")))
+    
+    # Save cookies after successful login
+    if is_logged_in(browser):
+        save_cookies(browser, username, cookies_path)
+
     return browser
 
-def login_facebook_ubuntu(username, password):
+def is_logged_in(browser):
+    """Check if the user is logged in to Facebook."""
+    try:
+        # Look for elements that indicate a successful login
+        # This could be a profile picture, notifications icon, etc.
+        WebDriverWait(browser, 5).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@aria-label='Your profile' or @aria-label='Account' or contains(@class, 'x1qhmfi1')]"))
+        )
+        return True
+    except:
+        return False
+
+def save_cookies(browser, username, cookies_path=None):
+    """Save browser cookies to a file."""
+    if not cookies_path:
+        # Create cookies directory if it doesn't exist
+        cookies_dir = os.path.join(os.getcwd(), "facebook_cookies")
+        if not os.path.exists(cookies_dir):
+            os.makedirs(cookies_dir)
+        cookies_path = os.path.join(cookies_dir, f"{username}_cookies.pkl")
+    
+    # Save cookies
+    try:
+        cookies = browser.get_cookies()
+        with open(cookies_path, 'wb') as file:
+            pickle.dump(cookies, file)
+        logger.info(f"Cookies saved successfully to {cookies_path}")
+    except Exception as e:
+        logger.error(f"Error saving cookies: {e}")
+
+def login_facebook_ubuntu(username, password, use_cookies=False):
     """Convenience function for Ubuntu login."""
-    return login_facebook(username, password, is_ubuntu=True)
+    cookies_path = os.path.join(os.getcwd(), "facebook_cookies", f"{username}_cookies.pkl")
+    return login_facebook(username, password, is_ubuntu=True, use_cookies=use_cookies, cookies_path=cookies_path)
 
 
 def extract_post_id_from_url(url):
@@ -287,12 +347,12 @@ def readData(fileName):
         return [line.strip() for line in f.readlines()]
     
     
-def run_fb_scraper_single_fanpage_posts(game_name):
+def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
     try:
         # Choose a random account and login
         username, password = random.choice(FB_ACCOUNT_LIST)
-        browser = login_facebook(username, password)
-        # browser = login_facebook_ubuntu(username, password)
+        cookies_path = os.path.join(os.getcwd(), "facebook_cookies", f"{username}_cookies.pkl")
+        browser = login_facebook(username, password, use_cookies=use_cookies, cookies_path=cookies_path)
 
         sleep(random.randint(2, 5))
 
@@ -458,6 +518,15 @@ def simulate_human_behavior(browser):
                 long_pause = random.uniform(8.0, 15.0)
                 logger.info(f"Taking a longer pause for {long_pause:.1f} seconds...")
                 time.sleep(long_pause)
+
+            # Simulate mouse hover over random element on the page
+            if random.random() < 0.1:  # 10% chance
+                elements = browser.find_elements(By.TAG_NAME, "a")
+                if elements:
+                    random_element = random.choice(elements)
+                    ActionChains(browser).move_to_element(random_element).perform()
+                    logger.info(f"Hovering over element: {random_element.get_attribute('href')}")
+                    time.sleep(random.uniform(1.5, 4.0))
         
         # Navigate to Facebook homepage
         logger.info("Navigating to Facebook homepage...")
@@ -481,6 +550,29 @@ def simulate_human_behavior(browser):
                 long_pause = random.uniform(6.0, 12.0)
                 logger.info(f"Reading content for {long_pause:.1f} seconds...")
                 time.sleep(long_pause)
+
+            # Simulate typing in the search bar (randomly, 10% chance)
+            if random.random() < 0.1:
+                search_box = browser.find_element(By.XPATH, "//input[@placeholder='Search Facebook']")
+                search_queries = ["vacation spots", "funny memes", "game tips", "movie trailers"]
+                search_query = random.choice(search_queries)
+                search_box.click()
+                search_box.clear()
+                search_box.send_keys(search_query)
+                search_box.send_keys(Keys.ENTER)
+                logger.info(f"Simulating search for: {search_query}")
+                time.sleep(random.randint(5, 10))
+
+            # Simulate clicking on a random post or ad
+            if random.random() < 0.05:  # 5% chance to click
+                posts = browser.find_elements(By.XPATH, "//a[contains(@href, 'posts/')]")
+                if posts:
+                    random_post = random.choice(posts)
+                    random_post.click()
+                    logger.info(f"Clicking on post link: {random_post.get_attribute('href')}")
+                    time.sleep(random.randint(5, 10))
+                    browser.back()  # Go back to the previous page
+                    time.sleep(random.uniform(1.0, 3.0))
         
         logger.info("Human behavior simulation completed")
         
@@ -488,17 +580,23 @@ def simulate_human_behavior(browser):
         logger.error(f"Error during human behavior simulation: {e}")
 
 
-def run_fb_scraper_multiple_fanpages(game_urls):
+
+def run_fb_scraper_multiple_fanpages(game_urls, use_cookies=True):
     """
     Run Facebook scraper for multiple fanpages using a single browser session
     
+    Args:
+        game_urls (list): List of game URLs to scrape
+        use_cookies (bool): Whether to use saved cookies for login
+        
     Returns:
         bool: True if scraping completed successfully, False otherwise
     """
     try:
         # Choose a random account and login
         username, password = random.choice(FB_ACCOUNT_LIST)
-        browser = login_facebook(username, password)
+        cookies_path = os.path.join(os.getcwd(), "facebook_cookies", f"{username}_cookies.pkl")
+        browser = login_facebook(username, password, use_cookies=use_cookies, cookies_path=cookies_path)
         
         current_url = browser.current_url
         if current_url.startswith(f"{FB_DEFAULT_URL}/two_step_verification/authentication"):

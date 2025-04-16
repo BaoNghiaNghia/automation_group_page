@@ -8,7 +8,16 @@ def get_game_fanpages():
         response = requests.get(f'{SERVICE_URL}/game_fanpages')
         response.raise_for_status()
         data = response.json()
-        return [game['fanpage'].split('/')[-1] for game in data['items'] if game.get('status') == 'active']
+        
+        # Get all active game fanpages
+        active_games = [game['fanpage'].split('/')[-1] for game in data['items'] if game.get('status') == 'active']
+        
+        # If there are active games, randomly shuffle them before returning
+        if active_games:
+            import random
+            random.shuffle(active_games)
+        
+        return active_games
     except requests.exceptions.RequestException as e:
         print(f"Error fetching game fanpages: {e}")
         return []

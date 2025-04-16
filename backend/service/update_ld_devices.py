@@ -100,6 +100,7 @@ def main(config_folder):
                 "udid": f"UD{device_name}",
                 "imei": f"IM{device_name}",
                 "last_run": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                "pc_runner": "Máy chạy Group 1",
                 "count_today": 0,
                 "status": "active"
             }
