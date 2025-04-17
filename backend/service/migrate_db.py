@@ -1,7 +1,9 @@
 import os
-import logging
+import time
 import json
-
+import logging
+import requests
+from backend.utils.index import get_all_game_fanpages
 from backend.constants import SERVICE_URL
 
 # Setup logging
@@ -27,12 +29,16 @@ def insert_paragraph_to_db():
         batch_data = []
         
         with open(output_file, 'w', encoding='utf-8') as f:
-            # Initialize flag for first item
-            first_item = True
-            
+            game_fanpages = get_all_game_fanpages()
+            if not game_fanpages:
+                logger.error("No game URLs found from get_game_fanpages")
+                raise Exception("No game URLs found from get_game_fanpages")
+
+            game_fanpages_id = {item['fanpage'].split('/')[-1]: item['id'] for item in game_fanpages}
+
             for folder in os.listdir(data_crawler_path):
                 folder_path = os.path.join(data_crawler_path, folder)
-                
+
                 if not os.path.isdir(folder_path):
                     continue
 
@@ -41,10 +47,10 @@ def insert_paragraph_to_db():
                 except ValueError:
                     logger.warning(f"Skipping {folder} - invalid folder name format")
                     continue
-                
+
                 image_path = folder_path
                 txt_files = [f for f in os.listdir(folder_path) if f.endswith('.txt')]
-                
+
                 for txt_file in txt_files:
                     file_path = os.path.join(folder_path, txt_file)
                     try:
@@ -54,23 +60,23 @@ def insert_paragraph_to_db():
                                 file_name = os.path.splitext(txt_file)[0]
                                 batch_data.append({
                                     'fanpage': game_name,
+                                    'game_fanpages_id': game_fanpages_id.get(game_name, None),
                                     'post_id': post_id,
                                     'clone_version': file_name,
                                     'content': content,
                                     'img_path': image_path
                                 })
-                                
+
                     except Exception as e:
                         logger.error(f"Error reading {file_path}: {str(e)}")
-            
+
             # Write any remaining data in the final batch
             if batch_data:
                 json.dump(batch_data, f, ensure_ascii=False, indent=4)
-                
+
         logger.info(f"Data saved to {output_file}")
-        
+
         # Add a 5-second delay to prevent overwhelming the system
-        import time
         time.sleep(5)
         logger.info("Added 5-second delay before completing the process")
 
@@ -85,8 +91,6 @@ def insert_paragraph_to_db():
             batch_size = 10
             total_records = len(data)
             total_batches = (total_records + batch_size - 1) // batch_size  # Ceiling division
-            
-            import requests
             
             api_url = f'{SERVICE_URL}/daily_posts_content/insert-batch'
             headers = {'Content-Type': 'application/json'}

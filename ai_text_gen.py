@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 if __name__ == "__main__":
     try:
         insert_paragraph_to_db()
-        
+
         # # Step 1: Rewrite paragraph with DeepSeek
         # logger.info("Starting Step 1: Rewriting paragraphs with DeepSeek")
         # result = rewrite_paragraph_deepseek()
@@ -21,7 +21,7 @@ if __name__ == "__main__":
         # # Wait for step 1 to complete before proceeding
         # if result:
         #     logger.info("Step 1 completed successfully.")
-            
+
         #     try:
         #         # Step 2: Insert paragraph to database
         #         logger.info("Starting Step 2: Inserting paragraphs to database")
