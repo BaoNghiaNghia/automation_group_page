@@ -29,9 +29,9 @@ def replace_facebook_links(content, group_by_game):
     return updated_content
 
 
-def rewrite_paragraph_deepseek():
+def rewrite_paragraph_deepseek(environment):
     try:
-        game_fanpages = get_all_game_fanpages()
+        game_fanpages = get_all_game_fanpages(environment)
         if not game_fanpages:
             logger.error("No game URLs found from get_game_fanpages")
             raise Exception("No game URLs found from get_game_fanpages")

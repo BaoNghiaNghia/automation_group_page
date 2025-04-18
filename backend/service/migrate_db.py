@@ -4,7 +4,7 @@ import json
 import logging
 import requests
 from backend.utils.index import get_all_game_fanpages
-from backend.constants import SERVICE_URL
+from backend.constants import SERVICE_URL, ENV_CONFIG
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 
-def insert_paragraph_to_db():
+def insert_paragraph_to_db(environment):
     
     try:
         # Define the data crawler path
@@ -29,7 +29,7 @@ def insert_paragraph_to_db():
         batch_data = []
         
         with open(output_file, 'w', encoding='utf-8') as f:
-            game_fanpages = get_all_game_fanpages()
+            game_fanpages = get_all_game_fanpages(environment)
             if not game_fanpages:
                 logger.error("No game URLs found from get_game_fanpages")
                 raise Exception("No game URLs found from get_game_fanpages")
@@ -92,7 +92,7 @@ def insert_paragraph_to_db():
             total_records = len(data)
             total_batches = (total_records + batch_size - 1) // batch_size  # Ceiling division
             
-            api_url = f'{SERVICE_URL}/daily_posts_content/insert-batch'
+            api_url = f'{ENV_CONFIG[environment]["SERVICE_URL"]}/daily_posts_content/insert-batch'
             headers = {'Content-Type': 'application/json'}
             
             for i in range(0, total_records, batch_size):

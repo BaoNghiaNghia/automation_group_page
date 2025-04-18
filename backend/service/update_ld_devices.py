@@ -3,15 +3,16 @@ import json
 import time
 import requests
 import datetime
-from backend.constants import SERVICE_URL
+from backend.constants import SERVICE_URL, ENV_CONFIG
 
 # Main function to execute the process
-def main(config_folder):
+def update_ld_devices(config_folder, environment):
     # Function to fetch device names from API
+    service_url = ENV_CONFIG[environment]['SERVICE_URL']
     def fetch_device_names_from_api():
         try:
             # Construct the API URL
-            api_url = f"{SERVICE_URL}/ldplayer_devices" if SERVICE_URL.endswith('/service') else f"{SERVICE_URL}/service/ldplayer_devices"
+            api_url = f"{service_url}/ldplayer_devices" if service_url.endswith('/service') else f"{service_url}/service/ldplayer_devices"
             
             # Make the API request
             response = requests.get(api_url)
@@ -81,7 +82,7 @@ def main(config_folder):
     # Create new devices in the database for missing devices
     def create_new_device(device_name):
         try:
-            url = f"{SERVICE_URL}/ldplayer_devices/create"
+            url = f"{service_url}/ldplayer_devices/create"
 
             headers = {
                 "Content-Type": "application/json"

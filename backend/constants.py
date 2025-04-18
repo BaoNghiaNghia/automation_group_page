@@ -10,17 +10,32 @@ FB_ACCOUNT_LIST = [
     # ("0921747844", "vutuan1985@"),
     # ("0928618253", "vutuan1985@"),
 ]
+# Environment-specific configurations
+ENV_CONFIG = {
+    "local": {
+        "SERVICE_URL": "http://127.0.0.1:8080/service",
+        "CONFIG_LDPLAYER_FOLDER": r"C:\LDPlayer\LDPlayer9\vms\config"
+    },
+    "production": {
+        "SERVICE_URL": "https://boostgamemobile.com/service",
+        "CONFIG_LDPLAYER_FOLDER": r"D:\LDPlayer\LDPlayer3.0\vms\config"
+    }
+}
 
-# SERVICE_URL = os.getenv("SERVICE_URL", "http://127.0.0.1:8080/service")
-SERVICE_URL = os.getenv("SERVICE_URL", "https://boostgamemobile.com/service")
+# Get environment from env var or default to local
+ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+
+# Set the appropriate configuration based on environment
+SERVICE_URL = os.getenv("SERVICE_URL", ENV_CONFIG[ENVIRONMENT]["SERVICE_URL"])
+CONFIG_LDPLAYER_FOLDER = ENV_CONFIG[ENVIRONMENT]["CONFIG_LDPLAYER_FOLDER"]
 
 DOMAIN_CAPTCHA = "https://captcha69.com"
 FOLDER_PATH_DATA_CRAWLER = "/data_crawler/"
 FOLDER_PATH_POST_ID_CRAWLER = "/data_posts_id/"
 LIMIT_POST_PER_DAY = 20
 
-# CONFIG_LDPLAYER_FOLDER = r"C:\LDPlayer\LDPlayer9\vms\config"
-CONFIG_LDPLAYER_FOLDER = r"D:\LDPlayer\LDPlayer3.0\vms\config"
+
+
 
 GEMINI_API_KEY = "AIzaSyCZCzQFbJIoKf4TPaazA7VvmlfiLuQvhSM"
 GEMINI_MODEL = "gemini-2.0-flash"

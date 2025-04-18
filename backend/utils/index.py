@@ -1,11 +1,11 @@
 import requests
 import os
-from backend.constants import SERVICE_URL
+from backend.constants import ENV_CONFIG
 
-def get_game_fanpages():
+def get_game_fanpages(environment):
     """Fetch active game fanpage URLs from service and extract game names."""
     try:
-        response = requests.get(f'{SERVICE_URL}/game_fanpages')
+        response = requests.get(f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages')
         response.raise_for_status()
         data = response.json()
         
@@ -22,10 +22,10 @@ def get_game_fanpages():
         print(f"Error fetching game fanpages: {e}")
         return []
     
-def get_all_game_fanpages():
+def get_all_game_fanpages(environment):
     """Fetch game fanpage URLs from service and extract game names."""
     try:
-        response = requests.get(f'{SERVICE_URL}/game_fanpages')
+        response = requests.get(f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages')
         response.raise_for_status()
         data = response.json()
         return data['items']

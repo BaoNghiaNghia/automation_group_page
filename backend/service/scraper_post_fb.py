@@ -491,7 +491,7 @@ def handle_captcha_if_present(browser, username, password):
         
 
 # Simulate human behavior between scraping games
-def simulate_human_behavior(browser):
+def simulate_human_behavior_when_scraping_game(browser):
     try:
         logger.info("Simulating human behavior...")
         
@@ -633,9 +633,17 @@ def simulate_human_behavior(browser):
             if random.random() < 0.1:  # 10% chance
                 try:
                     search_box = browser.find_element(By.XPATH, "//input[@placeholder='Search Facebook']")
-                    # More specific game-related searches
-                    search_queries = ["mobile game tips", "new game releases", "game strategies", 
-                                     "popular mobile games", "game recommendations", "gaming community"]
+                    # More specific game-related searches with popular trending queries
+                    search_queries = [
+                        "mobile game tips", "new game releases", "game strategies", "popular mobile games", 
+                        "game recommendations", "gaming community", "best mobile games 2023", 
+                        "free mobile games", "mobile game cheats", "mobile game updates", 
+                        "upcoming game releases", "mobile game events", "mobile game giveaways",
+                        "mobile game tournaments", "mobile game reviews", "mobile game guides",
+                        "trending mobile games", "mobile game hacks", "mobile game mods",
+                        "mobile game communities", "mobile game news", "mobile game forums"
+                    ]
+
                     search_query = random.choice(search_queries)
                     
                     # Type like a human with variable speed
@@ -670,6 +678,82 @@ def simulate_human_behavior(browser):
 
 
 
+def simulate_scrolling_behavior_when_init_facebook(browser):
+    """
+    Simulates natural human scrolling behavior in the browser
+    
+    Args:
+        browser (webdriver.Chrome): The browser instance used for Selenium automation
+        
+    Returns:
+        float: The final pause time in seconds
+    """
+    try:
+        # Use more natural scrolling patterns with variable speeds and distances
+        scroll_duration = random.randint(30, 60)  # 30-60 seconds of browsing
+        start_time = time.time()
+        
+        while time.time() - start_time < scroll_duration:
+            # Natural scrolling with acceleration and deceleration
+            scroll_pattern = random.choice(["smooth", "quick", "pause_heavy"])
+            
+            if scroll_pattern == "smooth":
+                # Smooth scrolling with gradual acceleration
+                for i in range(3, 8):
+                    scroll_amount = i * 100  # Gradually increasing scroll amount
+                    browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
+                    time.sleep(random.uniform(0.3, 0.7))
+            elif scroll_pattern == "quick":
+                # Quick scroll followed by pause (like finding something interesting)
+                scroll_amount = random.randint(500, 1200)
+                browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
+            else:  # pause_heavy
+                # Small scroll with longer pause (like reading content)
+                scroll_amount = random.randint(200, 400)
+                browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
+            
+            # Variable pauses between scrolling actions
+            if random.random() < 0.7:  # 70% chance for normal pause
+                time.sleep(random.uniform(2.0, 5.5))
+            else:  # 30% chance for longer engagement
+                engagement_time = random.uniform(7.0, 15.0)
+                logger.info(f"Engaging with content for {engagement_time:.1f} seconds...")
+                time.sleep(engagement_time)
+                
+                # Simulate reactions during longer engagement (like, comment hover)
+                if random.random() < 0.4:  # 40% chance to interact
+                    try:
+                        reaction_buttons = browser.find_elements(By.XPATH, "//div[@aria-label='Like' or @aria-label='React' or contains(@aria-label, 'reaction')]")
+                        if reaction_buttons:
+                            button = random.choice(reaction_buttons)
+                            # Hover over but don't click (just showing interest)
+                            ActionChains(browser).move_to_element(button).perform()
+                            logger.info("Hovering over reaction button")
+                            time.sleep(random.uniform(1.0, 2.5))
+                    except Exception as e:
+                        logger.debug(f"Failed to simulate reaction: {e}")
+        
+        # Occasionally navigate to a different section before returning to main task
+        if random.random() < 0.3:  # 30% chance
+            try:
+                sections = ["watch", "marketplace", "groups"]
+                section = random.choice(sections)
+                logger.info(f"Briefly visiting {section} section...")
+                browser.get(f"{FB_DEFAULT_URL}/{section}")
+                time.sleep(random.uniform(5.0, 10.0))
+                browser.get(FB_DEFAULT_URL)  # Return to homepage
+            except Exception as e:
+                logger.debug(f"Failed to visit section: {e}")
+        
+        # Final pause before starting the actual scraping
+        final_pause = random.uniform(5, 8)
+        logger.info(f"Finished human-like browsing behavior, pausing for {final_pause:.1f} seconds before scraping...")
+        return final_pause
+    except Exception as e:
+        logger.error(f"Error during scrolling behavior simulation: {e}")
+        return random.uniform(3, 5)  # Fallback pause time
+
+
 def run_fb_scraper_multiple_fanpages(game_urls, use_cookies=True):
     """
     Run Facebook scraper for multiple fanpages using a single browser session
@@ -698,36 +782,10 @@ def run_fb_scraper_multiple_fanpages(game_urls, use_cookies=True):
         sleep(sleep_time)
             
         # Add human-like behavior before starting to scrape
-        print("Simulating human-like browsing behavior before scraping...")
+        logger.info("Simulating human-like browsing behavior before scraping...")
         
-        # Perform some initial scrolls to mimic a person browsing
-        initial_scroll_count = random.randint(3, 7)  # Random number of initial scrolls
-        
-        for i in range(initial_scroll_count):
-            # Scroll down with varying speeds
-            scroll_height = random.randint(300, 800)  # Random scroll distance
-            browser.execute_script(f"window.scrollBy(0, {scroll_height});")
-            
-            # Add a random delay between scrolls (1-3 seconds)
-            delay = random.uniform(4, 10)
-            print(f"Initial scroll {i+1}/{initial_scroll_count}, waiting {delay:.2f} seconds...")
-            sleep(delay)
-            
-            # Sometimes move mouse to random positions (simulating human behavior)
-            if random.random() > 0.7:  # 30% chance to move mouse
-                try:
-                    # Find a random element to hover over
-                    elements = browser.find_elements(By.TAG_NAME, "div")
-                    if elements:
-                        random_element = random.choice(elements[:20])  # Choose from first 20 elements
-                        ActionChains(browser).move_to_element(random_element).perform()
-                        print("Moving mouse to random element...")
-                except Exception as e:
-                    print(f"Mouse movement failed: {e}")
-        
-        # Pause briefly before starting the actual scraping
-        final_pause = random.uniform(5, 8)
-        print(f"Finished initial browsing behavior, pausing for {final_pause:.2f} seconds before scraping...")
+        # Simulate scrolling behavior and get final pause time
+        final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
         sleep(final_pause)
 
         # Process each game URL with the same browser session
@@ -795,7 +853,7 @@ def run_fb_scraper_multiple_fanpages(game_urls, use_cookies=True):
                     sleep_time = random.randint(70, 100)
                     logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
                     sleep(sleep_time)
-                    simulate_human_behavior(browser)
+                    simulate_human_behavior_when_scraping_game(browser)
                     sleep(sleep_time)
                 
             except Exception as e:
