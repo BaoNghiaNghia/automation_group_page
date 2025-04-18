@@ -500,79 +500,168 @@ def simulate_human_behavior(browser):
         browser.get(f"{FB_DEFAULT_URL}/watch")
         
         # Scroll on Watch page for 2-3 minutes
-        watch_duration = random.randint(120, 180)  # 2-3 minutes
+        watch_duration = random.randint(150, 210)  # 2-3 minutes
         logger.info(f"Scrolling on Watch page for {watch_duration} seconds...")
         start_time = time.time()
-        last_height = browser.execute_script("return document.body.scrollHeight")
         
+        # Use more natural scrolling patterns with variable speeds and distances
         while time.time() - start_time < watch_duration:
-            # Random scroll amount
-            scroll_amount = random.randint(300, 800)
-            browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
+            # Natural scrolling with acceleration and deceleration
+            scroll_pattern = random.choice(["smooth", "quick", "pause_heavy"])
             
-            # Random pause between scrolls
-            time.sleep(random.uniform(2.5, 6.0))
+            if scroll_pattern == "smooth":
+                # Smooth scrolling with gradual acceleration
+                for i in range(3, 8):
+                    scroll_amount = i * 100  # Gradually increasing scroll amount
+                    browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
+                    time.sleep(random.uniform(0.3, 0.7))
+            elif scroll_pattern == "quick":
+                # Quick scroll followed by pause (like finding something interesting)
+                scroll_amount = random.randint(500, 1200)
+                browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
+            else:  # pause_heavy
+                # Small scroll with longer pause (like reading content)
+                scroll_amount = random.randint(200, 400)
+                browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
             
-            # Occasionally pause for longer (simulating watching a video)
-            if random.random() < 0.25:
-                long_pause = random.uniform(8.0, 15.0)
-                logger.info(f"Taking a longer pause for {long_pause:.1f} seconds...")
-                time.sleep(long_pause)
+            # Variable pauses between scrolling actions
+            if random.random() < 0.7:  # 70% chance for normal pause
+                time.sleep(random.uniform(2.0, 5.5))
+            else:  # 30% chance for longer engagement
+                engagement_time = random.uniform(7.0, 18.0)
+                logger.info(f"Engaging with content for {engagement_time:.1f} seconds...")
+                time.sleep(engagement_time)
+                
+                # Simulate reactions during longer engagement (like, comment hover)
+                if random.random() < 0.4:  # 40% chance to interact
+                    try:
+                        reaction_buttons = browser.find_elements(By.XPATH, "//div[@aria-label='Like' or @aria-label='React' or contains(@aria-label, 'reaction')]")
+                        if reaction_buttons:
+                            button = random.choice(reaction_buttons)
+                            # Hover over but don't click (just showing interest)
+                            ActionChains(browser).move_to_element(button).perform()
+                            logger.info("Hovering over reaction button")
+                            time.sleep(random.uniform(1.0, 2.5))
+                    except Exception as e:
+                        logger.debug(f"Failed to simulate reaction: {e}")
 
-            # Simulate mouse hover over random element on the page
-            if random.random() < 0.1:  # 10% chance
-                elements = browser.find_elements(By.TAG_NAME, "a")
-                if elements:
-                    random_element = random.choice(elements)
-                    ActionChains(browser).move_to_element(random_element).perform()
-                    logger.info(f"Hovering over element: {random_element.get_attribute('href')}")
-                    time.sleep(random.uniform(1.5, 4.0))
+            # Occasionally click on videos that look interesting
+            if random.random() < 0.15:  # 15% chance
+                try:
+                    videos = browser.find_elements(By.XPATH, "//div[contains(@class, 'watch')]//a[contains(@href, '/watch/')]")
+                    if videos:
+                        video = random.choice(videos)
+                        # Scroll to make video visible
+                        browser.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", video)
+                        time.sleep(random.uniform(1.0, 2.0))
+                        video.click()
+                        logger.info("Clicked on a video to watch")
+                        # Watch for a variable amount of time
+                        watch_time = random.uniform(15.0, 45.0)
+                        logger.info(f"Watching video for {watch_time:.1f} seconds")
+                        time.sleep(watch_time)
+                        browser.back()
+                        time.sleep(random.uniform(2.0, 4.0))
+                except Exception as e:
+                    logger.debug(f"Failed to interact with video: {e}")
         
-        # Navigate to Facebook homepage
+        # Navigate to Facebook homepage with natural browsing pattern
         logger.info("Navigating to Facebook homepage...")
         browser.get(FB_DEFAULT_URL)
         
-        # Scroll on homepage for 1.5-2.5 minutes
-        homepage_duration = random.randint(90, 150)  # 1.5-2.5 minutes
-        logger.info(f"Scrolling on homepage for {homepage_duration} seconds...")
+        # Scroll on homepage with more natural reading patterns
+        homepage_duration = random.randint(160, 230)  # 1.5-2.5 minutes
+        logger.info(f"Browsing homepage for {homepage_duration} seconds...")
         start_time = time.time()
         
         while time.time() - start_time < homepage_duration:
-            # Random scroll amount
-            scroll_amount = random.randint(200, 700)
-            browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
+            # Implement variable scrolling speeds and distances
+            scroll_speed = random.choice(["slow", "medium", "fast"])
             
-            # Random pause between scrolls
-            time.sleep(random.uniform(2.0, 5.5))
+            if scroll_speed == "slow":
+                # Slow careful reading
+                scroll_amount = random.randint(100, 300)
+                browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
+                time.sleep(random.uniform(4.0, 8.0))  # Longer time reading
+            elif scroll_speed == "medium":
+                # Normal browsing
+                scroll_amount = random.randint(300, 600)
+                browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
+                time.sleep(random.uniform(2.5, 5.0))
+            else:  # fast
+                # Scanning quickly
+                scroll_amount = random.randint(600, 900)
+                browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
+                time.sleep(random.uniform(1.0, 2.5))
             
-            # Occasionally pause for longer (simulating reading a post)
-            if random.random() < 0.2:
-                long_pause = random.uniform(6.0, 12.0)
-                logger.info(f"Reading content for {long_pause:.1f} seconds...")
-                time.sleep(long_pause)
+            # Simulate interest in specific content
+            if random.random() < 0.25:  # 25% chance to show interest
+                try:
+                    # Find interactive elements like posts, images, or comments
+                    interactive_elements = browser.find_elements(By.XPATH, 
+                        "//div[contains(@class, 'feed')]/div | //div[contains(@class, 'post')] | //div[contains(@class, 'story')]")
+                    
+                    if interactive_elements:
+                        element = random.choice(interactive_elements)
+                        # Scroll element into view with natural movement
+                        browser.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element)
+                        time.sleep(random.uniform(1.0, 2.0))
+                        
+                        # Hover over the element to show interest
+                        ActionChains(browser).move_to_element(element).perform()
+                        logger.info("Showing interest in a post")
+                        
+                        # Longer pause to simulate reading
+                        reading_time = random.uniform(8.0, 20.0)
+                        logger.info(f"Reading content for {reading_time:.1f} seconds")
+                        time.sleep(reading_time)
+                        
+                        # Sometimes expand comments or click on images
+                        if random.random() < 0.3:
+                            try:
+                                comment_buttons = element.find_elements(By.XPATH, ".//span[contains(text(), 'comment') or contains(text(), 'Comment')]")
+                                if comment_buttons:
+                                    comment_buttons[0].click()
+                                    logger.info("Expanded comments section")
+                                    time.sleep(random.uniform(5.0, 12.0))
+                            except Exception:
+                                pass
+                except Exception as e:
+                    logger.debug(f"Failed to interact with content: {e}")
 
-            # Simulate typing in the search bar (randomly, 10% chance)
-            if random.random() < 0.1:
-                search_box = browser.find_element(By.XPATH, "//input[@placeholder='Search Facebook']")
-                search_queries = ["vacation spots", "funny memes", "game tips", "movie trailers"]
-                search_query = random.choice(search_queries)
-                search_box.click()
-                search_box.clear()
-                search_box.send_keys(search_query)
-                search_box.send_keys(Keys.ENTER)
-                logger.info(f"Simulating search for: {search_query}")
-                time.sleep(random.randint(5, 10))
-
-            # Simulate clicking on a random post or ad
-            if random.random() < 0.05:  # 5% chance to click
-                posts = browser.find_elements(By.XPATH, "//a[contains(@href, 'posts/')]")
-                if posts:
-                    random_post = random.choice(posts)
-                    random_post.click()
-                    logger.info(f"Clicking on post link: {random_post.get_attribute('href')}")
-                    time.sleep(random.randint(5, 10))
-                    browser.back()  # Go back to the previous page
-                    time.sleep(random.uniform(1.0, 3.0))
+            # Occasionally search for topics related to games (more targeted)
+            if random.random() < 0.1:  # 10% chance
+                try:
+                    search_box = browser.find_element(By.XPATH, "//input[@placeholder='Search Facebook']")
+                    # More specific game-related searches
+                    search_queries = ["mobile game tips", "new game releases", "game strategies", 
+                                     "popular mobile games", "game recommendations", "gaming community"]
+                    search_query = random.choice(search_queries)
+                    
+                    # Type like a human with variable speed
+                    search_box.click()
+                    search_box.clear()
+                    for char in search_query:
+                        search_box.send_keys(char)
+                        time.sleep(random.uniform(0.05, 0.25))  # Variable typing speed
+                    
+                    time.sleep(random.uniform(0.5, 1.5))  # Pause before hitting enter
+                    search_box.send_keys(Keys.ENTER)
+                    logger.info(f"Searching for game-related topic: {search_query}")
+                    
+                    # Browse search results
+                    time.sleep(random.uniform(5.0, 12.0))
+                    
+                    # Scroll through results with variable speed
+                    for _ in range(random.randint(2, 5)):
+                        browser.execute_script(f"window.scrollBy(0, {random.randint(300, 700)});")
+                        time.sleep(random.uniform(2.0, 5.0))
+                    
+                    # Return to homepage
+                    browser.get(FB_DEFAULT_URL)
+                    time.sleep(random.uniform(2.0, 4.0))
+                except Exception as e:
+                    logger.debug(f"Search simulation failed: {e}")
         
         logger.info("Human behavior simulation completed")
         
