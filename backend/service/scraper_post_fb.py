@@ -17,6 +17,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from backend.utils.captcha_solver import solve_captcha, get_captcha_result
+from backend.utils.index import get_all_game_fanpages
 from backend.constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, FOLDER_PATH_DATA_CRAWLER, LIMIT_POST_PER_DAY, FOLDER_PATH_POST_ID_CRAWLER, FB_DEFAULT_URL
 import logging
 
@@ -524,9 +525,16 @@ def handle_captcha_if_present(browser, username, password):
         
 
 # Simulate human behavior between scraping games
-def simulate_human_behavior_when_scraping_game(browser):
+def simulate_human_behavior_when_scraping_game(browser, environment):
     try:
         logger.info("Simulating human behavior...")
+        
+        game_fanpages = get_all_game_fanpages(environment)
+        if not game_fanpages:
+            logger.error("No game URLs found from get_game_fanpages")
+            raise Exception("No game URLs found from get_game_fanpages")
+        
+        group_search_names = [game["group_search_name"] for game in game_fanpages if "group_search_name" in game]
         
         # Navigate to Facebook Watch
         logger.info("Navigating to Facebook Watch...")
@@ -666,7 +674,7 @@ def simulate_human_behavior_when_scraping_game(browser):
             if random.random() < 0.1:  # 10% chance
                 try:
                     search_box = browser.find_element(By.XPATH, "//input[@placeholder='Search Facebook']")
-                    # More specific game-related searches with popular trending queries
+                    
                     search_queries = [
                         "mobile game tips", "new game releases", "game strategies", "popular mobile games", 
                         "game recommendations", "gaming community", "best mobile games 2023", 
@@ -676,6 +684,9 @@ def simulate_human_behavior_when_scraping_game(browser):
                         "trending mobile games", "mobile game hacks", "mobile game mods",
                         "mobile game communities", "mobile game news", "mobile game forums"
                     ]
+                    
+                    # Extend search_queries with group_search_names
+                    search_queries.extend(group_search_names)
 
                     search_query = random.choice(search_queries)
                     
@@ -787,7 +798,7 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
         return random.uniform(3, 5)  # Fallback pause time
 
 
-def run_fb_scraper_multiple_fanpages(game_urls, use_cookies=True):
+def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
     """
     Run Facebook scraper for multiple fanpages using a single browser session
     
@@ -886,7 +897,7 @@ def run_fb_scraper_multiple_fanpages(game_urls, use_cookies=True):
                     sleep_time = random.randint(70, 100)
                     logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
                     sleep(sleep_time)
-                    simulate_human_behavior_when_scraping_game(browser)
+                    simulate_human_behavior_when_scraping_game(browser, environment)
                     sleep(sleep_time)
                 
             except Exception as e:

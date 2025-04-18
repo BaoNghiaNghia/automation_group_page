@@ -3,7 +3,7 @@ import json
 import time
 import requests
 import datetime
-from backend.constants import SERVICE_URL, ENV_CONFIG
+from backend.constants import ENV_CONFIG
 
 # Main function to execute the process
 def update_ld_devices(config_folder, environment):

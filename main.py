@@ -55,7 +55,7 @@ if __name__ == "__main__":
         time.sleep(4)  # Delay before proceeding to next step
         
         # ------------------------ Step 1: Scrape multiple fanpages ------------------------
-        result = run_step(1, "Scraping multiple fanpages", run_fb_scraper_multiple_fanpages, game_urls)
+        result = run_step(1, "Scraping multiple fanpages", run_fb_scraper_multiple_fanpages, game_urls, args.environment)
         time.sleep(5)  # Delay between steps
         
         if not result:
