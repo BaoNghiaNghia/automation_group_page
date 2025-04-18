@@ -47,14 +47,22 @@ def init_browser(is_ubuntu=False):
     browser = webdriver.Chrome(service=service, options=chrome_options)
     return browser
 
-def login_facebook(username, password, is_ubuntu=False, use_cookies=False, cookies_path=None):
+def login_facebook(username, password, is_ubuntu=False, use_cookies=True, cookies_path=None):
     """Login to Facebook using Selenium with option to use saved cookies."""
     browser = init_browser(is_ubuntu)
     
-    if use_cookies and cookies_path and os.path.exists(cookies_path):
+    # Set default cookies path if not provided
+    if not cookies_path:
+        cookies_dir = os.path.join(os.getcwd(), "facebook_cookies")
+        if not os.path.exists(cookies_dir):
+            os.makedirs(cookies_dir)
+        cookies_path = os.path.join(cookies_dir, f"{username}_cookies.pkl")
+    
+    if use_cookies and os.path.exists(cookies_path):
         # Load cookies if available
         browser.get(FB_DEFAULT_URL)
         try:
+            logger.info(f"Attempting to login using cookies from {cookies_path}")
             with open(cookies_path, 'rb') as cookiesfile:
                 cookies = pickle.load(cookiesfile)
                 for cookie in cookies:
@@ -82,13 +90,26 @@ def login_facebook(username, password, is_ubuntu=False, use_cookies=False, cooki
     browser.find_element(By.ID, "email").send_keys(username)
     browser.find_element(By.ID, "pass").send_keys(password)
     browser.find_element(By.ID, "pass").send_keys(Keys.ENTER)
-    
+
     # Wait for Facebook to respond after login
-    WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.TAG_NAME, "img")))
-    
-    # Save cookies after successful login
+    sleep(random.randint(5, 10))
+
+    # Check if login was successful and save cookies
     if is_logged_in(browser):
+        logger.info(f"Successfully logged in with credentials for {username}")
         save_cookies(browser, username, cookies_path)
+    else:
+        logger.warning(f"Login may have failed for {username}")
+
+        # Check for CAPTCHA or other verification
+        if "checkpoint" in browser.current_url or "captcha" in browser.page_source.lower():
+            logger.warning("Detected security checkpoint or CAPTCHA")
+            # Handle CAPTCHA if present
+            if handle_captcha_if_present(browser, username, password):
+                # After handling CAPTCHA, check login again and save cookies
+                if is_logged_in(browser):
+                    logger.info("Successfully logged in after CAPTCHA verification")
+                    save_cookies(browser, username, cookies_path)
 
     return browser
 
@@ -100,8 +121,10 @@ def is_logged_in(browser):
         WebDriverWait(browser, 5).until(
             EC.presence_of_element_located((By.XPATH, "//div[@aria-label='Your profile' or @aria-label='Account' or contains(@class, 'x1qhmfi1')]"))
         )
+        logger.info("Login verification successful - user is logged in")
         return True
     except:
+        logger.warning("Login verification failed - user is not logged in")
         return False
 
 def save_cookies(browser, username, cookies_path=None):
@@ -119,10 +142,16 @@ def save_cookies(browser, username, cookies_path=None):
         with open(cookies_path, 'wb') as file:
             pickle.dump(cookies, file)
         logger.info(f"Cookies saved successfully to {cookies_path}")
+        
+        # Verify cookie file was created
+        if os.path.exists(cookies_path) and os.path.getsize(cookies_path) > 0:
+            logger.info(f"Cookie file verified: {os.path.getsize(cookies_path)} bytes")
+        else:
+            logger.warning("Cookie file may be empty or not created properly")
     except Exception as e:
         logger.error(f"Error saving cookies: {e}")
 
-def login_facebook_ubuntu(username, password, use_cookies=False):
+def login_facebook_ubuntu(username, password, use_cookies=True):
     """Convenience function for Ubuntu login."""
     cookies_path = os.path.join(os.getcwd(), "facebook_cookies", f"{username}_cookies.pkl")
     return login_facebook(username, password, is_ubuntu=True, use_cookies=use_cookies, cookies_path=cookies_path)
@@ -358,6 +387,10 @@ def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
 
         # Handle CAPTCHA if present
         if handle_captcha_if_present(browser, username, password):
+            # Save cookies again after CAPTCHA handling
+            if is_logged_in(browser):
+                save_cookies(browser, username, cookies_path)
+                
             # Wait for redirect to the game page
             wait_for_redirect(browser, f"{FB_DEFAULT_URL}/{game_name}")
 

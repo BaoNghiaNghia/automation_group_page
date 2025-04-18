@@ -1,7 +1,7 @@
 facebook_*_post_ids.txt
 facebook_cookies.pkl
 /data_crawler
-
+/facebook_cookies
 
 # Byte-compiled / optimized / DLL files
 /__pycache__
