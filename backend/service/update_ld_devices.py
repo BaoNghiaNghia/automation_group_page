@@ -110,6 +110,10 @@ def main(config_folder):
             
             if response.status_code in (200, 201):
                 print(f"Successfully created device: {device_name}")
+                # Calculate and show progress percentage
+                current_index = missing_devices.index(device_name) + 1
+                percentage = (current_index / len(missing_devices)) * 100
+                print(f"Progress: {percentage:.1f}% ({current_index}/{len(missing_devices)})")
                 return True
             else:
                 print(f"Failed to create device {device_name}. Status code: {response.status_code}")
