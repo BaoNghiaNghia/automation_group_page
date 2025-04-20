@@ -18,7 +18,7 @@ ENV_CONFIG = {
     },
     "production": {
         "SERVICE_URL": "https://boostgamemobile.com/service",
-        "CONFIG_LDPLAYER_FOLDER": r"D:\LDPlayer\LDPlayer3.0\vms\config"
+        "CONFIG_LDPLAYER_FOLDER": r"D:\LDPlayer\LDPlayer9\vms\config"
     }
 }
 
