@@ -129,7 +129,7 @@ def update_ld_devices(config_folder, environment):
         success_count = 0
         
         for device_name in missing_devices:
-            if create_new_device(device_name):
+            if device_name and create_new_device(device_name):
                 success_count += 1
             # Add a small delay between requests to avoid overwhelming the API
             time.sleep(0.5)
