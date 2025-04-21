@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 if __name__ == "__main__":
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Run the text generation process")
-    parser.add_argument("environment", nargs="?", choices=["local", "production"], default="local",
+    parser.add_argument("--environment", "-e", choices=["local", "production"], default="local",
                         help="Specify the environment: local or production")
     args = parser.parse_args()
     
