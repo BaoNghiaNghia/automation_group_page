@@ -6,7 +6,7 @@ import datetime
 from backend.constants import ENV_CONFIG
 
 # Main function to execute the process
-def update_ld_devices(config_folder, environment):
+def update_ld_devices(config_folder, environment, pcrunner):
     # Function to fetch device names from API
     service_url = ENV_CONFIG[environment]['SERVICE_URL']
     def fetch_device_names_from_api():
@@ -101,7 +101,7 @@ def update_ld_devices(config_folder, environment):
                 "udid": f"UD{device_name}",
                 "imei": f"IM{device_name}",
                 "last_run": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-                "pc_runner": "Máy chạy Group 1",
+                "pc_runner": pcrunner,
                 "count_today": 0,
                 "status": "active"
             }

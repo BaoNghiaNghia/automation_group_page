@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 
-def sync_device_from_computer(environment, pcrunner):
+def sync_post_into_databse(environment):
     
     try:
         # Define the data crawler path
@@ -22,7 +22,7 @@ def sync_device_from_computer(environment, pcrunner):
         if not os.path.exists(data_crawler_path):
             logger.error("Data crawler folder does not exist")
             raise Exception("Data crawler folder does not exist")
-        
+
         output_file = 'all_post_today.json'
         
         batch_size = 1000  # Process in batches of 1000 items
@@ -64,8 +64,7 @@ def sync_device_from_computer(environment, pcrunner):
                                     'post_id': post_id,
                                     'clone_version': file_name,
                                     'content': content,
-                                    'img_path': image_path,
-                                    'pc_runner': pcrunner
+                                    'img_path': image_path
                                 })
 
                     except Exception as e:
@@ -124,5 +123,5 @@ def sync_device_from_computer(environment, pcrunner):
         return "Processing complete"
 
     except Exception as e:
-        logger.error(f"Error in sync_device_from_computer: {str(e)}")
+        logger.error(f"Error in sync_post_into_databse: {str(e)}")
         return []

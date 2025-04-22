@@ -5,7 +5,7 @@ from pathlib import Path
 from backend.service.scraper_post_fb import run_fb_scraper_multiple_fanpages
 from backend.constants import FOLDER_PATH_DATA_CRAWLER, ENV_CONFIG
 from backend.utils.index import get_game_fanpages
-from backend.service.migrate_db import sync_device_from_computer
+from backend.service.migrate_db import sync_post_into_databse
 from backend.service.text_generate_deepseek import rewrite_paragraph_deepseek
 from backend.service.update_ld_devices import update_ld_devices
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
         logger.info(f"Found {len(game_urls)} game URLs: {game_urls}")
 
         # ------------------------ Step 0: Check LDPlayer devices ------------------------
-        run_step(0, "Checking LDPlayer devices", update_ld_devices, ENV_CONFIG[args.environment]["CONFIG_LDPLAYER_FOLDER"], args.environment)
+        run_step(0, "Checking LDPlayer devices", update_ld_devices, ENV_CONFIG[args.environment]["CONFIG_LDPLAYER_FOLDER"], args.environment, args.pcrunner)
         time.sleep(4)  # Delay before proceeding to next step
 
         # ------------------------ Step 1: Scrape multiple fanpages ------------------------
@@ -74,7 +74,7 @@ if __name__ == "__main__":
             exit(1)
 
         # ------------------------ Step 3: Insert paragraph to database ------------------------
-        run_step(3, "Inserting paragraphs to database", sync_device_from_computer, args.environment, args.pcrunner)
+        run_step(3, "Inserting paragraphs to database", sync_post_into_databse, args.environment)
     except Exception as e:
         logger.error(f"Error occurred: {str(e)}")
         exit(1)
