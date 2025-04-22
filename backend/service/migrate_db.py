@@ -99,7 +99,7 @@ def sync_device_from_computer(environment, pcrunner):
             for i in range(0, total_records, batch_size):
                 batch = data[i:i+batch_size]
                 batch_num = i // batch_size + 1
-                
+
                 logger.info(f"Sending batch {batch_num}/{total_batches} ({len(batch)} records)")
                 
                 try:

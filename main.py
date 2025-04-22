@@ -1,5 +1,6 @@
 import time
 import logging
+import argparse
 from pathlib import Path
 from backend.service.scraper_post_fb import run_fb_scraper_multiple_fanpages
 from backend.constants import FOLDER_PATH_DATA_CRAWLER, ENV_CONFIG
@@ -23,12 +24,9 @@ def run_step(step_num, step_name, func, *args, **kwargs):
 
 
 if __name__ == "__main__":
-    import sys
-    import argparse
-    
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Run the scraper in local or production mode")
-    parser.add_argument("environment", nargs="?", choices=["local", "production"], default="local",
+    parser.add_argument("environment", nargs="-e", choices=["local", "production"], default="local",
                         help="Specify the environment: local or production")
     parser.add_argument("--pcrunner", "-pc", type=str, default="pc_1",
                         help="Specify the computer name to sync from")
@@ -39,6 +37,7 @@ if __name__ == "__main__":
     logger = logging.getLogger(__name__)
     
     logger.info(f"Running in {args.environment} environment")
+
 
     try:
         # Create and normalize base path once
@@ -55,28 +54,27 @@ if __name__ == "__main__":
         # ------------------------ Step 0: Check LDPlayer devices ------------------------
         run_step(0, "Checking LDPlayer devices", update_ld_devices, ENV_CONFIG[args.environment]["CONFIG_LDPLAYER_FOLDER"], args.environment)
         time.sleep(4)  # Delay before proceeding to next step
-        
+
         # ------------------------ Step 1: Scrape multiple fanpages ------------------------
         result = run_step(1, "Scraping multiple fanpages", run_fb_scraper_multiple_fanpages, game_urls, args.environment)
         time.sleep(5)  # Delay between steps
-        
+
         if not result:
             logger.warning("Step 1 failed. Cannot proceed to step 2.")
             print("Step 1 failed. Cannot proceed to step 2.")
             exit(1)
-            
+
         # ------------------------ Step 2: Rewrite paragraphs with DeepSeek ------------------------
         rewrite_result = run_step(2, "Rewriting paragraphs with DeepSeek", rewrite_paragraph_deepseek, args.environment)
         time.sleep(5)  # Delay between steps
-        
+
         if not rewrite_result:
             logger.warning("Step 2 failed. Cannot proceed to step 3.")
             print("Step 2 failed. Cannot proceed to step 3.")
             exit(1)
-            
+
         # ------------------------ Step 3: Insert paragraph to database ------------------------
         run_step(3, "Inserting paragraphs to database", sync_device_from_computer, args.environment, args.pcrunner)
-
     except Exception as e:
         logger.error(f"Error occurred: {str(e)}")
         exit(1)
