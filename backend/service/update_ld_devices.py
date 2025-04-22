@@ -82,60 +82,66 @@ def update_ld_devices(config_folder, environment, pcrunner):
     print(missing_devices)
 
     # Create new devices in the database for missing devices
-    def create_new_device(device_name):
+    def create_new_device_batch(device_names, batch_size=10):
         try:
-            url = f"{service_url}/ldplayer_devices/create"
+            url = f"{service_url}/ldplayer_devices/insert-batch"
 
             headers = {
                 "Content-Type": "application/json"
             }
             
-            # Generate a device ID based on the device name
-            device_id = f"LD-{device_name}"
+            # Prepare the payload with default values for each device
+            payload = []
+            for device_name in device_names:
+                device_data = {
+                    "device_name": device_name,
+                    "device_id": f"LD-{device_name}",
+                    "device_model": "Samsung Galaxy S10",
+                    "android_version": "12",
+                    "serial_number": f"SN{device_name}",
+                    "udid": f"UD{device_name}",
+                    "imei": f"IM{device_name}",
+                    "last_run": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                    "pc_runner": pcrunner,
+                    "count_today": 0,
+                    "status": "active"
+                }
+                payload.append(device_data)
             
-            # Prepare the payload with default values
-            payload = {
-                "device_name": device_name,
-                "device_id": device_id,
-                "device_model": "Samsung Galaxy S10",
-                "android_version": "12",
-                "serial_number": f"SN{device_name}",
-                "udid": f"UD{device_name}",
-                "imei": f"IM{device_name}",
-                "last_run": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-                "pc_runner": pcrunner,
-                "count_today": 0,
-                "status": "active"
-            }
-
             # Make the API request
             response = requests.post(url, headers=headers, json=payload)
             
             if response.status_code in (200, 201):
-                print(f"Successfully created device: {device_name}")
-                # Calculate and show progress percentage
-                current_index = missing_devices.index(device_name) + 1
-                percentage = (current_index / len(missing_devices)) * 100
-                print(f"Progress: {percentage:.1f}% ({current_index}/{len(missing_devices)})")
-                return True
+                print(f"Successfully created {len(device_names)} devices in batch")
+                return len(device_names)
             else:
-                print(f"Failed to create device {device_name}. Status code: {response.status_code}")
-                return False
+                print(f"Failed to create devices batch. Status code: {response.status_code}")
+                return 0
         except Exception as e:
-            print(f"Error creating device {device_name}: {str(e)}")
-            return False
+            print(f"Error creating devices batch: {str(e)}")
+            return 0
     
-    # Process all missing devices
+    # Process all missing devices in batches
     if missing_devices:
         print("Creating missing devices in the database...")
         success_count = 0
+        total_devices = len(missing_devices)
         
-        for device_name in missing_devices:
-            if device_name and create_new_device(device_name):
-                success_count += 1
-            # Add a small delay between requests to avoid overwhelming the API
-            time.sleep(0.5)
+        # Process in batches of 10
+        batch_size = 10
+        for i in range(0, total_devices, batch_size):
+            batch = missing_devices[i:i+batch_size]
+            if batch:
+                success_count += create_new_device_batch(batch, batch_size)
+                
+                # Calculate and show progress percentage
+                processed = min(i + batch_size, total_devices)
+                percentage = (processed / total_devices) * 100
+                print(f"Progress: {percentage:.1f}% ({processed}/{total_devices})")
+                
+                # Add a small delay between batches to avoid overwhelming the API
+                time.sleep(1)
         
-        print(f"Created {success_count} out of {len(missing_devices)} missing devices")
+        print(f"Created {success_count} out of {total_devices} missing devices")
     else:
         print("No missing devices to create")
