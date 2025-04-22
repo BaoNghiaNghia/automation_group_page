@@ -1,15 +1,27 @@
 import os
 import json
 import time
+import logging
 import requests
 import datetime
 from backend.constants import ENV_CONFIG
 
-# Main function to execute the process
+# Set up logging
+logger = logging.getLogger(__name__)
+
 def update_ld_devices(config_folder, environment, pcrunner):
-    # Function to fetch device names from API
+    """
+    Main function to synchronize LDPlayer devices between local config files and database.
+    
+    Args:
+        config_folder (str): Path to the folder containing LDPlayer config files
+        environment (str): Environment to use (local or production)
+        pcrunner (str): Name of the computer running the sync
+    """
     service_url = ENV_CONFIG[environment]['SERVICE_URL']
+    
     def fetch_device_names_from_api():
+        """Fetch device names from the API and return as a list"""
         try:
             # Construct the API URL
             api_url = f"{service_url}/ldplayer_devices" if service_url.endswith('/service') else f"{service_url}/service/ldplayer_devices"
@@ -17,81 +29,60 @@ def update_ld_devices(config_folder, environment, pcrunner):
             # Make the API request
             response = requests.get(api_url)
             
-            # Check if the request was successful
             if response.status_code == 200:
                 data = response.json()
                 
-                # Extract device names from the response
                 if 'devices' in data and 'items' in data['devices']:
-                    device_names = [item['device_name'] for item in data['devices']['items']]
-                    return device_names
+                    return [item['device_name'] for item in data['devices']['items']]
                 else:
-                    print("Error: Unexpected response format")
+                    logger.error("Unexpected response format from API")
                     return []
             else:
-                print(f"Error: API request failed with status code {response.status_code}")
+                logger.error(f"API request failed with status code {response.status_code}")
                 return []
         except Exception as e:
-            print(f"Error fetching device names from API: {str(e)}")
+            logger.error(f"Error fetching device names from API: {str(e)}")
             return []
 
-    # Function to read and extract value of the given key from JSON config files
     def extract_player_names(config_folder, key):
-        player_names = []  # List to store player names
+        """Extract player names from LDPlayer config files"""
+        player_names = []
         
-        # Loop through all files in the directory
-        for filename in os.listdir(config_folder):
-            # Check if the file ends with '.config'
-            if filename.endswith(".config"):
+        try:
+            # Loop through all files in the directory
+            for filename in os.listdir(config_folder):
+                if not filename.endswith(".config"):
+                    continue
+                    
                 file_path = os.path.join(config_folder, filename)
                 
                 try:
-                    # Open and read the JSON file
                     with open(file_path, 'r', encoding='utf-8') as file:
                         data = json.load(file)
                         
-                        # If the key exists, append its value to the list
                         if key in data:
                             device_name = data[key].strip()
                             if device_name:  # Only add non-empty device names
                                 player_names.append(device_name)
-                except (json.JSONDecodeError, FileNotFoundError) as e:
-                    # Handle errors silently (ignore the file if there's an issue reading it)
-                    pass
-        
+                except (json.JSONDecodeError, FileNotFoundError, UnicodeDecodeError) as e:
+                    # Skip problematic files
+                    logger.debug(f"Skipping file {filename}: {str(e)}")
+                    continue
+        except Exception as e:
+            logger.error(f"Error reading config directory: {str(e)}")
+            
         return player_names
 
-    # Define the key to search for
-    key_to_search = "statusSettings.playerName"
-
-    # Extract player names from all .config files in the specified folder
-    local_player_names = extract_player_names(config_folder, key_to_search)
-    print(f"Tổng cộng: {len(local_player_names)} thiết bị")
-    # Print the result as an array of strings
-    print(local_player_names)
-
-    # Fetch device names from the API
-    database_device_names = fetch_device_names_from_api()
-    print(f"Tổng cộng: {len(database_device_names)} thiết bị")
-    # Print the result as an array of strings
-    print(database_device_names)
-
-    # Find devices that are not in the database
-    missing_devices = [device for device in local_player_names if device not in database_device_names]
-    print(f"Số lượng thiết bị không có trong cơ sở dữ liệu: {len(missing_devices)}")
-    print(missing_devices)
-
-    # Create new devices in the database for missing devices
     def create_new_device_batch(device_names, batch_size=10):
+        """Create new devices in the database in batches"""
         try:
             url = f"{service_url}/ldplayer_devices/insert-batch"
-
-            headers = {
-                "Content-Type": "application/json"
-            }
+            headers = {"Content-Type": "application/json"}
             
             # Prepare the payload with default values for each device
             payload = []
+            current_time = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+            
             for device_name in device_names:
                 device_data = {
                     "device_name": device_name,
@@ -101,7 +92,7 @@ def update_ld_devices(config_folder, environment, pcrunner):
                     "serial_number": f"SN{device_name}",
                     "udid": f"UD{device_name}",
                     "imei": f"IM{device_name}",
-                    "last_run": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                    "last_run": current_time,
                     "pc_runner": pcrunner,
                     "count_today": 0,
                     "status": "active"
@@ -112,23 +103,43 @@ def update_ld_devices(config_folder, environment, pcrunner):
             response = requests.post(url, headers=headers, json=payload)
             
             if response.status_code in (200, 201):
-                print(f"Successfully created {len(device_names)} devices in batch")
+                logger.info(f"Successfully created {len(device_names)} devices in batch")
                 return len(device_names)
             else:
-                print(f"Failed to create devices batch. Status code: {response.status_code}")
+                logger.error(f"Failed to create devices batch. Status code: {response.status_code}")
                 return 0
         except Exception as e:
-            print(f"Error creating devices batch: {str(e)}")
+            logger.error(f"Error creating devices batch: {str(e)}")
             return 0
-    
+
+    # Main execution flow
+    key_to_search = "statusSettings.playerName"
+
+    # Extract player names from all .config files in the specified folder
+    local_player_names = extract_player_names(config_folder, key_to_search)
+    logger.info(f"Found {len(local_player_names)} local devices")
+    print(f"Tổng cộng: {len(local_player_names)} thiết bị")
+    print(local_player_names)
+
+    # Fetch device names from the API
+    database_device_names = fetch_device_names_from_api()
+    logger.info(f"Found {len(database_device_names)} devices in database")
+    print(f"Tổng cộng: {len(database_device_names)} thiết bị")
+    print(database_device_names)
+
+    # Find devices that are not in the database
+    missing_devices = [device for device in local_player_names if device not in database_device_names]
+    logger.info(f"Found {len(missing_devices)} devices missing from database")
+    print(f"Số lượng thiết bị không có trong cơ sở dữ liệu: {len(missing_devices)}")
+    print(missing_devices)
+
     # Process all missing devices in batches
     if missing_devices:
         print("Creating missing devices in the database...")
         success_count = 0
         total_devices = len(missing_devices)
-        
-        # Process in batches of 10
         batch_size = 10
+        
         for i in range(0, total_devices, batch_size):
             batch = missing_devices[i:i+batch_size]
             if batch:
@@ -142,6 +153,8 @@ def update_ld_devices(config_folder, environment, pcrunner):
                 # Add a small delay between batches to avoid overwhelming the API
                 time.sleep(1)
         
+        logger.info(f"Created {success_count} out of {total_devices} missing devices")
         print(f"Created {success_count} out of {total_devices} missing devices")
     else:
+        logger.info("No missing devices to create")
         print("No missing devices to create")
