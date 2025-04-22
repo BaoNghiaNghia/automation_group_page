@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 
-def insert_paragraph_to_db(environment):
+def sync_device_from_computer(environment, pcrunner):
     
     try:
         # Define the data crawler path
@@ -64,7 +64,8 @@ def insert_paragraph_to_db(environment):
                                     'post_id': post_id,
                                     'clone_version': file_name,
                                     'content': content,
-                                    'img_path': image_path
+                                    'img_path': image_path,
+                                    'pc_runner': pcrunner
                                 })
 
                     except Exception as e:
@@ -123,5 +124,5 @@ def insert_paragraph_to_db(environment):
         return "Processing complete"
 
     except Exception as e:
-        logger.error(f"Error in insert_paragraph_to_db: {str(e)}")
+        logger.error(f"Error in sync_device_from_computer: {str(e)}")
         return []

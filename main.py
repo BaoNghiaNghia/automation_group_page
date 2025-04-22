@@ -4,7 +4,7 @@ from pathlib import Path
 from backend.service.scraper_post_fb import run_fb_scraper_multiple_fanpages
 from backend.constants import FOLDER_PATH_DATA_CRAWLER, ENV_CONFIG
 from backend.utils.index import get_game_fanpages
-from backend.service.migrate_db import insert_paragraph_to_db
+from backend.service.migrate_db import sync_device_from_computer
 from backend.service.text_generate_deepseek import rewrite_paragraph_deepseek
 from backend.service.update_ld_devices import update_ld_devices
 
@@ -30,6 +30,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the scraper in local or production mode")
     parser.add_argument("environment", nargs="?", choices=["local", "production"], default="local",
                         help="Specify the environment: local or production")
+    parser.add_argument("--pcrunner", "-pc", type=str, default="pc_1",
+                        help="Specify the computer name to sync from")
     args = parser.parse_args()
     
     # Set up logging
@@ -73,7 +75,7 @@ if __name__ == "__main__":
             exit(1)
             
         # ------------------------ Step 3: Insert paragraph to database ------------------------
-        run_step(3, "Inserting paragraphs to database", insert_paragraph_to_db, args.environment    )
+        run_step(3, "Inserting paragraphs to database", sync_device_from_computer, args.environment, args.pcrunner)
 
     except Exception as e:
         logger.error(f"Error occurred: {str(e)}")
