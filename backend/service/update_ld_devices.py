@@ -52,7 +52,9 @@ def update_ld_devices(config_folder, environment, pcrunner):
                         
                         # If the key exists, append its value to the list
                         if key in data:
-                            player_names.append(data[key].strip())
+                            device_name = data[key].strip()
+                            if device_name:  # Only add non-empty device names
+                                player_names.append(device_name)
                 except (json.JSONDecodeError, FileNotFoundError) as e:
                     # Handle errors silently (ignore the file if there's an issue reading it)
                     pass
