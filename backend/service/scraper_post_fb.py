@@ -342,8 +342,108 @@ def crawlPostData(driver, postIds, game_name):
                 for img in dataPost["images"]:
                     stt += 1
                     download_file(img, str(stt), postId, FOLDER_PATH_DATA_CRAWLER, game_name)
+                    
+            # Click on the specified element (like button or reaction)
+            try:
+                # Wait for a random time before clicking to simulate human behavior
+                sleep(random.uniform(1.5, 3.0))
+                
+                # Find and click the specified element
+                like_button = driver.find_element(By.XPATH, 
+                    "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[1]/div/span/div/span[2]")
+                
+                
+                # Scroll element into view
+                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", like_button)
+                
+                # Wait a moment after scrolling
+                sleep(random.uniform(0.8, 1.5))
+                
+                # Click the element
+                like_button.click()
+                print(f"Clicked on reaction element for post ID: {id}")
+                
+                # Wait for about 7 seconds after clicking like button
+                sleep_time = random.uniform(6.5, 7.5)
+                print(f"Waiting for {sleep_time:.2f} seconds after clicking like button...")
+                sleep(sleep_time)
+                
+                try:
+                    # Find the reaction panel element with a more robust approach
+                    reaction_panel = WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.XPATH, "//div[contains(@role, 'dialog')]"))
+                    )
+                    
+                    # Wait a moment for the reaction panel to fully load
+                    sleep(random.uniform(1.0, 2.0))
+                    
+                    # Try to scroll the reaction panel using multiple methods
+                    for scroll_attempt in range(5):
+                        try:
+                            # Method 1: Use JavaScript to scroll in small increments
+                            scroll_height = 200 * (scroll_attempt + 1)
+                            driver.execute_script(f"arguments[0].scrollTop = {scroll_height};", reaction_panel)
+                            
+                            # Method 2: Alternative approach using scrollBy
+                            driver.execute_script(f"arguments[0].scrollBy(0, 200);", reaction_panel)
+                            
+                            # Method 3: Try to find scrollable container if the direct approach fails
+                            scrollable_elements = reaction_panel.find_elements(By.XPATH, ".//div[contains(@style, 'overflow') or contains(@style, 'scroll')]")
+                            if scrollable_elements:
+                                for elem in scrollable_elements:
+                                    driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", elem)
+                            
+                            # Wait between scroll attempts with random timing to appear more human-like
+                            sleep(random.uniform(0.8, 1.5))
+                            
+                            print(f"Completed scroll attempt {scroll_attempt+1}")
+                        except Exception as scroll_error:
+                            print(f"Error during scroll attempt {scroll_attempt+1}: {str(scroll_error)}")
+                            # Try a different approach on failure
+                            try:
+                                # Try using ActionChains as a fallback
+                                ActionChains(driver).move_to_element(reaction_panel).send_keys(Keys.PAGE_DOWN).perform()
+                                sleep(random.uniform(0.5, 1.0))
+                            except:
+                                pass
 
-            sleep(random.randint(8, 12))
+                    # Try to find all reaction links in the panel using a more specific selector
+                    try:
+                        reaction_links = reaction_panel.find_elements(By.CSS_SELECTOR, "a[role='link'][tabindex='0']")
+
+                        if reaction_links:
+                            # Extract href attributes and profile information from all reaction links
+                            print(f"Found {len(reaction_links)} reaction links:")
+                            for i, link in enumerate(reaction_links):
+                                href = link.get_attribute("href")
+                                profile_id = None
+
+                                # Skip Facebook stories links
+                                if "facebook.com/stories" in href:
+                                    continue
+
+                                # Extract profile ID from href - this is profile link in href
+                                if "profile.php?id=" in href:
+                                    profile_id = href.split("profile.php?id=")[1].split("&")[0]
+                                elif "facebook.com/" in href:
+                                    profile_id = href.split("facebook.com/")[1].split("?")[0].split("&")[0]
+
+                                print(f"  Reaction {i+1}: Profile ID: {profile_id}, Link: {href}")
+                        else:
+                            print("No reaction links found in the panel")
+                    except Exception as e:
+                        print(f"Error querying reaction links: {e}")
+                    
+                    print("Completed scrolling through the reaction panel")
+                except Exception as e:
+                    print(f"Could not scroll through reaction panel: {e}")
+                
+                # Wait a moment after clicking
+                sleep(random.uniform(1.0, 2.0))
+            except Exception as e:
+                print(f"Could not click on reaction element: {e}")
+
+            sleep(random.randint(600, 700))
         except Exception as e:
             print(f"Error in crawlPostData: {e}")
 
@@ -415,8 +515,16 @@ def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
                     browser.quit()
                     return
 
-                # Scroll down to load more posts
-                scroll_down(browser)
+                # Scroll down smoothly to load more posts
+                scheight = 1.0
+                while scheight < 10.0:
+                    browser.execute_script("window.scrollTo(0, document.body.scrollHeight/%s);" % scheight)
+                    scheight += 0.01
+                    sleep(0.01)  # Small pause between scroll increments
+                
+                # Add a small pause after smooth scrolling
+                sleep(random.uniform(1.0, 2.0))
+                
                 new_height = browser.execute_script("return document.body.scrollHeight")
 
                 # If no new content is loaded, stop scrolling
@@ -814,7 +922,7 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
         username, password = random.choice(FB_ACCOUNT_LIST)
         cookies_path = os.path.join(os.getcwd(), "facebook_cookies", f"{username}_cookies.pkl")
         browser = login_facebook(username, password, use_cookies=use_cookies, cookies_path=cookies_path)
-        
+
         current_url = browser.current_url
         if current_url.startswith(f"{FB_DEFAULT_URL}/two_step_verification/authentication"):
             if not handle_captcha_if_present(browser, username, password):
@@ -846,7 +954,7 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
                 
                 all_posts = set()
                 last_height = browser.execute_script("return document.body.scrollHeight")
-                
+
                 # Scroll and collect posts
                 for attempt in range(50):
                     print(f"\n[Scrolling Attempt {attempt + 1}]")

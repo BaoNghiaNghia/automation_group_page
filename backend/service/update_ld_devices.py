@@ -62,7 +62,8 @@ def update_ld_devices(config_folder, environment, pcrunner):
                         
                         if key in data:
                             device_name = data[key].strip()
-                            if device_name:  # Only add non-empty device names
+                            # Only add non-empty device names and ignore those with "(banned)"
+                            if device_name and "(banned)" not in device_name:
                                 player_names.append(device_name)
                 except (json.JSONDecodeError, FileNotFoundError, UnicodeDecodeError) as e:
                     # Skip problematic files
