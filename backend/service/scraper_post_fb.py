@@ -2,7 +2,6 @@ import os
 import time
 import requests
 import random
-import requests
 import pickle
 from PIL import Image
 from io import BytesIO
