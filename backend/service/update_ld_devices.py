@@ -118,24 +118,23 @@ def update_ld_devices(config_folder, environment, pcrunner):
     # Extract player names from all .config files in the specified folder
     local_player_names = extract_player_names(config_folder, key_to_search)
     logger.info(f"Found {len(local_player_names)} local devices")
-    print(f"Tổng cộng: {len(local_player_names)} thiết bị")
-    print(local_player_names)
 
     # Fetch device names from the API
     database_device_names = fetch_device_names_from_api()
     logger.info(f"Found {len(database_device_names)} devices in database")
-    print(f"Tổng cộng: {len(database_device_names)} thiết bị")
-    print(database_device_names)
 
     # Find devices that are not in the database
     missing_devices = [device for device in local_player_names if device not in database_device_names]
     logger.info(f"Found {len(missing_devices)} devices missing from database")
-    print(f"Số lượng thiết bị không có trong cơ sở dữ liệu: {len(missing_devices)}")
-    print(missing_devices)
+    
+    # Merged print statements
+    print(f"Tổng cộng: {len(local_player_names)} thiết bị trên máy {pcrunner}\n"
+          f"Tổng cộng: {len(database_device_names)} thiết bị trong Database\n"
+          f"Số lượng thiết bị bổ sung: {len(missing_devices)}")
 
     # Process all missing devices in batches
     if missing_devices:
-        print("Creating missing devices in the database...")
+        print("Tạo thiết bị mới trong Database...")
         success_count = 0
         total_devices = len(missing_devices)
         batch_size = 10
