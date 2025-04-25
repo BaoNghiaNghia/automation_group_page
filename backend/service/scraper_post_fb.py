@@ -375,36 +375,31 @@ def crawlPostData(driver, postIds, game_name):
                     # Add a random sleep to ensure the panel is fully loaded
                     sleep(random.uniform(1.0, 2.0))
 
-                    # Try to scroll the reaction panel using different methods
-                    for scroll_attempt in range(5):
-                        try:
-                            # Scroll to the last element in the list
-                            driver.execute_script('arguments[0].scrollIntoView({block: "center", behavior: "smooth"});', driver.find_element(By.XPATH, "/html/body/div[7]/div[1]/div/div[2]/div/div/div"))
-                            sleep(random.uniform(0.8, 1.5))
-                            
-                            # Try to find the reaction panel container for additional scrolling if needed
-                            panel_container = driver.find_element(By.XPATH, 
-                                "/html/body/div[7]/div[1]/div/div[2]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]")
-                            
-                            # Find the element to tap, hold and drag down
-                            drag_element = driver.find_element(By.XPATH,
-                                "/html/body/div[7]/div[1]/div/div[2]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[3]")
-                            
-                            # Perform tap, hold and drag down action
-                            action = ActionChains(driver)
-                            action.click_and_hold(drag_element)
-                            sleep(random.uniform(0.5, 1.0))  # Hold for a moment
-                            action.move_by_offset(0, 100)    # Move down by 100 pixels
-                            action.release()
-                            action.perform()
-                            sleep(random.uniform(0.8, 1.5))
-                            
-                            # Additional scrolling with keyboard actions
-                            ActionChains(driver).move_to_element(panel_container).click().perform()
-                            sleep(random.uniform(0.3, 0.7))
-                            
-                        except Exception as scroll_error:
-                            print(f"Error during scroll attempt {scroll_attempt+1}: {scroll_error}")
+                    try:
+                        # Try to find the reaction panel container for additional scrolling if needed
+                        panel_container = driver.find_element(By.XPATH, 
+                            "/html/body/div[7]/div[1]/div/div[2]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]")
+                        
+                        # Find the element to tap, hold and drag down
+                        drag_element = driver.find_element(By.XPATH,
+                            "/html/body/div[7]/div[1]/div/div[2]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[3]")
+                        
+                        # Perform tap, hold and drag down action
+                        action = ActionChains(driver)
+                        action.click_and_hold(drag_element)
+                        sleep(random.uniform(0.5, 1.0))  # Hold for a moment
+                        action.move_by_offset(0, 100)    # Move down by 100 pixels
+                        action.release()
+                        action.perform()
+                        sleep(random.uniform(0.8, 1.5))
+                        
+                        # Additional scrolling with keyboard actions
+                        ActionChains(driver).move_to_element(panel_container).click().perform()
+                        sleep(random.uniform(0.3, 0.7))
+                        
+                    except Exception as scroll_error:
+                        print(f"Error during scroll attempt ")
+                        
 
                     # Extract reaction links after scrolling
                     try:
@@ -445,7 +440,7 @@ def crawlPostData(driver, postIds, game_name):
             except Exception as e:
                 print(f"Could not click on reaction element: {e}")
 
-            sleep(random.randint(600, 700))
+            sleep(random.randint(12, 14))
         except Exception as e:
             print(f"Error in crawlPostData: {e}")
 
