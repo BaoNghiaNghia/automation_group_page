@@ -373,7 +373,7 @@ def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
                 print(f"Clicked on reaction element for post ID: {id}")
                 
                 # Wait for about 7 seconds after clicking like button
-                sleep_time = random.uniform(6.5, 7.5)
+                sleep_time = random.uniform(6.5, 9.5)
                 print(f"Waiting for {sleep_time:.2f} seconds after clicking like button...")
                 sleep(sleep_time)
                 
@@ -406,7 +406,7 @@ def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
                         while current_bottom_diff > 5 and scroll_rounds < 25:
                             action = ActionChains(driver)
                             action.click_and_hold(drag_element)
-                            sleep(random.uniform(1, 3))  # Hold for a moment
+                            sleep(random.uniform(2, 3))  # Hold for a moment
                             
                             # Adjust scroll distance based on difference
                             scroll_distance = min(100, current_bottom_diff)
@@ -414,7 +414,7 @@ def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
                             action.release()
                             action.perform()
                             
-                            sleep(random.uniform(1, 3))
+                            sleep(random.uniform(2, 3))
                             scroll_rounds += 1
                             
                             # Update positions after scrolling
@@ -427,7 +427,7 @@ def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
                             print(f"Completed scroll round {scroll_rounds}, bottom difference: {current_bottom_diff}px")
                         
                         print(f"Finished scrolling after {scroll_rounds} rounds, final bottom difference: {current_bottom_diff}px")
-                        
+
                         # Click on panel container to finish interaction
                         ActionChains(driver).move_to_element(panel_container).click().perform()
                         sleep(random.uniform(0.3, 0.7))
