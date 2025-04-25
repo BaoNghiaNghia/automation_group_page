@@ -313,9 +313,20 @@ def download_image_file(image_url, file_number, post_id, folder_path="/data_craw
         print(f"Error downloading image from {image_url}: {e}")
 
 
-def crawlPostData(driver, postIds, game_name, environment):
+def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
     empty_post_count = 0  # Counter for empty posts
     written_post_count = 0  # Counter for posts written to file
+
+
+    # Create a mapping of game fanpage URLs to their IDs
+    game_fanpages_id_map = {}
+    for item in list_game_fanpages:
+        # Extract the last part of the fanpage URL (after the last slash)
+        fanpage_key = item['fanpage'].rstrip('/').split('/')[-1]
+        game_fanpages_id_map[fanpage_key] = item['id']
+    
+    # Get the game_fanpage_id for the current game
+    game_fanpage_id = game_fanpages_id_map.get(game_name)
 
     for id in postIds:
         try:
@@ -450,15 +461,7 @@ def crawlPostData(driver, postIds, game_name, environment):
                                 
                             # Save profile IDs to API in batches of 10
                             if unique_profile_ids:
-                                try:
-                                    # Get the game_fanpages_id from the current context
-                                    # Assuming game_name is available in the scope or can be derived
-                                    game_fanpages_id = None
-                                    if 'game_name' in locals() or 'game_name' in globals():
-                                        # This is a placeholder - you would need to map game_name to game_fanpages_id
-                                        # in a real implementation
-                                        pass
-                                    
+                                try:                                 
                                     # Process in batches of 10
                                     profile_list = list(unique_profile_ids)
                                     batch_size = 10
@@ -470,7 +473,7 @@ def crawlPostData(driver, postIds, game_name, environment):
                                         for profile_id in batch:
                                             payload.append({
                                                 "profile_id": profile_id,
-                                                "game_fanpages_id": 1  # Default value if not available
+                                                "game_fanpages_id": game_fanpage_id
                                             })
                                         
                                         # Make API request
@@ -1001,6 +1004,9 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
         # Simulate scrolling behavior and get final pause time
         final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
         sleep(final_pause)
+        
+        list_game_fanpages = get_all_game_fanpages(environment)
+
 
         # Process each game URL with the same browser session
         for index, game_url in enumerate(game_urls):
@@ -1058,7 +1064,7 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
                     f.write("\n".join(sorted(all_posts)))
 
                 # Crawl post data
-                crawlPostData(browser, readData(post_id_full_path), game_name, environment)
+                crawlPostData(browser, readData(post_id_full_path), game_name, environment, list_game_fanpages)
                 
                 print(f"----- Done {len(all_posts)} posts: Game {game_name} -----")
                 
