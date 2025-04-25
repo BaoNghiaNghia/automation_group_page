@@ -894,7 +894,6 @@ def simulate_human_behavior_when_scraping_game(browser, environment):
         logger.error(f"Error during human behavior simulation: {e}")
 
 
-
 def simulate_scrolling_behavior_when_init_facebook(browser):
     """
     Simulates natural human scrolling behavior in the browser
