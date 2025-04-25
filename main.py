@@ -26,7 +26,7 @@ def run_step(step_num, step_name, func, *args, **kwargs):
 if __name__ == "__main__":
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Run the scraper in local or production mode")
-    parser.add_argument("environment", nargs="-e", choices=["local", "production"], default="local",
+    parser.add_argument("--environment", "-e", choices=["local", "production"], default="local",
                         help="Specify the environment: local or production")
     parser.add_argument("--pcrunner", "-pc", type=str, default="pc_1",
                         help="Specify the computer name to sync from")
