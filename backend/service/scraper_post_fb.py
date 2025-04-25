@@ -388,49 +388,54 @@ def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
 
                     try:
                         panel_container = driver.find_element(By.XPATH, "/html/body/div[7]/div[1]/div/div[2]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]")
-                        
                         drag_element = driver.find_element(By.XPATH, "/html/body/div[7]/div[1]/div/div[2]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[3]")
                         
-                        # Get positions and dimensions
+                        # Get initial positions
                         panel_container_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", panel_container)
                         drag_element_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", drag_element)
                         
                         panel_bottom = panel_container_rect['bottom']
                         drag_bottom = drag_element_rect['bottom']
-
-                        # Calculate how many scrolls needed to align bottoms
+                        
+                        # Maximum scroll attempts and threshold for alignment
+                        max_scroll_rounds = 30
+                        alignment_threshold = 5
                         scroll_rounds = 0
                         current_bottom_diff = abs(panel_bottom - drag_bottom)
                         
-                        # Continue scrolling until bottoms are aligned or very close
-                        while current_bottom_diff > 5 and scroll_rounds < 25:
+                        # Scroll until bottoms are aligned or max attempts reached
+                        while current_bottom_diff > alignment_threshold and scroll_rounds < max_scroll_rounds:
+                            # Create adaptive scroll distance based on difference
+                            scroll_distance = min(50, current_bottom_diff / 2)
+                            
+                            # Perform scroll action with smoother timing
                             action = ActionChains(driver)
                             action.click_and_hold(drag_element)
-                            sleep(random.uniform(2, 3))  # Hold for a moment
-                            
-                            # Adjust scroll distance based on difference
-                            scroll_distance = min(100, current_bottom_diff)
+                            sleep(random.uniform(1.5, 4))
                             action.move_by_offset(0, scroll_distance)
                             action.release()
                             action.perform()
                             
-                            sleep(random.uniform(2, 3))
-                            scroll_rounds += 1
+                            # Short wait between scrolls
+                            sleep(random.uniform(1.5, 4))
                             
-                            # Update positions after scrolling
+                            # Update measurements
                             panel_container_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", panel_container)
                             drag_element_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", drag_element)
                             panel_bottom = panel_container_rect['bottom']
                             drag_bottom = drag_element_rect['bottom']
                             current_bottom_diff = abs(panel_bottom - drag_bottom)
                             
-                            print(f"Completed scroll round {scroll_rounds}, bottom difference: {current_bottom_diff}px")
-                        
-                        print(f"Finished scrolling after {scroll_rounds} rounds, final bottom difference: {current_bottom_diff}px")
+                            scroll_rounds += 1
+                            print(f"Scroll round {scroll_rounds}, bottom difference: {current_bottom_diff:.1f}px")
+                            
+                            # Break early if we're making no progress
+                            if scroll_rounds > 3 and current_bottom_diff > panel_container_rect['height'] * 0.8:
+                                print("Limited progress in scrolling, stopping early")
+                                break
 
-                        # Click on panel container to finish interaction
+                        # Final click to finish interaction
                         ActionChains(driver).move_to_element(panel_container).click().perform()
-                        sleep(random.uniform(0.3, 0.7))
                         
                     except Exception as scroll_error:
                         print(f"Error during scroll attempt: {str(scroll_error)}")
