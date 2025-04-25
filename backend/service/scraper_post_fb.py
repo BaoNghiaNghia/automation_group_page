@@ -756,6 +756,86 @@ def simulate_human_behavior_when_scraping_game(browser, environment):
                             ActionChains(browser).move_to_element(button).perform()
                             logger.info("Hovering over reaction button")
                             time.sleep(random.uniform(1.0, 2.5))
+                            
+                            # Sometimes click on a reaction
+                            if random.random() < 0.5:  # 50% chance to click a reaction
+                                emotions = ["like", "love", "care", "haha", "wow", "sad", "angry"]
+                                selected_emotion = random.choice(emotions)
+                                logger.info(f"Considering reaction: {selected_emotion}")
+                                
+                                try:
+                                    # Different XPaths for different emotions
+                                    emotion_xpath_map = {
+                                        "like": "//div[@role='button' and @aria-label='Like']",
+                                        "love": "//div[@role='button' and @aria-label='Love']",
+                                        "care": "//div[@role='button' and @aria-label='Care']",
+                                        "haha": "//div[@role='button' and @aria-label='Haha']",
+                                        "wow": "//div[@role='button' and @aria-label='Wow']",
+                                        "sad": "//div[@role='button' and @aria-label='Sad']",
+                                        "angry": "//div[@role='button' and @aria-label='Angry']"
+                                    }
+                                    
+                                    # Wait for reaction panel to appear
+                                    try:
+                                        # Use a more reliable XPath for the reaction panel
+                                        reaction_panel = WebDriverWait(browser, 5).until(
+                                            EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'reactions-panel') or contains(@style, 'opacity') or @role='dialog']"))
+                                        )
+                                        logger.info("Reaction panel appeared")
+                                        time.sleep(random.uniform(0.5, 1.0))  # Short pause after panel appears
+                                        
+                                        # Try to find the specific emotion using multiple possible selectors
+                                        try:
+                                            # Try different approaches to find the emotion element
+                                            emotion_xpaths = [
+                                                emotion_xpath_map[selected_emotion],  # Original xpath
+                                                f"//div[@aria-label='{selected_emotion.capitalize()}']",  # Alternative format
+                                                f"//div[contains(@aria-label, '{selected_emotion}')]",  # Partial match
+                                                f"//div[@data-reaction-type='{selected_emotion}']"  # Data attribute
+                                            ]
+                                            
+                                            # Try each xpath until one works
+                                            emotion_element = None
+                                            for xpath in emotion_xpaths:
+                                                try:
+                                                    emotion_element = WebDriverWait(browser, 1).until(
+                                                        EC.presence_of_element_located((By.XPATH, xpath))
+                                                    )
+                                                    if emotion_element:
+                                                        break
+                                                except:
+                                                    continue
+                                            
+                                            if emotion_element:
+                                                # Move to the emotion and click it
+                                                ActionChains(browser).move_to_element(emotion_element).perform()
+                                                logger.info(f"Hovering over {selected_emotion} reaction")
+                                                
+                                                # Variable wait time before clicking
+                                                time.sleep(random.uniform(0.5, 1.5))
+                                                
+                                                # Click the emotion element
+                                                emotion_element.click()
+                                                logger.info(f"Clicked on {selected_emotion} reaction")
+                                                
+                                                # Wait after clicking
+                                                time.sleep(random.uniform(2.0, 4.0))
+                                            else:
+                                                logger.debug(f"Could not find {selected_emotion} reaction with any selector")
+                                            
+                                            # Move away from the reaction panel without clicking
+                                            ActionChains(browser).move_by_offset(200, 200).perform()
+                                            logger.info("Moving away from reaction panel")
+                                        except Exception as e:
+                                            logger.debug(f"Could not find or interact with emotion element: {e}")
+                                            # Move away to close the reaction panel
+                                            ActionChains(browser).move_by_offset(200, 200).perform()
+                                    except Exception as e:
+                                        logger.debug(f"Reaction panel did not appear or could not be interacted with: {e}")
+                                        # Try to move mouse away anyway to ensure we don't get stuck
+                                        ActionChains(browser).move_by_offset(200, 200).perform()
+                                except Exception as e:
+                                    logger.debug(f"Failed to interact with reactions: {e}")
                     except Exception as e:
                         logger.debug(f"Failed to simulate reaction: {e}")
 
@@ -908,7 +988,7 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
     """
     try:
         # Use more natural scrolling patterns with variable speeds and distances
-        scroll_duration = random.randint(120, 180)  # 30-60 seconds of browsing
+        scroll_duration = random.randint(180, 240)
         start_time = time.time()
         
         while time.time() - start_time < scroll_duration:
@@ -982,32 +1062,59 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
                         
                         # Wait for reaction panel to appear
                         try:
-                            WebDriverWait(browser, 3).until(
-                                EC.presence_of_element_located((By.XPATH, "//div[@role='dialog' and contains(@style, 'opacity')]"))
-                            )
+                            logger.info("Reaction panel appeared")
+                            time.sleep(random.uniform(0.5, 1.0))  # Short pause after panel appears
                             
-                            # Find the selected emotion
+                            # Try to find the specific emotion using multiple possible selectors
                             try:
-                                emotion_element = WebDriverWait(browser, 2).until(
-                                    EC.presence_of_element_located((By.XPATH, emotion_xpath_map[selected_emotion]))
-                                )
+                                # Try different approaches to find the emotion element
+                                emotion_xpaths = [
+                                    emotion_xpath_map[selected_emotion],  # Original xpath
+                                    f"//div[@aria-label='{selected_emotion.capitalize()}']",  # Alternative format
+                                    f"//div[contains(@aria-label, '{selected_emotion}')]",  # Partial match
+                                    f"//div[@data-reaction-type='{selected_emotion}']"  # Data attribute
+                                ]
                                 
-                                # Move to the emotion but DON'T click - just hover
-                                ActionChains(browser).move_to_element(emotion_element).perform()
-                                logger.info(f"Hovering over {selected_emotion} reaction (not clicking)")
+                                # Try each xpath until one works
+                                emotion_element = None
+                                for xpath in emotion_xpaths:
+                                    try:
+                                        emotion_element = WebDriverWait(browser, 1).until(
+                                            EC.presence_of_element_located((By.XPATH, xpath))
+                                        )
+                                        if emotion_element:
+                                            break
+                                    except:
+                                        continue
                                 
-                                # Variable wait time before continuing
-                                time.sleep(random.uniform(1.5, 3.0))
+                                if emotion_element:
+                                    # Move to the emotion and click it
+                                    ActionChains(browser).move_to_element(emotion_element).perform()
+                                    logger.info(f"Hovering over {selected_emotion} reaction")
+                                    
+                                    # Variable wait time before clicking
+                                    time.sleep(random.uniform(0.5, 1.5))
+                                    
+                                    # Click the emotion element
+                                    emotion_element.click()
+                                    logger.info(f"Clicked on {selected_emotion} reaction")
+                                    
+                                    # Wait after clicking
+                                    time.sleep(random.uniform(2.0, 4.0))
+                                else:
+                                    logger.debug(f"Could not find {selected_emotion} reaction with any selector")
                                 
                                 # Move away from the reaction panel without clicking
-                                ActionChains(browser).move_by_offset(100, 100).perform()
+                                ActionChains(browser).move_by_offset(200, 200).perform()
                                 logger.info("Moving away from reaction panel")
                             except Exception as e:
-                                logger.debug(f"Could not find emotion element: {e}")
+                                logger.debug(f"Could not find or interact with emotion element: {e}")
                                 # Move away to close the reaction panel
-                                ActionChains(browser).move_by_offset(100, 100).perform()
+                                ActionChains(browser).move_by_offset(200, 200).perform()
                         except Exception as e:
-                            logger.debug(f"Reaction panel did not appear: {e}")
+                            logger.debug(f"Reaction panel did not appear or could not be interacted with: {e}")
+                            # Try to move mouse away anyway to ensure we don't get stuck
+                            ActionChains(browser).move_by_offset(200, 200).perform()
                 except Exception as e:
                     logger.debug(f"Failed to interact with reactions: {e}")
         
