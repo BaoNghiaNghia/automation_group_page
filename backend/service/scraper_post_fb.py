@@ -17,7 +17,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from backend.utils.captcha_solver import solve_captcha, get_captcha_result
 from backend.utils.index import get_all_game_fanpages
-from backend.constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, FOLDER_PATH_DATA_CRAWLER, LIMIT_POST_PER_DAY, FOLDER_PATH_POST_ID_CRAWLER, FB_DEFAULT_URL
+from backend.constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, FOLDER_PATH_DATA_CRAWLER, LIMIT_POST_PER_DAY, FOLDER_PATH_POST_ID_CRAWLER, FB_DEFAULT_URL, ENV_CONFIG
 import logging
 
 
@@ -313,7 +313,7 @@ def download_image_file(image_url, file_number, post_id, folder_path="/data_craw
         print(f"Error downloading image from {image_url}: {e}")
 
 
-def crawlPostData(driver, postIds, game_name):
+def crawlPostData(driver, postIds, game_name, environment):
     empty_post_count = 0  # Counter for empty posts
     written_post_count = 0  # Counter for posts written to file
 
@@ -448,49 +448,47 @@ def crawlPostData(driver, postIds, game_name):
                             for idx, profile_id in enumerate(unique_profile_ids):
                                 print(f"  Unique Profile {idx+1}: {profile_id}")
                                 
-                            # # Save profile IDs to API in batches of 10
-                            # if unique_profile_ids:
-                            #     try:
-                            #         # Get the game_fanpages_id from the current context
-                            #         # Assuming game_name is available in the scope or can be derived
-                            #         game_fanpages_id = None
-                            #         if 'game_name' in locals() or 'game_name' in globals():
-                            #             # This is a placeholder - you would need to map game_name to game_fanpages_id
-                            #             # in a real implementation
-                            #             pass
+                            # Save profile IDs to API in batches of 10
+                            if unique_profile_ids:
+                                try:
+                                    # Get the game_fanpages_id from the current context
+                                    # Assuming game_name is available in the scope or can be derived
+                                    game_fanpages_id = None
+                                    if 'game_name' in locals() or 'game_name' in globals():
+                                        # This is a placeholder - you would need to map game_name to game_fanpages_id
+                                        # in a real implementation
+                                        pass
                                     
-                            #         # Process in batches of 10
-                            #         profile_list = list(unique_profile_ids)
-                            #         batch_size = 10
+                                    # Process in batches of 10
+                                    profile_list = list(unique_profile_ids)
+                                    batch_size = 10
                                     
-                            #         for i in range(0, len(profile_list), batch_size):
-                            #             batch = profile_list[i:i+batch_size]
-                            #             payload = []
+                                    for i in range(0, len(profile_list), batch_size):
+                                        batch = profile_list[i:i+batch_size]
+                                        payload = []
                                         
-                            #             for profile_id in batch:
-                            #                 # If game_fanpages_id is not available, you might need to 
-                            #                 # adjust this logic based on your application's requirements
-                            #                 payload.append({
-                            #                     "profile_id": profile_id,
-                            #                     "game_fanpages_id": game_fanpages_id or 1  # Default value if not available
-                            #                 })
+                                        for profile_id in batch:
+                                            payload.append({
+                                                "profile_id": profile_id,
+                                                "game_fanpages_id": 1  # Default value if not available
+                                            })
                                         
-                            #             # Make API request
-                            #             import requests
-                            #             import json
+                                        # Make API request
+                                        import requests
+                                        import json
                                         
-                            #             headers = {'Content-Type': 'application/json'}
-                            #             api_url = 'https://boostgamemobile.com/service/friend_list_group_game/insert-batch'
+                                        headers = {'Content-Type': 'application/json'}
+                                        api_url = f'{ENV_CONFIG[environment]["SERVICE_URL"]}/friend_list_group_game/insert-batch'
                                         
-                            #             response = requests.post(api_url, headers=headers, data=json.dumps(payload))
+                                        response = requests.post(api_url, headers=headers, data=json.dumps(payload))
                                         
-                            #             if response.status_code == 200:
-                            #                 print(f"Successfully sent batch of {len(batch)} profile IDs to API")
-                            #             else:
-                            #                 print(f"API request failed with status code {response.status_code}: {response.text}")
+                                        if response.status_code == 200:
+                                            print(f"Successfully sent batch of {len(batch)} profile IDs to API")
+                                        else:
+                                            print(f"API request failed with status code {response.status_code}: {response.text}")
                                             
-                            #     except Exception as api_error:
-                            #         print(f"Error sending profile IDs to API: {str(api_error)}")
+                                except Exception as api_error:
+                                    print(f"Error sending profile IDs to API: {str(api_error)}")
                         else:
                             print("No reaction links found in the panel")
                     except Exception as e:
