@@ -1032,7 +1032,7 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
                         logger.debug(f"Failed to simulate reaction: {e}")
                         
             # Decide whether to hover over reactions
-            if random.random() < 0.5:  # 40% chance to interact with reactions
+            if random.random() < 0.5:
                 emotions = ["like", "love", "care", "haha", "wow", "sad", "angry"]
                 selected_emotion = random.choice(emotions)
                 logger.info(f"Considering reaction: {selected_emotion}")
@@ -1099,8 +1099,23 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
                                     emotion_element.click()
                                     logger.info(f"Clicked on {selected_emotion} reaction")
                                     
-                                    # Wait after clicking
+                                    # Wait after clicking to ensure the reaction is registered
                                     time.sleep(random.uniform(2.0, 4.0))
+                                    
+                                    # Verify the reaction was registered before continuing
+                                    try:
+                                        # Look for confirmation that reaction was applied
+                                        WebDriverWait(browser, 3).until(
+                                            EC.presence_of_element_located((By.XPATH, f"//div[contains(@aria-label, '{selected_emotion}') and contains(@aria-label, 'ed')]"))
+                                        )
+                                        logger.info(f"Confirmed {selected_emotion} reaction was registered")
+                                    except Exception as e:
+                                        logger.debug(f"Could not confirm reaction was registered: {e}")
+                                        # Additional wait to ensure reaction processing
+                                        time.sleep(random.uniform(1.0, 2.0))
+                                    
+                                    # Continue only after ensuring reaction was processed
+                                    continue
                                 else:
                                     logger.debug(f"Could not find {selected_emotion} reaction with any selector")
                                 
