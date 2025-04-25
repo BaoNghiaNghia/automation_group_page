@@ -473,7 +473,7 @@ def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
                                 try:                                 
                                     # Process in batches of 10
                                     profile_list = list(unique_profile_ids)
-                                    batch_size = 10
+                                    batch_size = 20
                                     
                                     for i in range(0, len(profile_list), batch_size):
                                         batch = profile_list[i:i+batch_size]
