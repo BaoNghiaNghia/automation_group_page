@@ -388,54 +388,49 @@ def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
 
                     try:
                         panel_container = driver.find_element(By.XPATH, "/html/body/div[7]/div[1]/div/div[2]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]")
+                        
                         drag_element = driver.find_element(By.XPATH, "/html/body/div[7]/div[1]/div/div[2]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[3]")
                         
-                        # Get initial positions
+                        # Get positions and dimensions
                         panel_container_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", panel_container)
                         drag_element_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", drag_element)
                         
                         panel_bottom = panel_container_rect['bottom']
                         drag_bottom = drag_element_rect['bottom']
-                        
-                        # Maximum scroll attempts and threshold for alignment
-                        max_scroll_rounds = 30
-                        alignment_threshold = 5
+
+                        # Calculate how many scrolls needed to align bottoms
                         scroll_rounds = 0
                         current_bottom_diff = abs(panel_bottom - drag_bottom)
                         
-                        # Scroll until bottoms are aligned or max attempts reached
-                        while current_bottom_diff > alignment_threshold and scroll_rounds < max_scroll_rounds:
-                            # Create adaptive scroll distance based on difference
-                            scroll_distance = min(50, current_bottom_diff / 2)
-                            
-                            # Perform scroll action with smoother timing
+                        # Continue scrolling until bottoms are aligned or very close
+                        while current_bottom_diff > 5 and scroll_rounds < 25:
                             action = ActionChains(driver)
                             action.click_and_hold(drag_element)
-                            sleep(random.uniform(1.5, 4))
+                            sleep(random.uniform(1, 3))  # Hold for a moment
+                            
+                            # Adjust scroll distance based on difference
+                            scroll_distance = min(100, current_bottom_diff)
                             action.move_by_offset(0, scroll_distance)
                             action.release()
                             action.perform()
                             
-                            # Short wait between scrolls
-                            sleep(random.uniform(1.5, 4))
+                            sleep(random.uniform(1, 3))
+                            scroll_rounds += 1
                             
-                            # Update measurements
+                            # Update positions after scrolling
                             panel_container_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", panel_container)
                             drag_element_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", drag_element)
                             panel_bottom = panel_container_rect['bottom']
                             drag_bottom = drag_element_rect['bottom']
                             current_bottom_diff = abs(panel_bottom - drag_bottom)
                             
-                            scroll_rounds += 1
-                            print(f"Scroll round {scroll_rounds}, bottom difference: {current_bottom_diff:.1f}px")
-                            
-                            # Break early if we're making no progress
-                            if scroll_rounds > 3 and current_bottom_diff > panel_container_rect['height'] * 0.8:
-                                print("Limited progress in scrolling, stopping early")
-                                break
-
-                        # Final click to finish interaction
+                            print(f"Completed scroll round {scroll_rounds}, bottom difference: {current_bottom_diff}px")
+                        
+                        print(f"Finished scrolling after {scroll_rounds} rounds, final bottom difference: {current_bottom_diff}px")
+                        
+                        # Click on panel container to finish interaction
                         ActionChains(driver).move_to_element(panel_container).click().perform()
+                        sleep(random.uniform(0.3, 0.7))
                         
                     except Exception as scroll_error:
                         print(f"Error during scroll attempt: {str(scroll_error)}")
@@ -998,16 +993,16 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
                 print("CAPTCHA handling failed, exiting.")
                 return False  # Exit if CAPTCHA handling fails
 
-        sleep_time = random.randint(3, 8)
-        logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
-        # sleep(sleep_time)
+        # sleep_time = random.randint(3, 8)
+        # logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
+        # # sleep(sleep_time)
             
-        # Add human-like behavior before starting to scrape
-        logger.info("Simulating human-like browsing behavior before scraping...")
+        # # Add human-like behavior before starting to scrape
+        # logger.info("Simulating human-like browsing behavior before scraping...")
         
-        # Simulate scrolling behavior and get final pause time
-        final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
-        sleep(final_pause)
+        # # Simulate scrolling behavior and get final pause time
+        # final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
+        # sleep(final_pause)
         
         list_game_fanpages = get_all_game_fanpages(environment)
 

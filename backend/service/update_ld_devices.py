@@ -130,8 +130,8 @@ def update_ld_devices(config_folder, environment, pcrunner):
     
     # Merged print statements
     print(f"Tổng cộng: {len(local_player_names)} thiết bị trên máy {pcrunner}\n"
-          f"Tổng cộng: {len(database_device_names)} thiết bị trong Database\n"
-          f"Số lượng thiết bị bổ sung: {len(missing_devices)}")
+        f"Tổng cộng: {len(database_device_names)} thiết bị trong Database\n"
+        f"Số lượng thiết bị bổ sung: {len(missing_devices)}")
 
     # Process all missing devices in batches
     if missing_devices:
