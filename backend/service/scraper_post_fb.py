@@ -384,14 +384,40 @@ def crawlPostData(driver, postIds, game_name):
                         drag_element = driver.find_element(By.XPATH,
                             "/html/body/div[7]/div[1]/div/div[2]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[3]")
                         
-                        # Perform tap, hold and drag down action
-                        action = ActionChains(driver)
-                        action.click_and_hold(drag_element)
-                        sleep(random.uniform(0.5, 1.0))  # Hold for a moment
-                        action.move_by_offset(0, 100)    # Move down by 100 pixels
-                        action.release()
-                        action.perform()
-                        sleep(random.uniform(0.8, 1.5))
+                        # Print the HTML of the panel container and drag element for debugging
+                        try:
+                            panel_container_html = panel_container.get_attribute('outerHTML')
+                            print(f"Panel container HTML: {panel_container_html[:200]}...")  # Print first 200 chars to avoid console clutter
+                        except Exception as e:
+                            print(f"Error getting panel container HTML: {str(e)}")
+                            
+                        try:
+                            drag_element_html = drag_element.get_attribute('outerHTML')
+                            print(f"Drag element HTML: {drag_element_html[:200]}...")  # Print first 200 chars to avoid console clutter
+                        except Exception as e:
+                            print(f"Error getting drag element HTML: {str(e)}")
+                        
+                        panel_container_height = panel_container.size['height']
+                        drag_element_height = drag_element.size['height']
+
+                        # Print the heights of the panel container and drag element
+                        print(f"Panel container height: {panel_container_height}px")
+                        print(f"Drag element height: {drag_element_height}px")
+
+                        # Calculate number of scrolls needed based on container and element heights
+                        scroll_rounds = int(panel_container_height / drag_element_height) if drag_element_height > 0 else 3
+                        print(f"Performing {scroll_rounds} rounds of scrolling")
+                        
+                        for i in range(scroll_rounds):
+                            # Perform tap, hold and drag down action
+                            action = ActionChains(driver)
+                            action.click_and_hold(drag_element)
+                            sleep(random.uniform(0.5, 1.0))  # Hold for a moment
+                            action.move_by_offset(0, 100)    # Move down by 100 pixels
+                            action.release()
+                            action.perform()
+                            sleep(random.uniform(0.8, 1.5))
+                            print(f"Completed scroll round {i+1} of {scroll_rounds}")
                         
                         # Additional scrolling with keyboard actions
                         ActionChains(driver).move_to_element(panel_container).click().perform()
