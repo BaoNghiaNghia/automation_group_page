@@ -376,57 +376,54 @@ def crawlPostData(driver, postIds, game_name):
                     sleep(random.uniform(1.0, 2.0))
 
                     try:
-                        # Try to find the reaction panel container for additional scrolling if needed
-                        panel_container = driver.find_element(By.XPATH, 
-                            "/html/body/div[7]/div[1]/div/div[2]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]")
+                        panel_container = driver.find_element(By.XPATH, "/html/body/div[7]/div[1]/div/div[2]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]")
                         
-                        # Find the element to tap, hold and drag down
-                        drag_element = driver.find_element(By.XPATH,
-                            "/html/body/div[7]/div[1]/div/div[2]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[3]")
+                        drag_element = driver.find_element(By.XPATH, "/html/body/div[7]/div[1]/div/div[2]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[3]")
                         
-                        # Print the HTML of the panel container and drag element for debugging
-                        try:
-                            panel_container_html = panel_container.get_attribute('outerHTML')
-                            print(f"Panel container HTML: {panel_container_html[:200]}...")  # Print first 200 chars to avoid console clutter
-                        except Exception as e:
-                            print(f"Error getting panel container HTML: {str(e)}")
-                            
-                        try:
-                            drag_element_html = drag_element.get_attribute('outerHTML')
-                            print(f"Drag element HTML: {drag_element_html[:200]}...")  # Print first 200 chars to avoid console clutter
-                        except Exception as e:
-                            print(f"Error getting drag element HTML: {str(e)}")
+                        # Get positions and dimensions
+                        panel_container_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", panel_container)
+                        drag_element_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", drag_element)
                         
-                        panel_container_height = panel_container.size['height']
-                        drag_element_height = drag_element.size['height']
+                        panel_bottom = panel_container_rect['bottom']
+                        drag_bottom = drag_element_rect['bottom']
 
-                        # Print the heights of the panel container and drag element
-                        print(f"Panel container height: {panel_container_height}px")
-                        print(f"Drag element height: {drag_element_height}px")
-
-                        # Calculate number of scrolls needed based on container and element heights
-                        scroll_rounds = int(panel_container_height / drag_element_height) if drag_element_height > 0 else 3
-                        print(f"Performing {scroll_rounds} rounds of scrolling")
+                        # Calculate how many scrolls needed to align bottoms
+                        scroll_rounds = 0
+                        current_bottom_diff = abs(panel_bottom - drag_bottom)
                         
-                        for i in range(scroll_rounds):
-                            # Perform tap, hold and drag down action
+                        # Continue scrolling until bottoms are aligned or very close
+                        while current_bottom_diff > 5 and scroll_rounds < 25:
                             action = ActionChains(driver)
                             action.click_and_hold(drag_element)
-                            sleep(random.uniform(0.5, 1.0))  # Hold for a moment
-                            action.move_by_offset(0, 100)    # Move down by 100 pixels
+                            sleep(random.uniform(1, 3))  # Hold for a moment
+                            
+                            # Adjust scroll distance based on difference
+                            scroll_distance = min(100, current_bottom_diff)
+                            action.move_by_offset(0, scroll_distance)
                             action.release()
                             action.perform()
-                            sleep(random.uniform(0.8, 1.5))
-                            print(f"Completed scroll round {i+1} of {scroll_rounds}")
+                            
+                            sleep(random.uniform(1, 3))
+                            scroll_rounds += 1
+                            
+                            # Update positions after scrolling
+                            panel_container_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", panel_container)
+                            drag_element_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", drag_element)
+                            panel_bottom = panel_container_rect['bottom']
+                            drag_bottom = drag_element_rect['bottom']
+                            current_bottom_diff = abs(panel_bottom - drag_bottom)
+                            
+                            print(f"Completed scroll round {scroll_rounds}, bottom difference: {current_bottom_diff}px")
                         
-                        # Additional scrolling with keyboard actions
+                        print(f"Finished scrolling after {scroll_rounds} rounds, final bottom difference: {current_bottom_diff}px")
+                        
+                        # Click on panel container to finish interaction
                         ActionChains(driver).move_to_element(panel_container).click().perform()
                         sleep(random.uniform(0.3, 0.7))
                         
                     except Exception as scroll_error:
-                        print(f"Error during scroll attempt ")
+                        print(f"Error during scroll attempt: {str(scroll_error)}")
                         
-
                     # Extract reaction links after scrolling
                     try:
                         reaction_links = reaction_panel.find_elements(By.CSS_SELECTOR, "a[role='link'][tabindex='0']")
@@ -450,6 +447,50 @@ def crawlPostData(driver, postIds, game_name):
                             print(f"Found {len(unique_profile_ids)} unique profile IDs:")
                             for idx, profile_id in enumerate(unique_profile_ids):
                                 print(f"  Unique Profile {idx+1}: {profile_id}")
+                                
+                            # # Save profile IDs to API in batches of 10
+                            # if unique_profile_ids:
+                            #     try:
+                            #         # Get the game_fanpages_id from the current context
+                            #         # Assuming game_name is available in the scope or can be derived
+                            #         game_fanpages_id = None
+                            #         if 'game_name' in locals() or 'game_name' in globals():
+                            #             # This is a placeholder - you would need to map game_name to game_fanpages_id
+                            #             # in a real implementation
+                            #             pass
+                                    
+                            #         # Process in batches of 10
+                            #         profile_list = list(unique_profile_ids)
+                            #         batch_size = 10
+                                    
+                            #         for i in range(0, len(profile_list), batch_size):
+                            #             batch = profile_list[i:i+batch_size]
+                            #             payload = []
+                                        
+                            #             for profile_id in batch:
+                            #                 # If game_fanpages_id is not available, you might need to 
+                            #                 # adjust this logic based on your application's requirements
+                            #                 payload.append({
+                            #                     "profile_id": profile_id,
+                            #                     "game_fanpages_id": game_fanpages_id or 1  # Default value if not available
+                            #                 })
+                                        
+                            #             # Make API request
+                            #             import requests
+                            #             import json
+                                        
+                            #             headers = {'Content-Type': 'application/json'}
+                            #             api_url = 'https://boostgamemobile.com/service/friend_list_group_game/insert-batch'
+                                        
+                            #             response = requests.post(api_url, headers=headers, data=json.dumps(payload))
+                                        
+                            #             if response.status_code == 200:
+                            #                 print(f"Successfully sent batch of {len(batch)} profile IDs to API")
+                            #             else:
+                            #                 print(f"API request failed with status code {response.status_code}: {response.text}")
+                                            
+                            #     except Exception as api_error:
+                            #         print(f"Error sending profile IDs to API: {str(api_error)}")
                         else:
                             print("No reaction links found in the panel")
                     except Exception as e:
@@ -956,12 +997,12 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
         logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
         # sleep(sleep_time)
             
-        # # Add human-like behavior before starting to scrape
-        # logger.info("Simulating human-like browsing behavior before scraping...")
+        # Add human-like behavior before starting to scrape
+        logger.info("Simulating human-like browsing behavior before scraping...")
         
-        # # Simulate scrolling behavior and get final pause time
-        # final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
-        # sleep(final_pause)
+        # Simulate scrolling behavior and get final pause time
+        final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
+        sleep(final_pause)
 
         # Process each game URL with the same browser session
         for index, game_url in enumerate(game_urls):
@@ -1019,7 +1060,7 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
                     f.write("\n".join(sorted(all_posts)))
 
                 # Crawl post data
-                crawlPostData(browser, readData(post_id_full_path), game_name)
+                crawlPostData(browser, readData(post_id_full_path), game_name, environment)
                 
                 print(f"----- Done {len(all_posts)} posts: Game {game_name} -----")
                 
