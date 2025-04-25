@@ -33,6 +33,11 @@ def init_browser(is_ubuntu=False):
         "profile.default_content_setting_values.notifications": 1
     }
     chrome_options.add_experimental_option("prefs", prefs)
+    
+    # Remove the "Chrome is being controlled by automated test software" message
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    chrome_options.add_experimental_option("useAutomationExtension", False)
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
 
     if is_ubuntu:
         # Ubuntu-specific options
@@ -45,6 +50,10 @@ def init_browser(is_ubuntu=False):
         service = Service(executable_path="./chromedriver.exe")
 
     browser = webdriver.Chrome(service=service, options=chrome_options)
+    
+    # Additional step to modify navigator.webdriver property
+    browser.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+    
     return browser
 
 def login_facebook(username, password, is_ubuntu=False, use_cookies=True, cookies_path=None):
