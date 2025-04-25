@@ -50,6 +50,18 @@ def sync_post_into_databse(environment):
 
                 image_path = folder_path
                 txt_files = [f for f in os.listdir(folder_path) if f.endswith('.txt')]
+                
+                # Get the first image in the folder for base64 encoding
+                image_blob = None
+                image_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+                if image_files:
+                    try:
+                        import base64
+                        first_image_path = os.path.join(folder_path, image_files[0])
+                        with open(first_image_path, "rb") as img_file:
+                            image_blob = base64.b64encode(img_file.read()).decode('utf-8')
+                    except Exception as e:
+                        logger.error(f"Error encoding image {image_files[0]}: {str(e)}")
 
                 for txt_file in txt_files:
                     file_path = os.path.join(folder_path, txt_file)
@@ -58,13 +70,16 @@ def sync_post_into_databse(environment):
                             content = f_txt.read().strip()
                             if content:
                                 file_name = os.path.splitext(txt_file)[0]
+                                # Only include image_blob if file_name is 'content'
+                                current_image_blob = image_blob if file_name == 'content' else None
                                 batch_data.append({
                                     'fanpage': game_name,
                                     'game_fanpages_id': game_fanpages_id.get(game_name, None),
                                     'post_id': post_id,
                                     'clone_version': file_name,
                                     'content': content,
-                                    'img_path': image_path
+                                    'img_path': image_path,
+                                    'image_blob': current_image_blob
                                 })
 
                     except Exception as e:
