@@ -24,11 +24,10 @@ def update_ld_devices(config_folder, environment, pcrunner):
         """Fetch device names from the API and return as a list"""
         try:
             # Construct the API URL
-            api_url = f"{service_url}/ldplayer_devices" if service_url.endswith('/service') else f"{service_url}/service/ldplayer_devices"
-            
+            api_url = f"{service_url}/ldplayer_devices/all"
+
             # Make the API request
             response = requests.get(api_url)
-            
             if response.status_code == 200:
                 data = response.json()
                 
@@ -133,28 +132,28 @@ def update_ld_devices(config_folder, environment, pcrunner):
         f"Tổng cộng: {len(database_device_names)} thiết bị trong Database\n"
         f"Số lượng thiết bị bổ sung: {len(missing_devices)}")
 
-    # Process all missing devices in batches
-    if missing_devices:
-        print("Tạo thiết bị mới trong Database...")
-        success_count = 0
-        total_devices = len(missing_devices)
-        batch_size = 10
+    # # Process all missing devices in batches
+    # if missing_devices:
+    #     print("Tạo thiết bị mới trong Database...")
+    #     success_count = 0
+    #     total_devices = len(missing_devices)
+    #     batch_size = 10
         
-        for i in range(0, total_devices, batch_size):
-            batch = missing_devices[i:i+batch_size]
-            if batch:
-                success_count += create_new_device_batch(batch, batch_size)
+    #     for i in range(0, total_devices, batch_size):
+    #         batch = missing_devices[i:i+batch_size]
+    #         if batch:
+    #             success_count += create_new_device_batch(batch, batch_size)
                 
-                # Calculate and show progress percentage
-                processed = min(i + batch_size, total_devices)
-                percentage = (processed / total_devices) * 100
-                print(f"Progress: {percentage:.1f}% ({processed}/{total_devices})")
+    #             # Calculate and show progress percentage
+    #             processed = min(i + batch_size, total_devices)
+    #             percentage = (processed / total_devices) * 100
+    #             print(f"Progress: {percentage:.1f}% ({processed}/{total_devices})")
                 
-                # Add a small delay between batches to avoid overwhelming the API
-                time.sleep(1)
+    #             # Add a small delay between batches to avoid overwhelming the API
+    #             time.sleep(1)
         
-        logger.info(f"Created {success_count} out of {total_devices} missing devices")
-        print(f"Created {success_count} out of {total_devices} missing devices")
-    else:
-        logger.info("No missing devices to create")
-        print("No missing devices to create")
+    #     logger.info(f"Created {success_count} out of {total_devices} missing devices")
+    #     print(f"Created {success_count} out of {total_devices} missing devices")
+    # else:
+    #     logger.info("No missing devices to create")
+    #     print("No missing devices to create")
