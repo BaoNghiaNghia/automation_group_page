@@ -807,6 +807,8 @@ def simulate_human_behavior_when_scraping_game(browser, environment):
                 scroll_amount = random.randint(600, 900)
                 browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
                 time.sleep(random.uniform(1.0, 2.5))
+                
+            
             
             # Simulate interest in specific content
             if random.random() < 0.25:  # 25% chance to show interest
@@ -844,7 +846,7 @@ def simulate_human_behavior_when_scraping_game(browser, environment):
                     logger.debug(f"Failed to interact with content: {e}")
 
             # Occasionally search for topics related to games (more targeted)
-            if random.random() < 0.1:  # 10% chance
+            if random.random() < 0.4:
                 try:
                     search_box = browser.find_element(By.XPATH, "//input[@placeholder='Search Facebook']")
                     
@@ -906,7 +908,7 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
     """
     try:
         # Use more natural scrolling patterns with variable speeds and distances
-        scroll_duration = random.randint(30, 60)  # 30-60 seconds of browsing
+        scroll_duration = random.randint(120, 180)  # 30-60 seconds of browsing
         start_time = time.time()
         
         while time.time() - start_time < scroll_duration:
@@ -932,7 +934,7 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
             if random.random() < 0.7:  # 70% chance for normal pause
                 time.sleep(random.uniform(2.0, 5.5))
             else:  # 30% chance for longer engagement
-                engagement_time = random.uniform(7.0, 15.0)
+                engagement_time = random.uniform(9.0, 17.0)
                 logger.info(f"Engaging with content for {engagement_time:.1f} seconds...")
                 time.sleep(engagement_time)
                 
@@ -948,6 +950,66 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
                             time.sleep(random.uniform(1.0, 2.5))
                     except Exception as e:
                         logger.debug(f"Failed to simulate reaction: {e}")
+                        
+            # Decide whether to hover over reactions
+            if random.random() < 0.5:  # 40% chance to interact with reactions
+                emotions = ["like", "love", "care", "haha", "wow", "sad", "angry"]
+                selected_emotion = random.choice(emotions)
+                logger.info(f"Considering reaction: {selected_emotion}")
+                
+                try:
+                    # Different XPaths for different emotions
+                    emotion_xpath_map = {
+                        "like": "//div[@role='button' and @aria-label='Like']",
+                        "love": "//div[@role='button' and @aria-label='Love']",
+                        "care": "//div[@role='button' and @aria-label='Care']",
+                        "haha": "//div[@role='button' and @aria-label='Haha']",
+                        "wow": "//div[@role='button' and @aria-label='Wow']",
+                        "sad": "//div[@role='button' and @aria-label='Sad']",
+                        "angry": "//div[@role='button' and @aria-label='Angry']"
+                    }
+                    
+                    # Find Like buttons
+                    like_buttons = browser.find_elements(By.XPATH, "//div[@aria-label='Like' or @aria-label='React' or contains(@aria-label, 'reaction')]")
+                    if like_buttons:
+                        # Select a random Like button
+                        like_button = random.choice(like_buttons)
+                        
+                        # First hover over the Like button
+                        ActionChains(browser).move_to_element(like_button).perform()
+                        logger.info("Hovering over Like button")
+                        time.sleep(random.uniform(1.0, 2.0))
+                        
+                        # Wait for reaction panel to appear
+                        try:
+                            WebDriverWait(browser, 3).until(
+                                EC.presence_of_element_located((By.XPATH, "//div[@role='dialog' and contains(@style, 'opacity')]"))
+                            )
+                            
+                            # Find the selected emotion
+                            try:
+                                emotion_element = WebDriverWait(browser, 2).until(
+                                    EC.presence_of_element_located((By.XPATH, emotion_xpath_map[selected_emotion]))
+                                )
+                                
+                                # Move to the emotion but DON'T click - just hover
+                                ActionChains(browser).move_to_element(emotion_element).perform()
+                                logger.info(f"Hovering over {selected_emotion} reaction (not clicking)")
+                                
+                                # Variable wait time before continuing
+                                time.sleep(random.uniform(1.5, 3.0))
+                                
+                                # Move away from the reaction panel without clicking
+                                ActionChains(browser).move_by_offset(100, 100).perform()
+                                logger.info("Moving away from reaction panel")
+                            except Exception as e:
+                                logger.debug(f"Could not find emotion element: {e}")
+                                # Move away to close the reaction panel
+                                ActionChains(browser).move_by_offset(100, 100).perform()
+                        except Exception as e:
+                            logger.debug(f"Reaction panel did not appear: {e}")
+                except Exception as e:
+                    logger.debug(f"Failed to interact with reactions: {e}")
         
         # Occasionally navigate to a different section before returning to main task
         if random.random() < 0.3:  # 30% chance
