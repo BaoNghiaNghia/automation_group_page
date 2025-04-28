@@ -386,156 +386,8 @@ def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
                 print(f"Waiting for {sleep_time:.2f} seconds after clicking like button...")
                 sleep(sleep_time)
                 
-                try:
-                    # Define reaction panel xpath as a constant
-                    REACTION_PANEL_XPATH_OPTION_1 = "/html/body/div[7]/div[1]/div/div[2]/div/div/div"
-                    REACTION_PANEL_XPATH_OPTION_2 = "/html/body/div[5]/div[1]/div/div[2]/div/div/div"
-                    
-                    # Try with first xpath option
-                    try:
-                        # Wait for the reaction panel to load with first option
-                        reaction_panel = WebDriverWait(driver, 10).until(
-                            EC.presence_of_element_located((By.XPATH, REACTION_PANEL_XPATH_OPTION_1))
-                        )
-                        panel_xpath_used = REACTION_PANEL_XPATH_OPTION_1
-                        print("Found reaction panel with OPTION_1")
-                    except Exception as e:
-                        print(f"Could not find reaction panel with OPTION_1: {e}")
-                        # Try with second xpath option without raising exception
-                        try:
-                            reaction_panel = WebDriverWait(driver, 10).until(
-                                EC.presence_of_element_located((By.XPATH, REACTION_PANEL_XPATH_OPTION_2))
-                            )
-                            panel_xpath_used = REACTION_PANEL_XPATH_OPTION_2
-                            print("Found reaction panel with OPTION_2")
-                        except Exception as e2:
-                            print(f"Could not find reaction panel with OPTION_2: {e2}")
-                            # Continue with other code without raising exception
-                            panel_xpath_used = None
-                            reaction_panel = None
-
-                    # Only proceed if we found a reaction panel
-                    if reaction_panel:
-                        # Add a random sleep to ensure the panel is fully loaded
-                        sleep(random.uniform(1.0, 2.0))
-
-                        try:
-                            panel_container = driver.find_element(By.XPATH, f"{panel_xpath_used}/div/div/div/div[2]/div[2]/div/div/div[2]")
-
-                            drag_element = driver.find_element(By.XPATH, f"{panel_xpath_used}/div/div/div/div[2]/div[2]/div/div/div[3]")
-                            
-                            # Get positions and dimensions
-                            panel_container_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", panel_container)
-                            drag_element_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", drag_element)
-                            
-                            panel_bottom = panel_container_rect['bottom']
-                            drag_bottom = drag_element_rect['bottom']
-
-                            # Calculate how many scrolls needed to align bottoms
-                            scroll_rounds = 0
-                            current_bottom_diff = abs(panel_bottom - drag_bottom)
-                            
-                            # Continue scrolling until bottoms are aligned or very close
-                            while current_bottom_diff > 5 and scroll_rounds < 25:
-                                action = ActionChains(driver)
-                                action.click_and_hold(drag_element)
-                                sleep(random.uniform(1, 3))  # Hold for a moment
-                                
-                                # Adjust scroll distance based on difference
-                                scroll_distance = min(100, current_bottom_diff)
-                                action.move_by_offset(0, scroll_distance)
-                                action.release()
-                                action.perform()
-                                
-                                sleep(random.uniform(1, 3))
-                                scroll_rounds += 1
-                                
-                                # Update positions after scrolling
-                                panel_container_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", panel_container)
-                                drag_element_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", drag_element)
-                                panel_bottom = panel_container_rect['bottom']
-                                drag_bottom = drag_element_rect['bottom']
-                                current_bottom_diff = abs(panel_bottom - drag_bottom)
-                                
-                                print(f"Completed scroll round {scroll_rounds}, bottom difference: {current_bottom_diff}px")
-                            
-                            print(f"Finished scrolling after {scroll_rounds} rounds, final bottom difference: {current_bottom_diff}px")
-                            
-                            # Click on panel container to finish interaction
-                            ActionChains(driver).move_to_element(panel_container).click().perform()
-                            sleep(random.uniform(0.3, 0.7))
-                            
-                        except Exception as scroll_error:
-                            print(f"Error during scroll attempt: {str(scroll_error)}")
-                            
-                        # Extract reaction links after scrolling
-                        try:
-                            reaction_links = reaction_panel.find_elements(By.CSS_SELECTOR, "a[role='link'][tabindex='0']")
-                            
-                            if reaction_links:
-                                unique_profile_ids = set()
-                                for i, link in enumerate(reaction_links):
-                                    href = link.get_attribute("href")
-                                    profile_id = None
-                                    # Skip Facebook stories links
-                                    if "facebook.com/stories" in href:
-                                        continue
-                                    # Extract profile ID from href
-                                    if "profile.php?id=" in href:
-                                        profile_id = href.split("profile.php?id=")[1].split("&")[0]
-                                    elif "facebook.com/" in href:
-                                        profile_id = href.split("facebook.com/")[1].split("?")[0].split("&")[0]
-                                    
-                                    if profile_id:
-                                        unique_profile_ids.add(profile_id)
-                                print(f"Found {len(unique_profile_ids)} unique profile IDs:")
-                                for idx, profile_id in enumerate(unique_profile_ids):
-                                    print(f"  Unique Profile {idx+1}: {profile_id}")
-                                    
-                                # Save profile IDs to API in batches of 10
-                                if unique_profile_ids:
-                                    try:                                 
-                                        # Process in batches of 10
-                                        profile_list = list(unique_profile_ids)
-                                        batch_size = 20
-                                        
-                                        for i in range(0, len(profile_list), batch_size):
-                                            batch = profile_list[i:i+batch_size]
-                                            payload = []
-                                            
-                                            for profile_id in batch:
-                                                payload.append({
-                                                    "profile_id": profile_id,
-                                                    "game_fanpages_id": game_fanpage_id
-                                                })
-                                            
-                                            # Make API request
-                                            import requests
-                                            import json
-                                            
-                                            headers = {'Content-Type': 'application/json'}
-                                            api_url = f'{ENV_CONFIG[environment]["SERVICE_URL"]}/friend_list_group_game/insert-batch'
-                                            
-                                            response = requests.post(api_url, headers=headers, data=json.dumps(payload))
-                                            
-                                            if response.status_code == 200:
-                                                print(f"Successfully sent batch of {len(batch)} profile IDs to API")
-                                            else:
-                                                print(f"API request failed with status code {response.status_code}: {response.text}")
-                                                
-                                    except Exception as api_error:
-                                        print(f"Error sending profile IDs to API: {str(api_error)}")
-                            else:
-                                print("No reaction links found in the panel")
-                        except Exception as e:
-                            print(f"Error extracting reaction links: {e}")
-
-                        print("Completed scrolling through the reaction panel")
-                    else:
-                        print("No reaction panel found with either XPATH option, skipping panel interaction")
-
-                except Exception as e:
-                    print(f"Could not scroll through reaction panel: {e}")
+                # Call the function to handle reaction panel
+                handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment)
 
                 
                 # Wait a moment after clicking
@@ -551,7 +403,158 @@ def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
     print(f"\nTotal empty posts skipped: {empty_post_count}")
     print(f"Total posts written to file: {written_post_count}")
 
+# Function to handle reaction panel scrolling and profile extraction
+def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
+    try:
+        # Define reaction panel xpath as a constant
+        REACTION_PANEL_XPATH_OPTION_1 = "/html/body/div[7]/div[1]/div/div[2]/div/div/div"
+        REACTION_PANEL_XPATH_OPTION_2 = "/html/body/div[5]/div[1]/div/div[2]/div/div/div"
+        
+        # Try with first xpath option
+        try:
+            # Wait for the reaction panel to load with first option
+            reaction_panel = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, REACTION_PANEL_XPATH_OPTION_1))
+            )
+            panel_xpath_used = REACTION_PANEL_XPATH_OPTION_1
+            print("Found reaction panel with OPTION_1")
+        except Exception as e:
+            print(f"Could not find reaction panel with OPTION_1: {e}")
+            # Try with second xpath option without raising exception
+            try:
+                reaction_panel = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, REACTION_PANEL_XPATH_OPTION_2))
+                )
+                panel_xpath_used = REACTION_PANEL_XPATH_OPTION_2
+                print("Found reaction panel with OPTION_2")
+            except Exception as e2:
+                print(f"Could not find reaction panel with OPTION_2: {e2}")
+                # Continue with other code without raising exception
+                panel_xpath_used = None
+                reaction_panel = None
 
+        # Only proceed if we found a reaction panel
+        if reaction_panel:
+            # Add a random sleep to ensure the panel is fully loaded
+            sleep(random.uniform(1.0, 2.0))
+
+            try:
+                panel_container = driver.find_element(By.XPATH, f"{panel_xpath_used}/div/div/div/div[2]/div[2]/div/div/div[2]")
+
+                drag_element = driver.find_element(By.XPATH, f"{panel_xpath_used}/div/div/div/div[2]/div[2]/div/div/div[3]")
+                
+                # Get positions and dimensions
+                panel_container_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", panel_container)
+                drag_element_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", drag_element)
+                
+                panel_bottom = panel_container_rect['bottom']
+                drag_bottom = drag_element_rect['bottom']
+
+                # Calculate how many scrolls needed to align bottoms
+                scroll_rounds = 0
+                current_bottom_diff = abs(panel_bottom - drag_bottom)
+                
+                # Continue scrolling until bottoms are aligned or very close
+                while current_bottom_diff > 5 and scroll_rounds < 25:
+                    action = ActionChains(driver)
+                    action.click_and_hold(drag_element)
+                    sleep(random.uniform(1, 3))  # Hold for a moment
+                    
+                    # Adjust scroll distance based on difference
+                    scroll_distance = min(100, current_bottom_diff)
+                    action.move_by_offset(0, scroll_distance)
+                    action.release()
+                    action.perform()
+                    
+                    sleep(random.uniform(1, 3))
+                    scroll_rounds += 1
+                    
+                    # Update positions after scrolling
+                    panel_container_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", panel_container)
+                    drag_element_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", drag_element)
+                    panel_bottom = panel_container_rect['bottom']
+                    drag_bottom = drag_element_rect['bottom']
+                    current_bottom_diff = abs(panel_bottom - drag_bottom)
+                    
+                    print(f"Completed scroll round {scroll_rounds}, bottom difference: {current_bottom_diff}px")
+                
+                print(f"Finished scrolling after {scroll_rounds} rounds, final bottom difference: {current_bottom_diff}px")
+                
+                # Click on panel container to finish interaction
+                ActionChains(driver).move_to_element(panel_container).click().perform()
+                sleep(random.uniform(0.3, 0.7))
+                
+            except Exception as scroll_error:
+                print(f"Error during scroll attempt: {str(scroll_error)}")
+                
+            # Extract reaction links after scrolling
+            try:
+                reaction_links = reaction_panel.find_elements(By.CSS_SELECTOR, "a[role='link'][tabindex='0']")
+                
+                if reaction_links:
+                    unique_profile_ids = set()
+                    for i, link in enumerate(reaction_links):
+                        href = link.get_attribute("href")
+                        profile_id = None
+                        # Skip Facebook stories links
+                        if "facebook.com/stories" in href:
+                            continue
+                        # Extract profile ID from href
+                        if "profile.php?id=" in href:
+                            profile_id = href.split("profile.php?id=")[1].split("&")[0]
+                        elif "facebook.com/" in href:
+                            profile_id = href.split("facebook.com/")[1].split("?")[0].split("&")[0]
+                        
+                        if profile_id:
+                            unique_profile_ids.add(profile_id)
+                    print(f"Found {len(unique_profile_ids)} unique profile IDs:")
+                    for idx, profile_id in enumerate(unique_profile_ids):
+                        print(f"  Unique Profile {idx+1}: {profile_id}")
+                        
+                    # Save profile IDs to API in batches of 10
+                    if unique_profile_ids:
+                        try:                                 
+                            # Process in batches of 10
+                            profile_list = list(unique_profile_ids)
+                            batch_size = 20
+                            
+                            for i in range(0, len(profile_list), batch_size):
+                                batch = profile_list[i:i+batch_size]
+                                payload = []
+                                
+                                for profile_id in batch:
+                                    payload.append({
+                                        "profile_id": profile_id,
+                                        "game_fanpages_id": game_fanpage_id
+                                    })
+                                
+                                # Make API request
+                                import requests
+                                import json
+                                
+                                headers = {'Content-Type': 'application/json'}
+                                api_url = f'{ENV_CONFIG[environment]["SERVICE_URL"]}/friend_list_group_game/insert-batch'
+                                
+                                response = requests.post(api_url, headers=headers, data=json.dumps(payload))
+                                
+                                if response.status_code == 200:
+                                    print(f"Successfully sent batch of {len(batch)} profile IDs to API")
+                                else:
+                                    print(f"API request failed with status code {response.status_code}: {response.text}")
+                                    
+                        except Exception as api_error:
+                            print(f"Error sending profile IDs to API: {str(api_error)}")
+                else:
+                    print("No reaction links found in the panel")
+            except Exception as e:
+                print(f"Error extracting reaction links: {e}")
+
+            print("Completed scrolling through the reaction panel")
+        else:
+            print("No reaction panel found with either XPATH option, skipping panel interaction")
+
+    except Exception as e:
+        print(f"Could not scroll through reaction panel: {e}")
 
 # Function to save content to a file
 def writeFileTxtPost(fileName, content, idPost, pathImg="/img/", game_name=""):
@@ -777,9 +780,50 @@ def simulate_human_behavior_when_scraping_game(browser, environment):
             if random.random() < 0.7:  # 70% chance for normal pause
                 time.sleep(random.uniform(2.0, 5.5))
             else:  # 30% chance for longer engagement
-                engagement_time = random.uniform(7.0, 18.0)
+                engagement_time = random.uniform(8.0, 18.0)
                 logger.info(f"Engaging with content for {engagement_time:.1f} seconds...")
                 time.sleep(engagement_time)
+                
+                # Simulate sharing a post occasionally
+                if random.random() < 0.4:  # 15% chance to share a post
+                    try:
+                        logger.info("Attempting to share a post...")
+                        # Find share buttons using multiple possible selectors
+                        share_buttons = browser.find_elements(By.XPATH, 
+                            "//div[@aria-label='Share' or contains(@aria-label, 'share') or contains(@role, 'button')][.//span[text()='Share' or contains(text(), 'Share')]]")
+                        
+                        if share_buttons:
+                            share_button = random.choice(share_buttons)
+                            # Scroll to make the share button visible
+                            browser.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", share_button)
+                            time.sleep(random.uniform(0.8, 1.5))
+                            
+                            # Click the share button
+                            share_button.click()
+                            logger.info("Clicked share button")
+                            time.sleep(random.uniform(2.0, 3.5))
+                            
+                            # Handle the share dialog
+                            try:
+                                # Look for "Share now" option
+                                share_options = WebDriverWait(browser, 5).until(
+                                    EC.presence_of_element_located((By.XPATH, "//div[@role='dialog']//div[text()='Share now' or contains(text(), 'Share now')]"))
+                                )
+                                share_options.click()
+                                logger.info("Shared post using 'Share now' option")
+                                time.sleep(random.uniform(3.0, 5.0))
+                            except Exception as e:
+                                logger.info(f"Could not find 'Share now' option: {str(e)}")
+                                # Try to close the share dialog
+                                try:
+                                    close_buttons = browser.find_elements(By.XPATH, "//div[@aria-label='Close' or @role='button'][.//i]")
+                                    if close_buttons:
+                                        close_buttons[0].click()
+                                        logger.info("Closed share dialog")
+                                except Exception as close_error:
+                                    logger.info(f"Could not close share dialog: {str(close_error)}")
+                    except Exception as share_error:
+                        logger.info(f"Error while attempting to share post: {str(share_error)}")
                 
                 # Simulate reactions during longer engagement (like, comment hover)
                 if random.random() < 0.4:  # 40% chance to interact
@@ -923,7 +967,56 @@ def simulate_human_behavior_when_scraping_game(browser, environment):
                 browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
                 time.sleep(random.uniform(1.0, 2.5))
                 
-            
+            # Occasionally share posts related to games
+            if random.random() < 0.4:  # 15% chance to share a post
+                try:
+                    # Find share buttons on posts
+                    share_buttons = browser.find_elements(By.XPATH, 
+                        "//div[@aria-label='Share' or contains(@aria-label, 'share') or contains(@aria-label, 'Share')]")
+                    
+                    if share_buttons:
+                        # Choose a random share button
+                        share_button = random.choice(share_buttons)
+                        
+                        # Scroll to make share button visible
+                        browser.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", share_button)
+                        time.sleep(random.uniform(1.0, 2.0))
+                        
+                        # Click the share button
+                        share_button.click()
+                        logger.info("Clicked on share button")
+                        time.sleep(random.uniform(2.0, 3.0))
+                        
+                        # Look for "Share now" option in the share menu
+                        try:
+                            share_now_buttons = browser.find_elements(By.XPATH, 
+                                "//div[contains(text(), 'Share now') or contains(@aria-label, 'Share now')]")
+                            
+                            if share_now_buttons:
+                                share_now_button = share_now_buttons[0]
+                                share_now_button.click()
+                                logger.info("Shared a post")
+                                time.sleep(random.uniform(3.0, 5.0))
+                            else:
+                                # If "Share now" not found, try to close the share dialog
+                                close_buttons = browser.find_elements(By.XPATH, "//div[@aria-label='Close' or contains(@aria-label, 'close')]")
+                                if close_buttons:
+                                    close_buttons[0].click()
+                                    logger.info("Closed share dialog")
+                                    time.sleep(random.uniform(1.0, 2.0))
+                        except Exception as e:
+                            logger.debug(f"Failed to complete share action: {e}")
+                            # Try to press Escape key to close any open dialogs
+                            ActionChains(browser).send_keys(Keys.ESCAPE).perform()
+                            time.sleep(1.0)
+                except Exception as e:
+                    logger.debug(f"Failed to share post: {e}")
+                    # Try to press Escape key to close any open dialogs
+                    try:
+                        ActionChains(browser).send_keys(Keys.ESCAPE).perform()
+                        time.sleep(1.0)
+                    except:
+                        pass
             
             # Simulate interest in specific content
             if random.random() < 0.25:  # 25% chance to show interest
