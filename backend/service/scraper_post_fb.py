@@ -1212,43 +1212,25 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
                                 logger.info(f"Could not add text to share: {str(text_error)}")
                             
                             # Look for "Share now" or similar option
+                            share_options = WebDriverWait(browser, 5).until(
+                                EC.presence_of_element_located((By.XPATH, "//div[@role='dialog']//div[@aria-label='Share now' and @role='button'] | //div[@role='dialog']//div[text()='Share now' or contains(text(), 'Share now') or text()='Post' or contains(text(), 'Share')]"))
+                            )
+                            
+                            share_options.click()
+                            logger.info("Shared post with text")
+                            
+                            # Wait until share action is completed
+                            time.sleep(random.uniform(5.0, 8.0))
+                            
+                            # Look for confirmation elements that indicate sharing is complete
                             try:
-                                share_options = WebDriverWait(browser, 5).until(
-                                    EC.presence_of_element_located((By.XPATH, "//div[@role='dialog']//div[text()='Share now' or contains(text(), 'Share now') or text()='Post' or contains(text(), 'Share')]"))
+                                WebDriverWait(browser, 10).until_not(
+                                    EC.presence_of_element_located((By.XPATH, "//div[@role='dialog']"))
                                 )
-                                # Ensure element is clickable and scroll into view
-                                WebDriverWait(browser, 5).until(
-                                    EC.element_to_be_clickable((By.XPATH, "//div[@role='dialog']//div[text()='Share now' or contains(text(), 'Share now') or text()='Post' or contains(text(), 'Share')]"))
-                                )
-                                browser.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", share_options)
-                                time.sleep(random.uniform(0.8, 1.5))
-                                
-                                # Use JavaScript click to avoid intercepted click issues
-                                browser.execute_script("arguments[0].click();", share_options)
-                                logger.info("Shared post with text")
-                                
-                                # Wait until share action is completed
-                                time.sleep(random.uniform(5.0, 8.0))
-                                
-                                # Look for confirmation elements that indicate sharing is complete
-                                try:
-                                    WebDriverWait(browser, 10).until_not(
-                                        EC.presence_of_element_located((By.XPATH, "//div[@role='dialog']"))
-                                    )
-                                    logger.info("Share dialog closed, sharing completed")
-                                except Exception as wait_error:
-                                    logger.info(f"Waiting for share completion: {str(wait_error)}")
-                                    time.sleep(random.uniform(3.0, 5.0))  # Additional wait time
-                            except Exception as share_option_error:
-                                logger.info(f"Error clicking share option: {str(share_option_error)}")
-                                # Try alternative method with ActionChains
-                                try:
-                                    share_options = browser.find_element(By.XPATH, "//div[@role='dialog']//div[text()='Share now' or contains(text(), 'Share now') or text()='Post' or contains(text(), 'Share')]")
-                                    ActionChains(browser).move_to_element(share_options).pause(0.5).click().perform()
-                                    logger.info("Shared post using ActionChains")
-                                    time.sleep(random.uniform(5.0, 8.0))
-                                except Exception as alt_error:
-                                    logger.info(f"Alternative share method failed: {str(alt_error)}")
+                                logger.info("Share dialog closed, sharing completed")
+                            except Exception as wait_error:
+                                logger.info(f"Waiting for share completion: {str(wait_error)}")
+                                time.sleep(random.uniform(3.0, 5.0))  # Additional wait time
                         except Exception as e:
                             logger.info(f"Could not complete share action: {str(e)}")
                             # Try to close the share dialog
