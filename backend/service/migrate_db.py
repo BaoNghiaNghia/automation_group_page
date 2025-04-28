@@ -2,6 +2,7 @@ import os
 import time
 import json
 import logging
+import base64
 import requests
 from backend.utils.index import get_all_game_fanpages
 from backend.constants import SERVICE_URL, ENV_CONFIG
@@ -57,17 +58,22 @@ def sync_post_into_databse(environment):
                     txt_files = [f for f in os.listdir(folder_path) if f.endswith('.txt')]
                     
                     # Get the first image in the folder for base64 encoding
+                    # Process images once per folder
                     image_blob = None
                     image_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
                     if image_files:
                         try:
-                            import base64
+                            # Get the first image file
                             first_image_path = os.path.join(folder_path, image_files[0])
+                            # Read and encode the image in one operation
                             with open(first_image_path, "rb") as img_file:
                                 image_blob = base64.b64encode(img_file.read()).decode('utf-8')
                         except Exception as e:
                             logger.error(f"Error encoding image {image_files[0]}: {str(e)}")
+                    else:
+                        logger.debug(f"No images found in folder: {folder_path}")  # Changed to debug level
 
+                    # Process text files and create data entries
                     for txt_file in txt_files:
                         file_path = os.path.join(folder_path, txt_file)
                         try:
@@ -75,16 +81,18 @@ def sync_post_into_databse(environment):
                                 content = f_txt.read().strip()
                                 if content:
                                     file_name = os.path.splitext(txt_file)[0]
-                                    # Only include image_blob if file_name is 'content'
-                                    current_image_blob = image_blob if file_name == 'content' else None
+                                    # Get game_fanpages_id with proper type conversion
+                                    game_id = game_fanpages_id.get(game_name)
+                                    game_id_int = int(game_id) if game_id is not None else None
+                                    
                                     batch_data.append({
                                         'fanpage': game_name,
-                                        'game_fanpages_id': int(game_fanpages_id.get(game_name, 0)) if game_fanpages_id.get(game_name) is not None else None,
+                                        'game_fanpages_id': game_id_int,
                                         'post_id': post_id,
                                         'clone_version': file_name,
                                         'content': content,
                                         'img_path': image_path,
-                                        'image_blob': current_image_blob
+                                        'image_blob': image_blob if file_name == 'content' else None
                                     })
 
                         except Exception as e:
