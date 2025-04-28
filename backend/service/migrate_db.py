@@ -35,55 +35,60 @@ def sync_post_into_databse(environment):
                 raise Exception("No game URLs found from get_game_fanpages")
 
             game_fanpages_id = {item['fanpage'].split('/')[-1]: item['id'] for item in game_fanpages}
+            
+            # Skip processing if game_fanpages_id is empty
+            if not game_fanpages_id:
+                logger.warning("No game_fanpages_id found, skipping folder processing")
+                batch_data = []
+            else:
+                for folder in os.listdir(data_crawler_path):
+                    folder_path = os.path.join(data_crawler_path, folder)
 
-            for folder in os.listdir(data_crawler_path):
-                folder_path = os.path.join(data_crawler_path, folder)
+                    if not os.path.isdir(folder_path):
+                        continue
 
-                if not os.path.isdir(folder_path):
-                    continue
-
-                try:
-                    game_name, post_id = folder.split('_', 1)
-                except ValueError:
-                    logger.warning(f"Skipping {folder} - invalid folder name format")
-                    continue
-
-                image_path = folder_path
-                txt_files = [f for f in os.listdir(folder_path) if f.endswith('.txt')]
-                
-                # Get the first image in the folder for base64 encoding
-                image_blob = None
-                image_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-                if image_files:
                     try:
-                        import base64
-                        first_image_path = os.path.join(folder_path, image_files[0])
-                        with open(first_image_path, "rb") as img_file:
-                            image_blob = base64.b64encode(img_file.read()).decode('utf-8')
-                    except Exception as e:
-                        logger.error(f"Error encoding image {image_files[0]}: {str(e)}")
+                        game_name, post_id = folder.split('_', 1)
+                    except ValueError:
+                        logger.warning(f"Skipping {folder} - invalid folder name format")
+                        continue
 
-                for txt_file in txt_files:
-                    file_path = os.path.join(folder_path, txt_file)
-                    try:
-                        with open(file_path, 'r', encoding='utf-8') as f_txt:
-                            content = f_txt.read().strip()
-                            if content:
-                                file_name = os.path.splitext(txt_file)[0]
-                                # Only include image_blob if file_name is 'content'
-                                current_image_blob = image_blob if file_name == 'content' else None
-                                batch_data.append({
-                                    'fanpage': game_name,
-                                    'game_fanpages_id': int(game_fanpages_id.get(game_name, 0)) if game_fanpages_id.get(game_name) is not None else None,
-                                    'post_id': post_id,
-                                    'clone_version': file_name,
-                                    'content': content,
-                                    'img_path': image_path,
-                                    'image_blob': current_image_blob
-                                })
+                    image_path = folder_path
+                    txt_files = [f for f in os.listdir(folder_path) if f.endswith('.txt')]
+                    
+                    # Get the first image in the folder for base64 encoding
+                    image_blob = None
+                    image_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+                    if image_files:
+                        try:
+                            import base64
+                            first_image_path = os.path.join(folder_path, image_files[0])
+                            with open(first_image_path, "rb") as img_file:
+                                image_blob = base64.b64encode(img_file.read()).decode('utf-8')
+                        except Exception as e:
+                            logger.error(f"Error encoding image {image_files[0]}: {str(e)}")
 
-                    except Exception as e:
-                        logger.error(f"Error reading {file_path}: {str(e)}")
+                    for txt_file in txt_files:
+                        file_path = os.path.join(folder_path, txt_file)
+                        try:
+                            with open(file_path, 'r', encoding='utf-8') as f_txt:
+                                content = f_txt.read().strip()
+                                if content:
+                                    file_name = os.path.splitext(txt_file)[0]
+                                    # Only include image_blob if file_name is 'content'
+                                    current_image_blob = image_blob if file_name == 'content' else None
+                                    batch_data.append({
+                                        'fanpage': game_name,
+                                        'game_fanpages_id': int(game_fanpages_id.get(game_name, 0)) if game_fanpages_id.get(game_name) is not None else None,
+                                        'post_id': post_id,
+                                        'clone_version': file_name,
+                                        'content': content,
+                                        'img_path': image_path,
+                                        'image_blob': current_image_blob
+                                    })
+
+                        except Exception as e:
+                            logger.error(f"Error reading {file_path}: {str(e)}")
 
             # Write any remaining data in the final batch
             if batch_data:
