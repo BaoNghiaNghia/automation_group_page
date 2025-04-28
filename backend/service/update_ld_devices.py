@@ -137,7 +137,7 @@ def update_ld_devices(config_folder, environment, pcrunner):
         print("Tạo thiết bị mới trong Database...")
         success_count = 0
         total_devices = len(missing_devices)
-        batch_size = 10
+        batch_size = 20
         
         for i in range(0, total_devices, batch_size):
             batch = missing_devices[i:i+batch_size]
