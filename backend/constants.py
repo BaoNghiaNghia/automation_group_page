@@ -1,6 +1,11 @@
 import os
+import logging
 from dotenv import load_dotenv
 from pathlib import Path
+
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Load environment variables from .env file in the main route folder
 env_path = Path(__file__).resolve().parent.parent / '.env'
@@ -48,3 +53,39 @@ GEMINI_MODEL = "gemini-2.0-flash"
 
 DEEPSEEK_API_KEY = "sk-e71d03c8c9a44344b3c39ef6db11526c"
 DEEPSEEK_MODEL = "deepseek-chat"
+
+# Generate a random human-like comment
+SHARE_COMMENT_IN_POST = [
+    # English comments
+    "Interesting!",
+    "Check this out!",
+    "Thought you might like this",
+    "Worth sharing",
+    "What do you think about this?",
+    "This is cool",
+    "Saw this and thought of you",
+    "Hmm, interesting perspective",
+    "Have you seen this?",
+    "This caught my attention",
+    # Vietnamese comments
+    "Thú vị quá!",
+    "Xem cái này đi!",
+    "Nghĩ bạn sẽ thích cái này",
+    "Đáng để chia sẻ",
+    "Bạn nghĩ gì về cái này?",
+    "Cái này hay nè",
+    "Thấy cái này và nghĩ đến bạn",
+    "Hmm, góc nhìn thú vị",
+    "Bạn đã xem cái này chưa?",
+    "Cái này thu hút sự chú ý của mình",
+    "Đáng xem đấy!",
+    "Chia sẻ với mọi người",
+    "Hay quá, không thể bỏ qua",
+    "Cùng xem nhé!",
+    "Bài viết hay, chia sẻ lại",
+    "Rất đáng để suy ngẫm",
+    "Cảm thấy thú vị về điều này",
+    "Mọi người nghĩ sao?",
+    "Đọc xong thấy hay nên share",
+    "Chia sẻ cho ai cần"
+]

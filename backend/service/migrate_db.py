@@ -1,17 +1,10 @@
 import os
 import time
 import json
-import logging
 import base64
 import requests
 from backend.utils.index import get_all_game_fanpages
-from backend.constants import SERVICE_URL, ENV_CONFIG
-
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-
+from backend.constants import SERVICE_URL, ENV_CONFIG, logger
 
 def sync_post_into_databse(environment):
     

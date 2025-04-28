@@ -4,10 +4,7 @@ import time
 import logging
 import requests
 import datetime
-from backend.constants import ENV_CONFIG
-
-# Set up logging
-logger = logging.getLogger(__name__)
+from backend.constants import ENV_CONFIG, logger
 
 def update_ld_devices(config_folder, environment, pcrunner):
     """

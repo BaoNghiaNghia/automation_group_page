@@ -1,12 +1,9 @@
 from backend.service.text_generate_gemini import rewrite_paragraph_gemini
 from backend.service.text_generate_deepseek import rewrite_paragraph_deepseek
 from backend.service.migrate_db import sync_post_into_databse
-import logging
+from backend.constants import logger
 import argparse
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     # Set up argument parser

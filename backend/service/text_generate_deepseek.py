@@ -4,7 +4,7 @@ import random
 from time import sleep
 import logging
 from openai import OpenAI
-from backend.constants import DEEPSEEK_API_KEY, FOLDER_PATH_DATA_CRAWLER, DEEPSEEK_MODEL
+from backend.constants import DEEPSEEK_API_KEY, FOLDER_PATH_DATA_CRAWLER, DEEPSEEK_MODEL, logger
 from backend.utils.index import get_all_game_fanpages
 
 import re
@@ -12,9 +12,6 @@ import re
 # Initialize the DeepSeek client
 client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 NUMBER_OF_CLONE_PARAGRAPH = 10
 

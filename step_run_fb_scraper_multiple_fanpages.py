@@ -1,13 +1,10 @@
 import logging
 import argparse
-from backend.constants import ENV_CONFIG
+from backend.constants import ENV_CONFIG, logger
 from backend.service.update_ld_devices import update_ld_devices
 from backend.service.scraper_post_fb import run_fb_scraper_multiple_fanpages
 from backend.utils.index import get_game_fanpages
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     # Set up argument parser

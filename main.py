@@ -3,7 +3,7 @@ import logging
 import argparse
 from pathlib import Path
 from backend.service.scraper_post_fb import run_fb_scraper_multiple_fanpages
-from backend.constants import FOLDER_PATH_DATA_CRAWLER, ENV_CONFIG
+from backend.constants import FOLDER_PATH_DATA_CRAWLER, ENV_CONFIG, logger
 from backend.utils.index import get_game_fanpages
 from backend.service.migrate_db import sync_post_into_databse
 from backend.service.text_generate_deepseek import rewrite_paragraph_deepseek
@@ -32,9 +32,7 @@ if __name__ == "__main__":
                         help="Specify the computer name to sync from")
     args = parser.parse_args()
     
-    # Set up logging
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    logger = logging.getLogger(__name__)
+
     
     logger.info(f"Running in {args.environment} environment")
 
