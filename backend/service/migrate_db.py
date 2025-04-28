@@ -74,7 +74,7 @@ def sync_post_into_databse(environment):
                                 current_image_blob = image_blob if file_name == 'content' else None
                                 batch_data.append({
                                     'fanpage': game_name,
-                                    'game_fanpages_id': game_fanpages_id.get(game_name, None),
+                                    'game_fanpages_id': int(game_fanpages_id.get(game_name, 0)) if game_fanpages_id.get(game_name) is not None else None,
                                     'post_id': post_id,
                                     'clone_version': file_name,
                                     'content': content,
