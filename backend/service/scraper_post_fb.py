@@ -409,29 +409,28 @@ def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
         # Define reaction panel xpath as a constant
         REACTION_PANEL_XPATH_OPTION_1 = "/html/body/div[7]/div[1]/div/div[2]/div/div/div"
         REACTION_PANEL_XPATH_OPTION_2 = "/html/body/div[5]/div[1]/div/div[2]/div/div/div"
+        REACTION_PANEL_XPATH_OPTION_3 = "/html/body/div[6]/div[1]/div/div[2]/div/div/div"
         
-        # Try with first xpath option
-        try:
-            # Wait for the reaction panel to load with first option
-            reaction_panel = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.XPATH, REACTION_PANEL_XPATH_OPTION_1))
-            )
-            panel_xpath_used = REACTION_PANEL_XPATH_OPTION_1
-            print("Found reaction panel with OPTION_1")
-        except Exception as e:
-            print(f"Could not find reaction panel with OPTION_1: {e}")
-            # Try with second xpath option without raising exception
+        # Try all xpath options in sequence
+        reaction_panel = None
+        panel_xpath_used = None
+        
+        xpath_options = [
+            (REACTION_PANEL_XPATH_OPTION_1, "OPTION_1"),
+            (REACTION_PANEL_XPATH_OPTION_2, "OPTION_2"),
+            (REACTION_PANEL_XPATH_OPTION_3, "OPTION_3")
+        ]
+        
+        for xpath, option_name in xpath_options:
             try:
-                reaction_panel = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.XPATH, REACTION_PANEL_XPATH_OPTION_2))
+                reaction_panel = WebDriverWait(driver, 5).until(
+                    EC.presence_of_element_located((By.XPATH, xpath))
                 )
-                panel_xpath_used = REACTION_PANEL_XPATH_OPTION_2
-                print("Found reaction panel with OPTION_2")
-            except Exception as e2:
-                print(f"Could not find reaction panel with OPTION_2: {e2}")
-                # Continue with other code without raising exception
-                panel_xpath_used = None
-                reaction_panel = None
+                panel_xpath_used = xpath
+                print(f"Found reaction panel with {option_name}")
+                break
+            except Exception as e:
+                print(f"Could not find reaction panel with {option_name}: {e}")
 
         # Only proceed if we found a reaction panel
         if reaction_panel:
@@ -551,7 +550,7 @@ def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
 
             print("Completed scrolling through the reaction panel")
         else:
-            print("No reaction panel found with either XPATH option, skipping panel interaction")
+            print("No reaction panel found with any XPATH option, skipping panel interaction")
 
     except Exception as e:
         print(f"Could not scroll through reaction panel: {e}")
