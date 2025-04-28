@@ -1159,7 +1159,7 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
                         logger.debug(f"Failed to simulate reaction: {e}")
                         
             # SHARE A POST
-            if random.random() < 0.3:  # 30% chance to share a post
+            if random.random() < 0.4:  # 30% chance to share a post
                 try:
                     logger.info("Attempting to share a post...")
                     # Find share buttons using multiple possible selectors
