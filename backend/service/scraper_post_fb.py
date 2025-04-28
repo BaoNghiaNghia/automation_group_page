@@ -784,7 +784,7 @@ def simulate_human_behavior_when_scraping_game(browser, environment):
                 logger.info(f"Engaging with content for {engagement_time:.1f} seconds...")
                 time.sleep(engagement_time)
                 
-                # Simulate sharing a post occasionally
+                # SHARE A POST
                 if random.random() < 0.4:  # 15% chance to share a post
                     try:
                         logger.info("Attempting to share a post...")
@@ -967,7 +967,7 @@ def simulate_human_behavior_when_scraping_game(browser, environment):
                 browser.execute_script(f"window.scrollBy(0, {scroll_amount});")
                 time.sleep(random.uniform(1.0, 2.5))
                 
-            # Occasionally share posts related to games
+            # SHARE A POST
             if random.random() < 0.4:  # 15% chance to share a post
                 try:
                     # Find share buttons on posts
@@ -1158,6 +1158,92 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
                             time.sleep(random.uniform(1.0, 2.5))
                     except Exception as e:
                         logger.debug(f"Failed to simulate reaction: {e}")
+                        
+            # SHARE A POST
+            if random.random() < 0.3:  # 30% chance to share a post
+                try:
+                    logger.info("Attempting to share a post...")
+                    # Find share buttons using multiple possible selectors
+                    share_buttons = browser.find_elements(By.XPATH, 
+                        "//div[@aria-label='Share' or contains(@aria-label, 'share') or contains(@role, 'button')][.//span[text()='Share' or contains(text(), 'Share')]]")
+                    
+                    if share_buttons:
+                        share_button = random.choice(share_buttons)
+                        # Scroll to make the share button visible
+                        browser.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", share_button)
+                        time.sleep(random.uniform(0.8, 1.5))
+                        
+                        # Click the share button
+                        share_button.click()
+                        logger.info("Clicked share button")
+                        time.sleep(random.uniform(2.0, 3.5))
+                        
+                        # Handle the share dialog
+                        try:
+                            # First try to add some text to the share
+                            try:
+                                # Look for text input field in the share dialog
+                                text_input = WebDriverWait(browser, 5).until(
+                                    EC.presence_of_element_located((By.XPATH, "//div[@role='dialog']//div[@contenteditable='true' or @role='textbox']"))
+                                )
+                                
+                                # Generate a random human-like comment
+                                share_comments = [
+                                    "Interesting! 👀",
+                                    "Check this out!",
+                                    "Thought you might like this",
+                                    "Worth sharing 👍",
+                                    "What do you think about this?",
+                                    "This is cool",
+                                    "Saw this and thought of you",
+                                    "Hmm, interesting perspective",
+                                    "Have you seen this?",
+                                    "This caught my attention"
+                                ]
+                                share_text = random.choice(share_comments)
+                                
+                                # Type the text with human-like timing
+                                for char in share_text:
+                                    text_input.send_keys(char)
+                                    time.sleep(random.uniform(0.05, 0.15))  # Realistic typing speed
+                                
+                                logger.info(f"Added text to share: '{share_text}'")
+                                time.sleep(random.uniform(1.0, 2.0))
+                            except Exception as text_error:
+                                logger.info(f"Could not add text to share: {str(text_error)}")
+                            
+                            # Look for "Share now" or similar option
+                            share_options = WebDriverWait(browser, 5).until(
+                                EC.presence_of_element_located((By.XPATH, "//div[@role='dialog']//div[text()='Share now' or contains(text(), 'Share now') or text()='Post' or contains(text(), 'Share')]"))
+                            )
+                            share_options.click()
+                            logger.info("Shared post with text")
+                            time.sleep(random.uniform(3.0, 5.0))
+                        except Exception as e:
+                            logger.info(f"Could not complete share action: {str(e)}")
+                            # Try to close the share dialog
+                            try:
+                                close_buttons = browser.find_elements(By.XPATH, "//div[@aria-label='Close' or @role='button'][.//i]")
+                                if close_buttons:
+                                    close_buttons[0].click()
+                                    logger.info("Closed share dialog")
+                                    time.sleep(random.uniform(1.0, 2.0))
+                                else:
+                                    # Try to press Escape key to close any open dialogs
+                                    ActionChains(browser).send_keys(Keys.ESCAPE).perform()
+                                    time.sleep(1.0)
+                            except Exception as close_error:
+                                logger.info(f"Could not close share dialog: {str(close_error)}")
+                                # Try to press Escape key as a last resort
+                                try:
+                                    ActionChains(browser).send_keys(Keys.ESCAPE).perform()
+                                    time.sleep(1.0)
+                                except:
+                                    pass
+                    else:
+                        logger.info("No share buttons found")
+                except Exception as share_error:
+                    logger.info(f"Error while attempting to share post: {str(share_error)}")
                         
             # Decide whether to hover over reactions
             if random.random() < 0.5:
