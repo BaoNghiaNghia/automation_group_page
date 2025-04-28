@@ -426,7 +426,7 @@ def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
                 print(f"Found reaction panel with {option_name}")
                 break
             except Exception as e:
-                print(f"Could not find reaction panel with {option_name}: {e}")
+                print(f"Could not find reaction panel with {option_name}")
 
         # Only proceed if we found a reaction panel
         if reaction_panel:
