@@ -20,6 +20,41 @@ from backend.utils.index import get_all_game_fanpages
 from backend.constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, FOLDER_PATH_DATA_CRAWLER, LIMIT_POST_PER_DAY, FOLDER_PATH_POST_ID_CRAWLER, FB_DEFAULT_URL, ENV_CONFIG
 import logging
 
+# Generate a random human-like comment
+SHARE_COMMENT_IN_POST = [
+    # English comments
+    "Interesting!",
+    "Check this out!",
+    "Thought you might like this",
+    "Worth sharing",
+    "What do you think about this?",
+    "This is cool",
+    "Saw this and thought of you",
+    "Hmm, interesting perspective",
+    "Have you seen this?",
+    "This caught my attention",
+    # Vietnamese comments
+    "Thú vị quá!",
+    "Xem cái này đi!",
+    "Nghĩ bạn sẽ thích cái này",
+    "Đáng để chia sẻ",
+    "Bạn nghĩ gì về cái này?",
+    "Cái này hay nè",
+    "Thấy cái này và nghĩ đến bạn",
+    "Hmm, góc nhìn thú vị",
+    "Bạn đã xem cái này chưa?",
+    "Cái này thu hút sự chú ý của mình",
+    "Đáng xem đấy!",
+    "Chia sẻ với mọi người",
+    "Hay quá, không thể bỏ qua",
+    "Cùng xem nhé!",
+    "Bài viết hay, chia sẻ lại",
+    "Rất đáng để suy ngẫm",
+    "Cảm thấy thú vị về điều này",
+    "Mọi người nghĩ sao?",
+    "Đọc xong thấy hay nên share",
+    "Chia sẻ cho ai cần"
+]
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -1159,7 +1194,7 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
                         logger.debug(f"Failed to simulate reaction: {e}")
                         
             # SHARE A POST
-            if random.random() < 0.4:  # 30% chance to share a post
+            if random.random() < 0.25:
                 try:
                     logger.info("Attempting to share a post...")
                     # Find share buttons using multiple possible selectors
@@ -1186,20 +1221,7 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
                                     EC.presence_of_element_located((By.XPATH, "//div[@role='dialog']//div[@contenteditable='true' or @role='textbox']"))
                                 )
                                 
-                                # Generate a random human-like comment
-                                share_comments = [
-                                    "Interesting! 👀",
-                                    "Check this out!",
-                                    "Thought you might like this",
-                                    "Worth sharing 👍",
-                                    "What do you think about this?",
-                                    "This is cool",
-                                    "Saw this and thought of you",
-                                    "Hmm, interesting perspective",
-                                    "Have you seen this?",
-                                    "This caught my attention"
-                                ]
-                                share_text = random.choice(share_comments)
+                                share_text = random.choice(SHARE_COMMENT_IN_POST)
                                 
                                 # Type the text with human-like timing
                                 for char in share_text:
