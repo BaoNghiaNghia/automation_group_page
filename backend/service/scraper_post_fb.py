@@ -387,18 +387,34 @@ def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
                 sleep(sleep_time)
                 
                 try:
-                    # Wait for the reaction panel to load
-                    reaction_panel = WebDriverWait(driver, 10).until(
-                        EC.presence_of_element_located((By.XPATH, "/html/body/div[7]/div[1]/div/div[2]/div/div/div"))
-                    )
+                    # Define reaction panel xpath as a constant
+                    REACTION_PANEL_XPATH_OPTION_1 = "/html/body/div[7]/div[1]/div/div[2]/div/div/div"
+                    REACTION_PANEL_XPATH_OPTION_2 = "/html/body/div[5]/div[1]/div/div[2]/div/div/div"
+                    
+                    # Try with first xpath option
+                    try:
+                        # Wait for the reaction panel to load with first option
+                        reaction_panel = WebDriverWait(driver, 10).until(
+                            EC.presence_of_element_located((By.XPATH, REACTION_PANEL_XPATH_OPTION_1))
+                        )
+                        panel_xpath_used = REACTION_PANEL_XPATH_OPTION_1
+                        print("Found reaction panel with OPTION_1")
+                    except Exception as e:
+                        print(f"Could not find reaction panel with OPTION_1: {e}")
+                        # Try with second xpath option
+                        reaction_panel = WebDriverWait(driver, 10).until(
+                            EC.presence_of_element_located((By.XPATH, REACTION_PANEL_XPATH_OPTION_2))
+                        )
+                        panel_xpath_used = REACTION_PANEL_XPATH_OPTION_2
+                        print("Found reaction panel with OPTION_2")
 
                     # Add a random sleep to ensure the panel is fully loaded
                     sleep(random.uniform(1.0, 2.0))
 
                     try:
-                        panel_container = driver.find_element(By.XPATH, "/html/body/div[7]/div[1]/div/div[2]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]")
-                        
-                        drag_element = driver.find_element(By.XPATH, "/html/body/div[7]/div[1]/div/div[2]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[3]")
+                        panel_container = driver.find_element(By.XPATH, f"{panel_xpath_used}/div/div/div/div[2]/div[2]/div/div/div[2]")
+
+                        drag_element = driver.find_element(By.XPATH, f"{panel_xpath_used}/div/div/div/div[2]/div[2]/div/div/div[3]")
                         
                         # Get positions and dimensions
                         panel_container_rect = driver.execute_script("return arguments[0].getBoundingClientRect();", panel_container)
