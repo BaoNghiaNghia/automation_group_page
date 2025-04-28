@@ -1217,7 +1217,19 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
                             )
                             share_options.click()
                             logger.info("Shared post with text")
-                            time.sleep(random.uniform(3.0, 5.0))
+                            
+                            # Wait until share action is completed
+                            time.sleep(random.uniform(5.0, 8.0))
+                            
+                            # Look for confirmation elements that indicate sharing is complete
+                            try:
+                                WebDriverWait(browser, 10).until_not(
+                                    EC.presence_of_element_located((By.XPATH, "//div[@role='dialog']"))
+                                )
+                                logger.info("Share dialog closed, sharing completed")
+                            except Exception as wait_error:
+                                logger.info(f"Waiting for share completion: {str(wait_error)}")
+                                time.sleep(random.uniform(3.0, 5.0))  # Additional wait time
                         except Exception as e:
                             logger.info(f"Could not complete share action: {str(e)}")
                             # Try to close the share dialog
