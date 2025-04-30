@@ -450,7 +450,7 @@ def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
                 current_bottom_diff = abs(panel_bottom - drag_bottom)
                 
                 # Continue scrolling until bottoms are aligned or very close
-                while current_bottom_diff > 5 and scroll_rounds < 50:
+                while current_bottom_diff > 5 and scroll_rounds < 100:
                     action = ActionChains(driver)
                     action.click_and_hold(drag_element)
                     sleep(random.uniform(1, 3))  # Hold for a moment
