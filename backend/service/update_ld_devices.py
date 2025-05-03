@@ -161,45 +161,45 @@ def update_ld_devices(config_folder, environment, pcrunner):
     update_config_file(config_folder)
     
 
-    # Extract player names from all .config files in the specified folder
-    local_player_names = extract_player_names(config_folder, key_to_search)
-    logger.info(f"Found {len(local_player_names)} local devices")
+    # # Extract player names from all .config files in the specified folder
+    # local_player_names = extract_player_names(config_folder, key_to_search)
+    # logger.info(f"Found {len(local_player_names)} local devices")
 
-    # Fetch device names from the API
-    database_device_names = fetch_device_names_from_api()
-    logger.info(f"Found {len(database_device_names)} devices in database")
+    # # Fetch device names from the API
+    # database_device_names = fetch_device_names_from_api()
+    # logger.info(f"Found {len(database_device_names)} devices in database")
 
-    # Find devices that are not in the database
-    missing_devices = [device for device in local_player_names if device not in database_device_names]
-    logger.info(f"Found {len(missing_devices)} devices missing from database")
+    # # Find devices that are not in the database
+    # missing_devices = [device for device in local_player_names if device not in database_device_names]
+    # logger.info(f"Found {len(missing_devices)} devices missing from database")
     
-    # Merged print statements
-    print(f"Tổng cộng: {len(local_player_names)} thiết bị trên máy {pcrunner}\n"
-        f"Tổng cộng: {len(database_device_names)} thiết bị trong Database\n"
-        f"Số lượng thiết bị bổ sung: {len(missing_devices)}")
+    # # Merged print statements
+    # print(f"Tổng cộng: {len(local_player_names)} thiết bị trên máy {pcrunner}\n"
+    #     f"Tổng cộng: {len(database_device_names)} thiết bị trong Database\n"
+    #     f"Số lượng thiết bị bổ sung: {len(missing_devices)}")
 
-    # Process all missing devices in batches
-    if missing_devices:
-        print("Tạo thiết bị mới trong Database...")
-        success_count = 0
-        total_devices = len(missing_devices)
-        batch_size = 20
+    # # Process all missing devices in batches
+    # if missing_devices:
+    #     print("Tạo thiết bị mới trong Database...")
+    #     success_count = 0
+    #     total_devices = len(missing_devices)
+    #     batch_size = 20
         
-        for i in range(0, total_devices, batch_size):
-            batch = missing_devices[i:i+batch_size]
-            if batch:
-                success_count += create_new_device_batch(batch, batch_size)
+    #     for i in range(0, total_devices, batch_size):
+    #         batch = missing_devices[i:i+batch_size]
+    #         if batch:
+    #             success_count += create_new_device_batch(batch, batch_size)
                 
-                # Calculate and show progress percentage
-                processed = min(i + batch_size, total_devices)
-                percentage = (processed / total_devices) * 100
-                print(f"Progress: {percentage:.1f}% ({processed}/{total_devices})")
+    #             # Calculate and show progress percentage
+    #             processed = min(i + batch_size, total_devices)
+    #             percentage = (processed / total_devices) * 100
+    #             print(f"Progress: {percentage:.1f}% ({processed}/{total_devices})")
                 
-                # Add a small delay between batches to avoid overwhelming the API
-                time.sleep(1)
+    #             # Add a small delay between batches to avoid overwhelming the API
+    #             time.sleep(1)
         
-        logger.info(f"Created {success_count} out of {total_devices} missing devices")
-        print(f"Created {success_count} out of {total_devices} missing devices")
-    else:
-        logger.info("No missing devices to create")
-        print("No missing devices to create")
+    #     logger.info(f"Created {success_count} out of {total_devices} missing devices")
+    #     print(f"Created {success_count} out of {total_devices} missing devices")
+    # else:
+    #     logger.info("No missing devices to create")
+    #     print("No missing devices to create")
