@@ -69,6 +69,58 @@ def update_ld_devices(config_folder, environment, pcrunner):
             logger.error(f"Error reading config directory: {str(e)}")
             
         return player_names
+        
+    def update_config_file(config_folder, key, value):
+        """
+        Update a specific key in a device's .config file
+        
+        Args:
+            config_folder (str): Path to the folder containing LDPlayer config files
+            key (str): Config key to update
+            value: New value to set for the key
+        
+        Returns:
+            bool: True if update was successful, False otherwise
+        """
+        updated_count = 0
+        try:
+            # Loop through all files in the directory with .config extension
+            for filename in os.listdir(config_folder):
+                if not filename.endswith(".config"):
+                    continue
+                    
+                file_path = os.path.join(config_folder, filename)
+                
+                try:
+                    # Read the current config
+                    with open(file_path, 'r', encoding='utf-8') as file:
+                        data = json.load(file)
+                    
+                    # Update the specified key
+                    data[key] = value
+                    
+                    # Update essential settings for automation
+                    # Convert from default values to automation-ready values
+                    data["basicSettings.adbDebug"] = 1  # Enable ADB debugging (0 -> 1)
+                    data["basicSettings.rootMode"] = True  # Enable root mode (false -> true)
+                    data["basicSettings.standaloneSysVmdk"] = True  # Enable standalone system (false -> true)
+                    
+                    # Write the updated config back to the file
+                    with open(file_path, 'w', encoding='utf-8') as file:
+                        json.dump(data, file, indent=2)
+                    
+                    updated_count += 1
+                    logger.info(f"Updated config file {filename}, set {key}={value} and enabled automation settings")
+                        
+                except (json.JSONDecodeError, FileNotFoundError, UnicodeDecodeError) as e:
+                    logger.debug(f"Skipping file {filename} during update: {str(e)}")
+                    continue
+            
+            logger.info(f"Successfully updated {updated_count} config files")
+            return True
+        except Exception as e:
+            logger.error(f"Error updating config files: {str(e)}")
+            return False
 
     def create_new_device_batch(device_names, batch_size=10):
         """Create new devices in the database in batches"""
@@ -111,6 +163,9 @@ def update_ld_devices(config_folder, environment, pcrunner):
 
     # Main execution flow
     key_to_search = "statusSettings.playerName"
+    
+    update_config_file(config_folder)
+    
 
     # Extract player names from all .config files in the specified folder
     local_player_names = extract_player_names(config_folder, key_to_search)

@@ -1537,9 +1537,9 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
 
                 # Crawl post data
                 crawlPostData(browser, readData(post_id_full_path), game_name, environment, list_game_fanpages)
-                
+
                 print(f"----- Done {len(all_posts)} posts: Game {game_name} -----")
-                
+
                 # Add random delay after processing all games
                 if index < len(game_urls) - 1:  # Only sleep if not the last game
                     sleep_time = random.randint(70, 100)
