@@ -70,14 +70,12 @@ def update_ld_devices(config_folder, environment, pcrunner):
             
         return player_names
         
-    def update_config_file(config_folder, key, value):
+    def update_config_file(config_folder):
         """
         Update a specific key in a device's .config file
         
         Args:
             config_folder (str): Path to the folder containing LDPlayer config files
-            key (str): Config key to update
-            value: New value to set for the key
         
         Returns:
             bool: True if update was successful, False otherwise
@@ -96,9 +94,6 @@ def update_ld_devices(config_folder, environment, pcrunner):
                     with open(file_path, 'r', encoding='utf-8') as file:
                         data = json.load(file)
                     
-                    # Update the specified key
-                    data[key] = value
-                    
                     # Update essential settings for automation
                     # Convert from default values to automation-ready values
                     data["basicSettings.adbDebug"] = 1  # Enable ADB debugging (0 -> 1)
@@ -110,7 +105,6 @@ def update_ld_devices(config_folder, environment, pcrunner):
                         json.dump(data, file, indent=2)
                     
                     updated_count += 1
-                    logger.info(f"Updated config file {filename}, set {key}={value} and enabled automation settings")
                         
                 except (json.JSONDecodeError, FileNotFoundError, UnicodeDecodeError) as e:
                     logger.debug(f"Skipping file {filename} during update: {str(e)}")
