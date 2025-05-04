@@ -98,7 +98,7 @@ def update_ld_devices(config_folder, environment, pcrunner):
                     # Convert from default values to automation-ready values
                     data["basicSettings.adbDebug"] = 1  # Enable ADB debugging (0 -> 1)
                     data["basicSettings.rootMode"] = True  # Enable root mode (false -> true)
-                    data["basicSettings.standaloneSysVmdk"] = True  # Enable standalone system (false -> true)
+                    data["basicSettings.standaloneSysVmdk"] = False  # Enable standalone system (false -> true)
                     
                     # Write the updated config back to the file
                     with open(file_path, 'w', encoding='utf-8') as file:
