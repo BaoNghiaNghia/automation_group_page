@@ -30,8 +30,8 @@ def rewrite_paragraph_deepseek(environment):
     try:
         game_fanpages = get_all_game_fanpages(environment)
         if not game_fanpages:
-            logger.error("No game URLs found from get_game_fanpages")
-            raise Exception("No game URLs found from get_game_fanpages")
+            logger.error("No game URLs found from get_game_fanpages_unique")
+            raise Exception("No game URLs found from get_game_fanpages_unique")
 
         hashtag_by_game = {item['fanpage'].split('/')[-1]: item['hashtag'] for item in game_fanpages}
         group_by_game = {item['fanpage'].split('/')[-1]: item['hashtag'] for item in game_fanpages}

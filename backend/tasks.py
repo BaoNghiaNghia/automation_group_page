@@ -4,7 +4,7 @@ from pathlib import Path
 from celery import shared_task
 from backend.service.scraper_post_fb import run_fb_scraper_single_fanpage_posts
 from backend.constants import FOLDER_PATH_DATA_CRAWLER, FOLDER_PATH_POST_ID_CRAWLER
-from backend.utils.index import get_game_fanpages, should_scrape_game
+from backend.utils.index import get_game_fanpages_unique, should_scrape_game
 
 @shared_task(name="backend.tasks.run_main_task_minutes")  # Match the name in celery_config.py
 def run_main_task_minutes():
@@ -12,7 +12,7 @@ def run_main_task_minutes():
         print("----- :::: run_main_task_minutes :::: -----")
         
         # Get game fanpage URLs
-        game_urls = get_game_fanpages()
+        game_urls = get_game_fanpages_unique()
         if not game_urls:
             print("No game URLs found. Exiting.")
             return

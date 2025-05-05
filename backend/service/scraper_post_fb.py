@@ -737,8 +737,8 @@ def simulate_human_behavior_when_scraping_game(browser, environment):
         
         game_fanpages = get_all_game_fanpages(environment)
         if not game_fanpages:
-            logger.error("No game URLs found from get_game_fanpages")
-            raise Exception("No game URLs found from get_game_fanpages")
+            logger.error("No game URLs found from get_game_fanpages_unique")
+            raise Exception("No game URLs found from get_game_fanpages_unique")
         
         group_search_names = [game["group_search_name"] for game in game_fanpages if "group_search_name" in game]
         

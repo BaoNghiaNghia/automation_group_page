@@ -7,7 +7,7 @@ from backend.utils.index import get_all_game_fanpages
 from backend.constants import SERVICE_URL, ENV_CONFIG, logger
 
 def sync_post_into_database(environment):
-    
+
     try:
         # Define the data crawler path
         data_crawler_path = os.path.join(os.getcwd(), "data_crawler")
@@ -25,8 +25,8 @@ def sync_post_into_database(environment):
         with open(output_file, 'w', encoding='utf-8') as f:
             game_fanpages = get_all_game_fanpages(environment)
             if not game_fanpages:
-                logger.error("No game URLs found from get_game_fanpages")
-                raise Exception("No game URLs found from get_game_fanpages")
+                logger.error("No game URLs found from get_game_fanpages_unique")
+                raise Exception("No game URLs found from get_game_fanpages_unique")
 
             # Create a dictionary mapping game fanpage URLs to their IDs
             # Handle potential duplicates by keeping the last occurrence of each key

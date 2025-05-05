@@ -3,7 +3,7 @@ import argparse
 from backend.constants import ENV_CONFIG, logger
 from backend.service.update_ld_devices import update_ld_devices
 from backend.service.scraper_post_fb import run_fb_scraper_multiple_fanpages
-from backend.utils.index import get_game_fanpages
+from backend.utils.index import get_game_fanpages_unique
 
 
 if __name__ == "__main__":
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     try:
 
         # Get game URLs to scrape
-        if not (game_urls := get_game_fanpages(args.environment)):
+        if not (game_urls := get_game_fanpages_unique(args.environment)):
             logger.error("No game URLs found")
             exit(1)
 
