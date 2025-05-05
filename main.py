@@ -5,7 +5,7 @@ from pathlib import Path
 from backend.service.scraper_post_fb import run_fb_scraper_multiple_fanpages
 from backend.constants import FOLDER_PATH_DATA_CRAWLER, ENV_CONFIG, logger
 from backend.utils.index import get_game_fanpages
-from backend.service.migrate_db import sync_post_into_databse
+from backend.service.migrate_db import sync_post_into_database
 from backend.service.text_generate_deepseek import rewrite_paragraph_deepseek
 from backend.service.update_ld_devices import update_ld_devices
 
@@ -72,7 +72,7 @@ if __name__ == "__main__":
             exit(1)
 
         # ------------------------ Step 3: Insert paragraph to database ------------------------
-        run_step(3, "Inserting paragraphs to database", sync_post_into_databse, args.environment)
+        run_step(3, "Inserting paragraphs to database", sync_post_into_database, args.environment)
     except Exception as e:
         logger.error(f"Error occurred: {str(e)}")
         exit(1)

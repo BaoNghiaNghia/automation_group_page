@@ -6,7 +6,7 @@ import requests
 from backend.utils.index import get_all_game_fanpages
 from backend.constants import SERVICE_URL, ENV_CONFIG, logger
 
-def sync_post_into_databse(environment):
+def sync_post_into_database(environment):
     
     try:
         # Define the data crawler path
@@ -49,22 +49,31 @@ def sync_post_into_databse(environment):
 
                     image_path = folder_path
                     txt_files = [f for f in os.listdir(folder_path) if f.endswith('.txt')]
-                    
-                    # Get the first image in the folder for base64 encoding
-                    # Process images once per folder
-                    image_blob = None
                     image_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-                    if image_files:
+                    # Process image files and upload them to the API
+                    for image_file in image_files:
                         try:
-                            # Get the first image file
-                            first_image_path = os.path.join(folder_path, image_files[0])
-                            # Read and encode the image in one operation
-                            with open(first_image_path, "rb") as img_file:
-                                image_blob = base64.b64encode(img_file.read()).decode('utf-8')
+                            image_file_path = os.path.join(folder_path, image_file)
+                            
+                            # Prepare the API endpoint for image upload
+                            upload_url = f'{ENV_CONFIG[environment]["SERVICE_URL"]}/daily_posts_content/upload-image'
+                            
+                            # Open the image file and prepare it for upload
+                            with open(image_file_path, 'rb') as img_file:
+                                # Create a multipart form with the image file
+                                files = {'file': (image_file, img_file, 'multipart/form-data')}
+                                
+                                # Send the request to upload the image
+                                response = requests.post(upload_url, files=files)
+                                
+                                # Check if the upload was successful
+                                if response.status_code == 200:
+                                    logger.info(f"Successfully uploaded image: {image_file}")
+                                else:
+                                    logger.error(f"Failed to upload image {image_file}. Status code: {response.status_code}")
+                                    
                         except Exception as e:
-                            logger.error(f"Error encoding image {image_files[0]}: {str(e)}")
-                    else:
-                        logger.debug(f"No images found in folder: {folder_path}")  # Changed to debug level
+                            logger.error(f"Error uploading image {image_file}: {str(e)}")
 
                     # Process text files and create data entries
                     for txt_file in txt_files:
@@ -85,7 +94,7 @@ def sync_post_into_databse(environment):
                                         'clone_version': file_name,
                                         'content': content,
                                         'img_path': image_path,
-                                        'image_blob': image_blob if file_name == 'content' else None
+                                        'image_blob': None
                                     })
 
                         except Exception as e:
@@ -144,5 +153,5 @@ def sync_post_into_databse(environment):
         return "Processing complete"
 
     except Exception as e:
-        logger.error(f"Error in sync_post_into_databse: {str(e)}")
+        logger.error(f"Error in sync_post_into_database: {str(e)}")
         return []

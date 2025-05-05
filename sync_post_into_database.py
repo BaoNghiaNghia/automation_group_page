@@ -1,6 +1,6 @@
 from backend.service.text_generate_gemini import rewrite_paragraph_gemini
 from backend.service.text_generate_deepseek import rewrite_paragraph_deepseek
-from backend.service.migrate_db import sync_post_into_databse
+from backend.service.migrate_db import sync_post_into_database
 from backend.constants import logger
 import argparse
 
@@ -14,7 +14,7 @@ if __name__ == "__main__":
     logger.info(f"Running in {args.environment} environment")
     
     try:
-        sync_post_into_databse(args.environment)
+        sync_post_into_database(args.environment)
 
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
