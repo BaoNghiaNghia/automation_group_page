@@ -111,7 +111,7 @@ def update_ld_devices(config_folder, environment, pcrunner):
                     continue
                 
             # Check if Shared_images_ldplayer folder exists in parent directory, if not create it
-            parent_dir = os.path.dirname(os.getcwd())
+            parent_dir = os.path.join(os.path.dirname(os.getcwd()), "adb_fb_post", "ADB", "bin", "Debug")
             shared_images_folder = os.path.join(parent_dir, "Shared_images_ldplayer")
             if not os.path.exists(shared_images_folder):
                 try:
