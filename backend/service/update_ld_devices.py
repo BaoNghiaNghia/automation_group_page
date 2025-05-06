@@ -86,28 +86,75 @@ def update_ld_devices(config_folder, environment, pcrunner):
             for filename in os.listdir(config_folder):
                 if not filename.endswith(".config"):
                     continue
-                    
+
                 file_path = os.path.join(config_folder, filename)
-                
+
                 try:
                     # Read the current config
                     with open(file_path, 'r', encoding='utf-8') as file:
                         data = json.load(file)
-                    
+
                     # Update essential settings for automation
                     # Convert from default values to automation-ready values
                     data["basicSettings.adbDebug"] = 1  # Enable ADB debugging (0 -> 1)
                     data["basicSettings.rootMode"] = True  # Enable root mode (false -> true)
                     data["basicSettings.standaloneSysVmdk"] = False  # Enable standalone system (false -> true)
-                    
+
                     # Write the updated config back to the file
                     with open(file_path, 'w', encoding='utf-8') as file:
                         json.dump(data, file, indent=2)
-                    
+
                     updated_count += 1
                         
                 except (json.JSONDecodeError, FileNotFoundError, UnicodeDecodeError) as e:
                     logger.debug(f"Skipping file {filename} during update: {str(e)}")
+                    continue
+                
+            # Check if Shared_images_ldplayer folder exists, if not create it
+            shared_images_folder = os.path.join(os.getcwd(), "Shared_images_ldplayer")
+            if not os.path.exists(shared_images_folder):
+                try:
+                    os.makedirs(shared_images_folder)
+                    logger.info(f"Created Shared_images_ldplayer folder at {shared_images_folder}")
+                except Exception as e:
+                    logger.error(f"Failed to create Shared_images_ldplayer folder: {str(e)}")
+            
+            # For each config file, create a player-specific folder and update the config
+            for filename in os.listdir(config_folder):
+                if not filename.endswith(".config"):
+                    continue
+                
+                file_path = os.path.join(config_folder, filename)
+                
+                try:
+                    # Read the config to get the player name
+                    with open(file_path, 'r', encoding='utf-8') as file:
+                        data = json.load(file)
+                    
+                    # Get player name from config
+                    if "statusSettings.playerName" in data:
+                        player_name = data["statusSettings.playerName"].strip()
+                        if player_name and "(banned)" not in player_name:
+                            # Create player-specific folder inside Shared_images_ldplayer
+                            player_folder = os.path.join(shared_images_folder, player_name)
+                            if not os.path.exists(player_folder):
+                                try:
+                                    os.makedirs(player_folder)
+                                    logger.debug(f"Created folder for player {player_name}")
+                                except Exception as e:
+                                    logger.error(f"Failed to create folder for player {player_name}: {str(e)}")
+                                    continue
+                            
+                            # Update the sharedPictures setting in the config
+                            data["statusSettings.sharedPictures"] = player_folder
+                            
+                            # Write the updated config back to the file
+                            with open(file_path, 'w', encoding='utf-8') as file:
+                                json.dump(data, file, indent=2)
+                            
+                            logger.debug(f"Updated sharedPictures path for {player_name}")
+                except (json.JSONDecodeError, FileNotFoundError, UnicodeDecodeError) as e:
+                    logger.debug(f"Skipping file {filename} during shared pictures update: {str(e)}")
                     continue
             
             logger.info(f"Successfully updated {updated_count} config files")
@@ -163,6 +210,7 @@ def update_ld_devices(config_folder, environment, pcrunner):
 
     # Extract player names from all .config files in the specified folder
     local_player_names = extract_player_names(config_folder, key_to_search)
+    
     logger.info(f"Found {len(local_player_names)} local devices")
 
     # Fetch device names from the API
