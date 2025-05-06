@@ -110,8 +110,9 @@ def update_ld_devices(config_folder, environment, pcrunner):
                     logger.debug(f"Skipping file {filename} during update: {str(e)}")
                     continue
                 
-            # Check if Shared_images_ldplayer folder exists, if not create it
-            shared_images_folder = os.path.join(os.getcwd(), "Shared_images_ldplayer")
+            # Check if Shared_images_ldplayer folder exists in parent directory, if not create it
+            parent_dir = os.path.dirname(os.getcwd())
+            shared_images_folder = os.path.join(parent_dir, "Shared_images_ldplayer")
             if not os.path.exists(shared_images_folder):
                 try:
                     os.makedirs(shared_images_folder)
@@ -145,8 +146,9 @@ def update_ld_devices(config_folder, environment, pcrunner):
                                     logger.error(f"Failed to create folder for player {player_name}: {str(e)}")
                                     continue
                             
-                            # Update the sharedPictures setting in the config
-                            data["statusSettings.sharedPictures"] = player_folder
+                            # Update the sharedPictures setting in the config using forward slashes
+                            player_folder_formatted = player_folder.replace("\\", "/")
+                            data["statusSettings.sharedPictures"] = player_folder_formatted
                             
                             # Write the updated config back to the file
                             with open(file_path, 'w', encoding='utf-8') as file:
