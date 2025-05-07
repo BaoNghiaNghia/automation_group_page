@@ -99,6 +99,12 @@ def update_ld_devices(config_folder, environment, pcrunner):
                     data["basicSettings.adbDebug"] = 1  # Enable ADB debugging (0 -> 1)
                     data["basicSettings.rootMode"] = True  # Enable root mode (false -> true)
                     data["basicSettings.standaloneSysVmdk"] = False  # Enable standalone system (false -> true)
+                    # Update resolution and DPI settings for better automation compatibility
+                    data["advancedSettings.resolution"] = {
+                        "width": 540,
+                        "height": 960
+                    }
+                    data["advancedSettings.resolutionDpi"] = 240
 
                     # Write the updated config back to the file
                     with open(file_path, 'w', encoding='utf-8') as file:
@@ -124,7 +130,7 @@ def update_ld_devices(config_folder, environment, pcrunner):
             for filename in os.listdir(config_folder):
                 if not filename.endswith(".config"):
                     continue
-                
+
                 file_path = os.path.join(config_folder, filename)
                 
                 try:
