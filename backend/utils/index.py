@@ -23,6 +23,26 @@ def get_game_fanpages_unique(environment):
         print(f"Error fetching game fanpages: {e}")
         return []
     
+def get_game_fanpages_unique_for_scan(environment):
+    """Fetch active game fanpage URLs from service and extract game names."""
+    try:
+        response = requests.get(f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages/available-scan')
+        response.raise_for_status()
+        data = response.json()
+        
+        # Get all active game fanpages
+        # Extract unique game fanpage URLs by using a set to remove duplicates
+        active_games = list(set(game['fanpage'].split('/')[-1] for game in data['items'] if game.get('status') == 'active'))
+        
+        # If there are active games, randomly shuffle them before returning
+        if active_games:
+            random.shuffle(active_games)
+        
+        return active_games
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching game fanpages: {e}")
+        return []
+    
 def get_all_game_fanpages(environment):
     """Fetch game fanpage URLs from service and extract game names."""
     try:
