@@ -1,5 +1,6 @@
-import requests
+import os
 import base64
+import requests
 from selenium.webdriver.common.by import By
 from backend.constants import API_KEY_CAPTCHA, DOMAIN_CAPTCHA
 
@@ -43,3 +44,27 @@ def get_captcha_result(captcha_id):
     else:
         print(f"Error fetching CAPTCHA result: {response_text}")
         return None
+    
+# Function to save content to a file
+def writeFileTxtPost(fileName, content, idPost, pathImg="/img/", game_name=""):
+    # Normalize and build the path properly
+    post_path = os.path.join(os.getcwd(), pathImg.strip("/\\"), f"{game_name}_{str(idPost)}")
+
+    if not os.path.exists(post_path):
+        os.makedirs(post_path)
+
+    file_path = os.path.join(post_path, fileName)
+
+    try:
+        with open(file_path, 'a', encoding="utf-8") as f1:
+            f1.write(content + os.linesep)
+        print(f"Content written to {file_path}")
+    except Exception as e:
+        print(f"Error writing to file {file_path}: {e}")
+
+
+# Read Post IDs from file (assumed function)
+def readDataFromFile(fileName):
+    with open(fileName, 'r', encoding="utf-8") as f:
+        return [line.strip() for line in f.readlines()]
+    

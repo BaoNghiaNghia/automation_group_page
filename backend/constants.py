@@ -89,3 +89,10 @@ SHARE_COMMENT_IN_POST = [
     "Đọc xong thấy hay nên share",
     "Chia sẻ cho ai cần"
 ]
+
+LIST_COMPETIOR_GROUP_LINK = [
+    "https://www.facebook.com/groups/lastwarsurvivalvn/members",
+    "https://www.facebook.com/groups/370081218909245/members",
+    "https://www.facebook.com/groups/lucdiathanhoa/members",
+    "https://www.facebook.com/groups/vikingrisevietnam/members"
+]
