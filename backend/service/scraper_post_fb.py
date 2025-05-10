@@ -774,6 +774,7 @@ def crawl_member_in_group_competition(browser, environment):
                 if filename.endswith("_members.txt"):
                     processed_groups.add(filename.replace("_members.txt", ""))
 
+        # First loop: Collect member links for all groups
         for group_link in LIST_COMPETIOR_GROUP_LINK:
             # Extract group name from URL
             group_name = urlparse(group_link).path.split('/')[2]
@@ -805,13 +806,23 @@ def crawl_member_in_group_competition(browser, environment):
             
             logger.info(f"Saved {len(member_links)} member links for group {group_name}")
             
-            # Send data to API
-            send_member_data_to_api(file_path, group_name, environment)
-            
             # Random sleep between processing groups
             sleep_time = random.randint(5, 10)
             logger.info(f"Sleeping for {sleep_time} seconds before processing next group...")
             sleep(sleep_time)
+        
+        # Second loop: Send data to API for all collected groups
+        for group_link in LIST_COMPETIOR_GROUP_LINK:
+            group_name = urlparse(group_link).path.split('/')[2]
+            file_path = os.path.join(save_dir, f"{group_name}_members.txt")
+            
+            if os.path.exists(file_path):
+                logger.info(f"Sending data to API for group: {group_name}")
+                send_member_data_to_api(file_path, group_name, environment)
+                
+                sleep_time = random.randint(2, 5)
+                logger.info(f"Sleeping for {sleep_time} seconds before processing next API request...")
+                sleep(sleep_time)
 
     except Exception as e:
         logger.error(f"Error while crawling members from competitor groups: {e}")
@@ -901,7 +912,25 @@ def send_member_data_to_api(file_path, group_name, environment):
     
     for i in range(0, len(all_member_links), batch_size):
         batch = all_member_links[i:i+batch_size]
-        payload = [{"profile_id": link, "game_fanpages_id": group_name} for link in batch]
+        
+        # Extract profile_id from the URL
+        payload = []
+        for link in batch:
+            profile_id = None
+            if '/profile.php?id=' in link:
+                profile_id = link.split('/profile.php?id=')[1].split('&')[0]
+            else:
+                parts = link.strip('/').split('/')
+                if parts and parts[-1].isdigit():
+                    profile_id = parts[-1]
+                else:
+                    profile_id = parts[-1] 
+            
+            payload.append({
+                "profile_id": profile_id,
+                "game_fanpages_id": 1,
+                "profile_link": link
+            })
         
         try:
             response = requests.post(api_url, headers=headers, data=json.dumps(payload), timeout=30)
@@ -911,6 +940,9 @@ def send_member_data_to_api(file_path, group_name, environment):
                 successful_batches += 1
             else:
                 logger.error(f"API request failed: status {response.status_code}, response: {response.text}")
+                
+            # Add a 500ms delay between API requests
+            sleep(0.5)
         except requests.exceptions.RequestException as req_err:
             logger.error(f"Request error sending batch {i//batch_size + 1}: {req_err}")
     
