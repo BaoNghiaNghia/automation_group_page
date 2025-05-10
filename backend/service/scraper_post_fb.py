@@ -18,9 +18,17 @@ from selenium.webdriver.support import expected_conditions as EC
 from backend.utils.captcha_solver import solve_captcha, get_captcha_result, readDataFromFile, writeFileTxtPost
 from backend.service.simulation_behaviour import simulate_human_behavior_when_scraping_game, simulate_scrolling_behavior_when_init_facebook
 from backend.utils.index import get_all_game_fanpages
-
-from backend.constants import FB_ACCOUNT_LIST, FB_DEFAULT_URL, FOLDER_PATH_DATA_CRAWLER, LIMIT_POST_PER_DAY, FOLDER_PATH_POST_ID_CRAWLER, FB_DEFAULT_URL, ENV_CONFIG, logger
-
+from backend.constants import (
+    FB_ACCOUNT_LIST, 
+    FB_DEFAULT_URL, 
+    FOLDER_PATH_DATA_CRAWLER, 
+    LIMIT_POST_PER_DAY, 
+    FOLDER_PATH_POST_ID_CRAWLER, 
+    ENV_CONFIG, 
+    SPAM_KEYWORDS_IN_POST,
+    LIST_COMPETIOR_GROUP_LINK,
+    logger
+)
 
 
 def init_browser(is_ubuntu=False):
@@ -746,13 +754,79 @@ def scan_spam_in_group(browser, environment):
     """
 
 
-def crawl_member_in_group_competition(browser, environment):
-    """_summary_
 
-    Args:
-        browser (_type_): _description_
-        environment (_type_): _description_
+def crawl_member_in_group_competition(browser, environment):
     """
+    Crawl member information from competitor groups
+    
+    Args:
+        browser: Selenium WebDriver instance
+        environment: Environment configuration
+    """
+    try:
+        logger.info("Starting to crawl members from competitor groups...")
+        
+        for group_link in LIST_COMPETIOR_GROUP_LINK:
+            logger.info(f"Processing group: {group_link}")
+            
+            # Navigate to the group members page
+            browser.get(group_link)
+            sleep(random.randint(3, 6))
+            
+            # Wait for the page to load
+            WebDriverWait(browser, 20).until(
+                EC.presence_of_element_located((By.TAG_NAME, "body"))
+            )
+            
+            # Scroll down to load more members
+            for _ in range(5):  # Scroll a few times to load more members
+                browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                sleep(random.randint(2, 4))
+            
+            # Find member links using XPath patterns
+            member_links = []
+            
+            # Try to find member links with different XPath patterns
+            for i in range(1, 4000):  # Try a reasonable number of possible members
+                try:
+                    xpath_pattern = f"//div[contains(@class, 'x1yztbdb')][{i}]//a[contains(@href, '/user/') or contains(@href, '/profile.php')]"
+                    elements = browser.find_elements(By.XPATH, xpath_pattern)
+                    
+                    if elements:
+                        for element in elements:
+                            href = element.get_attribute('href')
+                            if href and href not in member_links:
+                                # Convert group member URL to direct profile URL
+                                if '/groups/' in href and '/user/' in href:
+                                    # Extract user ID from URL like https://www.facebook.com/groups/508952542049343/user/100086522871144/
+                                    user_id = href.split('/user/')[1].strip('/')
+                                    href = f"https://www.facebook.com/{user_id}"
+                                member_links.append(href)
+                except Exception as e:
+                    continue
+            
+            logger.info(f"Found {len(member_links)} member links in group {group_link}")
+            
+            # Create directory to save member links if it doesn't exist
+            group_name = urlparse(group_link).path.split('/')[2]
+            save_dir = os.path.join(os.getcwd(), "competitor_group_members")
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            
+            # Save member links to file
+            with open(os.path.join(save_dir, f"{group_name}_members.txt"), "w") as f:
+                for link in member_links:
+                    f.write(f"{link}\n")
+            
+            logger.info(f"Saved {len(member_links)} member links for group {group_name}")
+            
+            # Random sleep between processing groups
+            sleep_time = random.randint(5, 10)
+            logger.info(f"Sleeping for {sleep_time} seconds before processing next group...")
+            sleep(sleep_time)
+            
+    except Exception as e:
+        logger.error(f"Error while crawling members from competitor groups: {e}")
 
 
 def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
@@ -786,8 +860,8 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
         logger.info("Simulating human-like browsing behavior before scraping...")
         
         # Simulate scrolling behavior and get final pause time
-        final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
-        sleep(final_pause)
+        # final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
+        # sleep(final_pause)
         
         # ----------------------- Scan Spam in Group ----------------------- #
         scan_spam_in_group(browser, environment)
@@ -796,81 +870,12 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
         crawl_member_in_group_competition(browser, environment)
         
         # ----------------------- Scraper fanpages ----------------------- #
-        list_game_fanpages = get_all_game_fanpages(environment)
+        # list_game_fanpages = get_all_game_fanpages(environment)
 
-        # Process each game URL with the same browser session
-        for index, game_url in enumerate(game_urls):
-            try:
-                print(f"\n----- Starting to scrape: {game_url} -----")
+        # # Process each game URL with the same browser session
+        # for index, game_url in enumerate(game_urls):
+        #     process_game_url(browser, game_url, index, game_urls, environment, list_game_fanpages)
                 
-                # Extract game name from URL
-                game_name = game_url.rstrip("/").split("/")[-1]
-                
-                # Navigate to game page
-                browser.get(f"{FB_DEFAULT_URL}/{game_url}")
-                sleep(random.randint(7, 13) if index < len(game_urls) - 1 else 0)  # Wait for page load
-                
-                all_posts = set()
-                last_height = browser.execute_script("return document.body.scrollHeight")
-
-                # Scroll and collect posts
-                for attempt in range(50):
-                    print(f"\n[Scrolling Attempt {attempt + 1}]")
-                    current_posts = get_posts_by_attribute(browser, game_name)
-                    all_posts.update(current_posts)
-                    
-                    if len(all_posts) >= LIMIT_POST_PER_DAY:
-                        print("Limit of posts reached.")
-                        break
-
-                    # Check if no posts found after 3 attempts
-                    if attempt >= 3 and len(all_posts) == 0:
-                        print("No posts found after 3 attempts, exiting.")
-                        break
-                    
-                    # Scroll down to load more posts
-                    scroll_down(browser)
-                    new_height = browser.execute_script("return document.body.scrollHeight")
-
-                    if new_height == last_height:
-                        print("Reached the end of the page, stopping scroll.")
-                        break
-
-                    last_height = new_height
-                    
-                    if attempt == 49:
-                        print("Too many scroll attempts, exiting.")
-
-
-                # Save post IDs
-                post_id_file_path = os.path.join(os.getcwd(), FOLDER_PATH_POST_ID_CRAWLER.strip("/\\"))
-                if not os.path.exists(post_id_file_path):
-                    os.makedirs(post_id_file_path)
-                    
-                post_id_file_name = f"facebook_{game_name}_post_ids.txt"
-                post_id_full_path = os.path.join(post_id_file_path, post_id_file_name)
-                
-                with open(post_id_full_path, "w", encoding="utf-8") as f:
-                    f.write("\n".join(sorted(all_posts)))
-
-                # Crawl post data
-                crawlPostData(browser, readDataFromFile(post_id_full_path), game_name, environment, list_game_fanpages)
-
-                print(f"----- Done {len(all_posts)} posts: Game {game_name} -----")
-
-                # Add random delay after processing all games
-                if index < len(game_urls) - 1:  # Only sleep if not the last game
-                    sleep_time = random.randint(70, 100)
-                    logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
-                    sleep(sleep_time)
-                    simulate_human_behavior_when_scraping_game(browser, environment)
-                    sleep(sleep_time)
-                
-            except Exception as e:
-                print(f"Error processing {game_url}: {e}")
-                continue  # Proceed to next game if error occurs in current game
-
-        return True  # Successfully completed scraping all games
 
     except Exception as e:
         print(f"Error in main scraper: {e}")
@@ -883,3 +888,87 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
             print("Browser closed successfully.")
         except Exception as e:
             print(f"Error closing browser: {e}")
+
+
+def process_game_url(browser, game_url, index, game_urls, environment, list_game_fanpages):
+    """
+    Process a single game URL for Facebook scraping
+    
+    Args:
+        browser: Selenium browser instance
+        game_url (str): URL of the game fanpage to scrape
+        index (int): Current index in the game_urls list
+        game_urls (list): List of all game URLs being processed
+        environment: Environment configuration
+        list_game_fanpages: List of all game fanpages
+    """
+    try:
+        print(f"\n----- Starting to scrape: {game_url} -----")
+        
+        # Extract game name from URL
+        game_name = game_url.rstrip("/").split("/")[-1]
+        
+        # Navigate to game page
+        browser.get(f"{FB_DEFAULT_URL}/{game_url}")
+        sleep(random.randint(7, 13) if index < len(game_urls) - 1 else 0)  # Wait for page load
+        
+        all_posts = set()
+        last_height = browser.execute_script("return document.body.scrollHeight")
+
+        # Scroll and collect posts
+        for attempt in range(50):
+            print(f"\n[Scrolling Attempt {attempt + 1}]")
+            current_posts = get_posts_by_attribute(browser, game_name)
+            all_posts.update(current_posts)
+            
+            if len(all_posts) >= LIMIT_POST_PER_DAY:
+                print("Limit of posts reached.")
+                break
+
+            # Check if no posts found after 3 attempts
+            if attempt >= 3 and len(all_posts) == 0:
+                print("No posts found after 3 attempts, exiting.")
+                break
+            
+            # Scroll down to load more posts
+            scroll_down(browser)
+            new_height = browser.execute_script("return document.body.scrollHeight")
+
+            if new_height == last_height:
+                print("Reached the end of the page, stopping scroll.")
+                break
+
+            last_height = new_height
+            
+            if attempt == 49:
+                print("Too many scroll attempts, exiting.")
+
+
+        # Save post IDs
+        post_id_file_path = os.path.join(os.getcwd(), FOLDER_PATH_POST_ID_CRAWLER.strip("/\\"))
+        if not os.path.exists(post_id_file_path):
+            os.makedirs(post_id_file_path)
+            
+        post_id_file_name = f"facebook_{game_name}_post_ids.txt"
+        post_id_full_path = os.path.join(post_id_file_path, post_id_file_name)
+        
+        with open(post_id_full_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(sorted(all_posts)))
+
+        # Crawl post data
+        crawlPostData(browser, readDataFromFile(post_id_full_path), game_name, environment, list_game_fanpages)
+
+        print(f"----- Done {len(all_posts)} posts: Game {game_name} -----")
+
+        # Add random delay after processing all games
+        if index < len(game_urls) - 1:  # Only sleep if not the last game
+            sleep_time = random.randint(70, 100)
+            logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
+            sleep(sleep_time)
+            simulate_human_behavior_when_scraping_game(browser, environment)
+            sleep(sleep_time)
+        
+    except Exception as e:
+        print(f"Error processing {game_url}: {e}")
+
+        return True  # Successfully completed scraping all games
