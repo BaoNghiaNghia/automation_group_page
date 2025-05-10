@@ -212,29 +212,51 @@ def wait_for_page_load(browser):
 
 
 def get_posts_by_attribute(browser, game_name):
+    """_summary_
+
+    Args:
+        browser (_type_): _description_
+        game_name (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    
     posts = []
     try:
-        # Concatenate the URL parts before using them in the XPath
-        base_url = f"{FB_DEFAULT_URL}/{game_name}/posts"
-        post_links = browser.find_elements(By.XPATH, f"//a[starts-with(@href, '{base_url}')]")
+        # Use the more specific XPath pattern to find post links
+        post_links = browser.find_elements(By.XPATH, "//div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/a")
         
         for link in post_links:
             href = link.get_attribute('href')
             post_id = extract_post_id_from_url(href)
             if post_id and post_id not in posts:
                 posts.append(post_id)
-
                 print(f"Post ID found: {post_id}")
+                
+        # If no posts found with the specific XPath, fall back to the URL-based approach
+        if not posts:
+            base_url = f"{FB_DEFAULT_URL}/{game_name}/posts"
+            fallback_links = browser.find_elements(By.XPATH, f"//a[starts-with(@href, '{base_url}')]")
+            
+            for link in fallback_links:
+                href = link.get_attribute('href')
+                post_id = extract_post_id_from_url(href)
+                if post_id and post_id not in posts:
+                    posts.append(post_id)
+                    print(f"Post ID found (fallback): {post_id}")
     except Exception as e:
         print(f"Error retrieving posts: {e}")
     return posts
 
 def scroll_down(browser):
+    """Scroll down the page to load more posts."""
     browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     sleep(random.randint(5, 9))  # Wait for content to load
 
 
 def clonePostContent(driver, postId):
+    """Clone the post content and images from the post ID."""
     try:
         driver.get(f"{FB_DEFAULT_URL}/{str(postId)}")
         
@@ -266,6 +288,7 @@ def clonePostContent(driver, postId):
 
 # Function to download image and save with the correct extension
 def download_image_file(image_url, file_number, post_id, folder_path="/data_crawl/", game_name=""):
+    """Download image file and save with the correct extension."""
     try:
         # Create the folder for the post if it doesn't exist
         post_path = os.path.join(os.getcwd(), folder_path.strip("/\\"), f"{game_name}_{str(post_id)}")
@@ -322,6 +345,7 @@ def download_image_file(image_url, file_number, post_id, folder_path="/data_craw
 
 
 def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
+    """Crawl post data from the post IDs."""
     empty_post_count = 0  # Counter for empty posts
     written_post_count = 0  # Counter for posts written to file
 
@@ -404,6 +428,7 @@ def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
 
 # Function to handle reaction panel scrolling and profile extraction
 def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
+    """Handle the reaction panel scrolling and profile extraction."""
     try:
         # Define reaction panel xpath as a constant
         REACTION_PANEL_XPATH_OPTION_1 = "/html/body/div[7]/div[1]/div/div[2]/div/div/div"
@@ -556,6 +581,7 @@ def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
         
     
 def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
+    """Run the Facebook scraper for a single fanpage."""
     try:
         # Choose a random account and login
         username, password = random.choice(FB_ACCOUNT_LIST)
@@ -710,7 +736,24 @@ def handle_captcha_if_present(browser, username, password):
         print(f"Error while handling CAPTCHA: {e}")
         
 
-# Simulate human behavior between scraping games
+
+def scan_spam_in_group(browser, environment):
+    """_summary_
+
+    Args:
+        browser (_type_): _description_
+        environment (_type_): _description_
+    """
+
+
+def crawl_member_in_group_competition(browser, environment):
+    """_summary_
+
+    Args:
+        browser (_type_): _description_
+        environment (_type_): _description_
+    """
+
 
 def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
     """
@@ -746,8 +789,14 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
         final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
         sleep(final_pause)
         
+        # ----------------------- Scan Spam in Group ----------------------- #
+        scan_spam_in_group(browser, environment)
+        
+        # ----------------------- Crawler member in group competition ----------------------- #
+        crawl_member_in_group_competition(browser, environment)
+        
+        # ----------------------- Scraper fanpages ----------------------- #
         list_game_fanpages = get_all_game_fanpages(environment)
-
 
         # Process each game URL with the same browser session
         for index, game_url in enumerate(game_urls):
