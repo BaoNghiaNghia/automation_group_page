@@ -1,6 +1,7 @@
 facebook_*_post_ids.txt
 facebook_cookies.pkl
 /data_crawler
+/competitor_group_members
 
 # Byte-compiled / optimized / DLL files
 /__pycache__

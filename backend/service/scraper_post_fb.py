@@ -778,18 +778,21 @@ def crawl_member_in_group_competition(browser, environment):
                 EC.presence_of_element_located((By.TAG_NAME, "body"))
             )
             
-            # Scroll down to load more members
-            for _ in range(5):  # Scroll a few times to load more members
+            member_links = []
+            target_member_count = 4000
+            max_scroll_attempts = 100  # Limit scrolling attempts to prevent infinite loops
+            scroll_count = 0
+            
+            # Scroll until we find enough members or reach max scroll attempts
+            while len(member_links) < target_member_count and scroll_count < max_scroll_attempts:
+                # Scroll down to load more members
                 browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                 sleep(random.randint(2, 4))
-            
-            # Find member links using XPath patterns
-            member_links = []
-            
-            # Try to find member links with different XPath patterns
-            for i in range(1, 4000):  # Try a reasonable number of possible members
+                scroll_count += 1
+                
+                # Try to find member links with different XPath patterns
                 try:
-                    xpath_pattern = f"//div[contains(@class, 'x1yztbdb')][{i}]//a[contains(@href, '/user/') or contains(@href, '/profile.php')]"
+                    xpath_pattern = "//a[contains(@href, '/user/') or contains(@href, '/profile.php')]"
                     elements = browser.find_elements(By.XPATH, xpath_pattern)
                     
                     if elements:
@@ -803,7 +806,15 @@ def crawl_member_in_group_competition(browser, environment):
                                     href = f"https://www.facebook.com/{user_id}"
                                 member_links.append(href)
                 except Exception as e:
+                    logger.error(f"Error finding member links: {e}")
                     continue
+                
+                logger.info(f"Found {len(member_links)} member links so far (scroll attempt {scroll_count})")
+                
+                # Break if we've found enough members
+                if len(member_links) >= target_member_count:
+                    logger.info(f"Reached target of {target_member_count} member links")
+                    break
             
             logger.info(f"Found {len(member_links)} member links in group {group_link}")
             
@@ -824,7 +835,6 @@ def crawl_member_in_group_competition(browser, environment):
             sleep_time = random.randint(5, 10)
             logger.info(f"Sleeping for {sleep_time} seconds before processing next group...")
             sleep(sleep_time)
-            
     except Exception as e:
         logger.error(f"Error while crawling members from competitor groups: {e}")
 
