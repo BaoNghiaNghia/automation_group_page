@@ -763,7 +763,26 @@ def crawl_member_in_group_competition(browser, environment):
     try:
         logger.info("Starting to crawl members from competitor groups...")
         
+        # Create directory for competitor group members if it doesn't exist
+        save_dir = os.path.join(os.getcwd(), "competitor_group_members")
+        os.makedirs(save_dir, exist_ok=True)
+        
+        # Get list of already processed groups
+        processed_groups = set()
+        if os.path.exists(save_dir):
+            for filename in os.listdir(save_dir):
+                if filename.endswith("_members.txt"):
+                    processed_groups.add(filename.replace("_members.txt", ""))
+        
         for group_link in LIST_COMPETIOR_GROUP_LINK:
+            # Extract group name from URL
+            group_name = urlparse(group_link).path.split('/')[2]
+            
+            # Skip if this group has already been processed
+            if group_name in processed_groups:
+                logger.info(f"Skipping group {group_name} as it has already been processed")
+                continue
+                
             logger.info(f"Processing group: {group_link}")
             
             # Navigate to the group members page
@@ -775,10 +794,13 @@ def crawl_member_in_group_competition(browser, environment):
                 EC.presence_of_element_located((By.TAG_NAME, "body"))
             )
             
-            member_links = []
+            member_links = set()  # Using set for faster duplicate checking
             target_member_count = 4000
-            max_scroll_attempts = 100  # Limit scrolling attempts to prevent infinite loops
+            max_scroll_attempts = 100
             scroll_count = 0
+            
+            # XPath pattern for finding member links
+            xpath_pattern = "//a[contains(@href, '/user/') or contains(@href, '/profile.php')]"
             
             # Scroll until we find enough members or reach max scroll attempts
             while len(member_links) < target_member_count and scroll_count < max_scroll_attempts:
@@ -787,24 +809,25 @@ def crawl_member_in_group_competition(browser, environment):
                 sleep(random.randint(2, 4))
                 scroll_count += 1
                 
-                # Try to find member links with different XPath patterns
+                # Try to find member links
                 try:
-                    xpath_pattern = "//a[contains(@href, '/user/') or contains(@href, '/profile.php')]"
                     elements = browser.find_elements(By.XPATH, xpath_pattern)
                     
                     if elements:
                         for element in elements:
                             href = element.get_attribute('href')
-                            if href and href not in member_links:
+                            if href:
                                 if '/groups/' in href and '/user/' in href:
                                     user_id = href.split('/user/')[1].strip('/')
                                     href = f"www.facebook.com/{user_id}"
-                                member_links.append(href)
+                                member_links.add(href)
                 except Exception as e:
                     logger.error(f"Error finding member links: {e}")
                     continue
 
-                logger.info(f"Found {len(member_links)} member links so far (scroll attempt {scroll_count})")
+                # Log progress every 5 scroll attempts
+                if scroll_count % 5 == 0:
+                    logger.info(f"Found {len(member_links)} member links so far (scroll attempt {scroll_count})")
                 
                 # Break if we've found enough members
                 if len(member_links) >= target_member_count:
@@ -813,38 +836,26 @@ def crawl_member_in_group_competition(browser, environment):
             
             logger.info(f"Found {len(member_links)} member links in group {group_link}")
             
-            # Create directory to save member links if it doesn't exist
-            group_name = urlparse(group_link).path.split('/')[2]
-            save_dir = os.path.join(os.getcwd(), "competitor_group_members")
-            if not os.path.exists(save_dir):
-                os.makedirs(save_dir)
-            
             # Save member links to file
-            with open(os.path.join(save_dir, f"{group_name}_members.txt"), "w") as f:
+            file_path = os.path.join(save_dir, f"{group_name}_members.txt")
+            with open(file_path, "w") as f:
                 for link in member_links:
                     f.write(f"{link}\n")
             
             logger.info(f"Saved {len(member_links)} member links for group {group_name}")
             
-            # Load data from file and post to API in batches of 20
+            # Send data to API in batches
             try:
-                file_path = os.path.join(save_dir, f"{group_name}_members.txt")
                 with open(file_path, 'r') as f:
                     all_member_links = [line.strip() for line in f.readlines()]
                 
                 batch_size = 20
+                headers = {'Content-Type': 'application/json'}
+                api_url = f'{ENV_CONFIG[environment]["SERVICE_URL"]}/friend_list_group_game/insert-batch'
+                
                 for i in range(0, len(all_member_links), batch_size):
                     batch = all_member_links[i:i+batch_size]
-                    payload = []
-                    
-                    for profile_link in batch:
-                        payload.append({
-                            "profile_id": profile_link,
-                            "game_fanpages_id": group_name  # Using group_name as identifier
-                        })
-                    
-                    headers = {'Content-Type': 'application/json'}
-                    api_url = f'{ENV_CONFIG[environment]["SERVICE_URL"]}/friend_list_group_game/insert-batch'
+                    payload = [{"profile_id": profile_link, "game_fanpages_id": group_name} for profile_link in batch]
                     
                     response = requests.post(api_url, headers=headers, data=json.dumps(payload))
                     
@@ -852,24 +863,20 @@ def crawl_member_in_group_competition(browser, environment):
                         logger.info(f"Successfully sent batch of {len(batch)} profile IDs to API")
                     else:
                         logger.error(f"API request failed with status code {response.status_code}: {response.text}")
-                        
-            except Exception as api_error:
-                logger.error(f"Error sending profile IDs to API: {str(api_error)}")
-
-            # Delete the file after successful API submission
-            try:
+                
+                # Delete the file after successful API submission
                 if os.path.exists(file_path):
                     os.remove(file_path)
                     logger.info(f"Successfully deleted file: {file_path}")
-                else:
-                    logger.warning(f"File not found for deletion: {file_path}")
-            except Exception as delete_error:
-                logger.error(f"Error deleting file {file_path}: {str(delete_error)}")
+                        
+            except Exception as error:
+                logger.error(f"Error processing profile IDs: {str(error)}")
             
             # Random sleep between processing groups
             sleep_time = random.randint(5, 10)
             logger.info(f"Sleeping for {sleep_time} seconds before processing next group...")
             sleep(sleep_time)
+            
     except Exception as e:
         logger.error(f"Error while crawling members from competitor groups: {e}")
 
