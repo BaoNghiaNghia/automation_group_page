@@ -985,8 +985,8 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
         logger.info("Simulating human-like browsing behavior before scraping...")
         
         # Simulate scrolling behavior and get final pause time
-        # final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
-        # sleep(final_pause)
+        final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
+        sleep(final_pause)
         
         # ----------------------- Scan Spam in Group ----------------------- #
         scan_spam_in_group(browser, environment)
@@ -995,11 +995,11 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
         crawl_member_in_group_competition(browser, environment)
         
         # ----------------------- Scraper fanpages ----------------------- #
-        # list_game_fanpages = get_all_game_fanpages(environment)
+        list_game_fanpages = get_all_game_fanpages(environment)
 
-        # # Process each game URL with the same browser session
-        # for index, game_url in enumerate(game_urls):
-        #     process_game_url(browser, game_url, index, game_urls, environment, list_game_fanpages)
+        # Process each game URL with the same browser session
+        for index, game_url in enumerate(game_urls):
+            process_game_url(browser, game_url, index, game_urls, environment, list_game_fanpages)
                 
 
     except Exception as e:
