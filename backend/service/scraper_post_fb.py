@@ -773,7 +773,8 @@ def crawl_member_in_group_competition(browser, environment):
             for filename in os.listdir(save_dir):
                 if filename.endswith("_members.txt"):
                     processed_groups.add(filename.replace("_members.txt", ""))
-        
+
+
         for group_link in LIST_COMPETIOR_GROUP_LINK:
             # Extract group name from URL
             group_name = urlparse(group_link).path.split('/')[2]
@@ -844,39 +845,56 @@ def crawl_member_in_group_competition(browser, environment):
             
             logger.info(f"Saved {len(member_links)} member links for group {group_name}")
             
-            # Send data to API in batches
-            try:
-                with open(file_path, 'r') as f:
-                    all_member_links = [line.strip() for line in f.readlines()]
-                
-                batch_size = 20
-                headers = {'Content-Type': 'application/json'}
-                api_url = f'{ENV_CONFIG[environment]["SERVICE_URL"]}/friend_list_group_game/insert-batch'
-                
-                for i in range(0, len(all_member_links), batch_size):
-                    batch = all_member_links[i:i+batch_size]
-                    payload = [{"profile_id": profile_link, "game_fanpages_id": group_name} for profile_link in batch]
-                    
-                    response = requests.post(api_url, headers=headers, data=json.dumps(payload))
-                    
-                    if response.status_code == 200:
-                        logger.info(f"Successfully sent batch of {len(batch)} profile IDs to API")
-                    else:
-                        logger.error(f"API request failed with status code {response.status_code}: {response.text}")
-                
-                # Delete the file after successful API submission
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-                    logger.info(f"Successfully deleted file: {file_path}")
-                        
-            except Exception as error:
-                logger.error(f"Error processing profile IDs: {str(error)}")
+            
             
             # Random sleep between processing groups
             sleep_time = random.randint(5, 10)
             logger.info(f"Sleeping for {sleep_time} seconds before processing next group...")
             sleep(sleep_time)
+
+
+        # Send data to API in batches
+        if not os.path.exists(file_path):
+            logger.error(f"File not found: {file_path}")
+            return
             
+        # Read all member links at once
+        with open(file_path, 'r') as f:
+            all_member_links = [line.strip() for line in f if line.strip()]
+        
+        if not all_member_links:
+            logger.warning(f"No member links found in {file_path}")
+            return
+            
+        batch_size = 20
+        headers = {'Content-Type': 'application/json'}
+        api_url = f'{ENV_CONFIG[environment]["SERVICE_URL"]}/friend_list_group_game/insert-batch'
+        
+        # Process in batches with error handling
+        successful_batches = 0
+        for i in range(0, len(all_member_links), batch_size):
+            batch = all_member_links[i:i+batch_size]
+            payload = [{"profile_id": link, "game_fanpages_id": group_name} for link in batch]
+            
+            try:
+                response = requests.post(api_url, headers=headers, data=json.dumps(payload), timeout=30)
+                
+                if response.status_code == 200:
+                    logger.info(f"Successfully sent batch {i//batch_size + 1}/{(len(all_member_links)-1)//batch_size + 1} ({len(batch)} profiles)")
+                    successful_batches += 1
+                else:
+                    logger.error(f"API request failed: status {response.status_code}, response: {response.text}")
+            except requests.exceptions.RequestException as req_err:
+                logger.error(f"Request error sending batch {i//batch_size + 1}: {req_err}")
+        
+        # Only delete file if at least one batch was successful
+        if successful_batches > 0 and os.path.exists(file_path):
+            os.remove(file_path)
+            logger.info(f"Successfully deleted file: {file_path}")
+        elif successful_batches == 0:
+            logger.warning(f"No batches were successfully sent, keeping file: {file_path}")
+
+
     except Exception as e:
         logger.error(f"Error while crawling members from competitor groups: {e}")
 
