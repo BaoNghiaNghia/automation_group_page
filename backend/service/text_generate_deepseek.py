@@ -2,12 +2,10 @@ import os
 import re
 import random
 from time import sleep
-import logging
 from openai import OpenAI
 from backend.constants import DEEPSEEK_API_KEY, FOLDER_PATH_DATA_CRAWLER, DEEPSEEK_MODEL, logger
 from backend.utils.index import get_all_game_fanpages
 
-import re
 
 # Initialize the DeepSeek client
 client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")

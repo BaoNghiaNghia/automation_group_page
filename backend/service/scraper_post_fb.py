@@ -1,4 +1,5 @@
 import os
+import json
 import random
 import pickle
 import requests
@@ -559,10 +560,6 @@ def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
                                         "game_fanpages_id": game_fanpage_id
                                     })
                                 
-                                # Make API request
-                                import requests
-                                import json
-                                
                                 headers = {'Content-Type': 'application/json'}
                                 api_url = f'{ENV_CONFIG[environment]["SERVICE_URL"]}/friend_list_group_game/insert-batch'
                                 
@@ -799,16 +796,14 @@ def crawl_member_in_group_competition(browser, environment):
                         for element in elements:
                             href = element.get_attribute('href')
                             if href and href not in member_links:
-                                # Convert group member URL to direct profile URL
                                 if '/groups/' in href and '/user/' in href:
-                                    # Extract user ID from URL like https://www.facebook.com/groups/508952542049343/user/100086522871144/
                                     user_id = href.split('/user/')[1].strip('/')
-                                    href = f"https://www.facebook.com/{user_id}"
+                                    href = f"www.facebook.com/{user_id}"
                                 member_links.append(href)
                 except Exception as e:
                     logger.error(f"Error finding member links: {e}")
                     continue
-                
+
                 logger.info(f"Found {len(member_links)} member links so far (scroll attempt {scroll_count})")
                 
                 # Break if we've found enough members
@@ -830,6 +825,46 @@ def crawl_member_in_group_competition(browser, environment):
                     f.write(f"{link}\n")
             
             logger.info(f"Saved {len(member_links)} member links for group {group_name}")
+            
+            # Load data from file and post to API in batches of 20
+            try:
+                file_path = os.path.join(save_dir, f"{group_name}_members.txt")
+                with open(file_path, 'r') as f:
+                    all_member_links = [line.strip() for line in f.readlines()]
+                
+                batch_size = 20
+                for i in range(0, len(all_member_links), batch_size):
+                    batch = all_member_links[i:i+batch_size]
+                    payload = []
+                    
+                    for profile_link in batch:
+                        payload.append({
+                            "profile_id": profile_link,
+                            "game_fanpages_id": group_name  # Using group_name as identifier
+                        })
+                    
+                    headers = {'Content-Type': 'application/json'}
+                    api_url = f'{ENV_CONFIG[environment]["SERVICE_URL"]}/friend_list_group_game/insert-batch'
+                    
+                    response = requests.post(api_url, headers=headers, data=json.dumps(payload))
+                    
+                    if response.status_code == 200:
+                        logger.info(f"Successfully sent batch of {len(batch)} profile IDs to API")
+                    else:
+                        logger.error(f"API request failed with status code {response.status_code}: {response.text}")
+                        
+            except Exception as api_error:
+                logger.error(f"Error sending profile IDs to API: {str(api_error)}")
+
+            # Delete the file after successful API submission
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    logger.info(f"Successfully deleted file: {file_path}")
+                else:
+                    logger.warning(f"File not found for deletion: {file_path}")
+            except Exception as delete_error:
+                logger.error(f"Error deleting file {file_path}: {str(delete_error)}")
             
             # Random sleep between processing groups
             sleep_time = random.randint(5, 10)
