@@ -49,18 +49,18 @@ if __name__ == "__main__":
             
         logger.info(f"Found {len(game_urls)} game URLs: {game_urls}")
 
-        # ------------------------ Step 0: Check LDPlayer devices ------------------------
-        run_step(0, "Checking LDPlayer devices", update_ld_devices, ENV_CONFIG[args.environment]["CONFIG_LDPLAYER_FOLDER"], args.environment, args.pcrunner)
-        time.sleep(4)  # Delay before proceeding to next step
+        # # ------------------------ Step 0: Check LDPlayer devices ------------------------
+        # run_step(0, "Checking LDPlayer devices", update_ld_devices, ENV_CONFIG[args.environment]["CONFIG_LDPLAYER_FOLDER"], args.environment, args.pcrunner)
+        # time.sleep(4)  # Delay before proceeding to next step
 
-        # ------------------------ Step 1: Scrape multiple fanpages ------------------------
-        result = run_step(1, "Scraping multiple fanpages", run_fb_scraper_multiple_fanpages, game_urls, args.environment)
-        time.sleep(5)  # Delay between steps
+        # # ------------------------ Step 1: Scrape multiple fanpages ------------------------
+        # result = run_step(1, "Scraping multiple fanpages", run_fb_scraper_multiple_fanpages, game_urls, args.environment)
+        # time.sleep(5)  # Delay between steps
 
-        if not result:
-            logger.warning("Step 1 failed. Cannot proceed to step 2.")
-            print("Step 1 failed. Cannot proceed to step 2.")
-            exit(1)
+        # if not result:
+        #     logger.warning("Step 1 failed. Cannot proceed to step 2.")
+        #     print("Step 1 failed. Cannot proceed to step 2.")
+        #     exit(1)
 
         # ------------------------ Step 2: Rewrite paragraphs with DeepSeek ------------------------
         rewrite_result = run_step(2, "Rewriting paragraphs with DeepSeek", rewrite_paragraph_deepseek, args.environment)
