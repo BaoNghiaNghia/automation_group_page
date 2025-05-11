@@ -1103,7 +1103,8 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
         # Process each game URL with the same browser session
         for index, game_url in enumerate(game_urls):
             process_game_url(browser, game_url, index, game_urls, environment, list_game_fanpages)
-                
+        
+        return True
 
     except Exception as e:
         print(f"Error in main scraper: {e}")
