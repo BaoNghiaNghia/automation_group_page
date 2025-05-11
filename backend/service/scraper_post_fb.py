@@ -543,32 +543,51 @@ def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
                     for idx, profile_id in enumerate(unique_profile_ids):
                         print(f"  Unique Profile {idx+1}: {profile_id}")
                         
-                    # Save profile IDs to API in batches of 10
+                    # Save profile IDs to API in batches
                     if unique_profile_ids:
                         try:                                 
-                            # Process in batches of 10
+                            # Process in batches
                             profile_list = list(unique_profile_ids)
                             batch_size = 20
+                            
+                            # Process in batches with error handling
+                            successful_batches = 0
+                            total_batches = (len(profile_list) - 1) // batch_size + 1
                             
                             for i in range(0, len(profile_list), batch_size):
                                 batch = profile_list[i:i+batch_size]
                                 payload = []
                                 
                                 for profile_id in batch:
+                                    # Handle both numeric IDs and username formats
+                                    profile_link = ""
+                                    if profile_id.isdigit():
+                                        profile_link = f"www.facebook.com/profile.phop?id={profile_id}"
+                                    else:
+                                        profile_link = f"www.facebook.com/{profile_id}"
+
                                     payload.append({
                                         "profile_id": profile_id,
-                                        "game_fanpages_id": game_fanpage_id
+                                        "game_fanpages_id": game_fanpage_id,
+                                        "profile_link": profile_link
                                     })
-                                
+
                                 headers = {'Content-Type': 'application/json'}
                                 api_url = f'{ENV_CONFIG[environment]["SERVICE_URL"]}/friend_list_group_game/insert-batch'
                                 
-                                response = requests.post(api_url, headers=headers, data=json.dumps(payload))
-                                
-                                if response.status_code == 200:
-                                    print(f"Successfully sent batch of {len(batch)} profile IDs to API")
-                                else:
-                                    print(f"API request failed with status code {response.status_code}: {response.text}")
+                                try:
+                                    response = requests.post(api_url, headers=headers, data=json.dumps(payload), timeout=30)
+                                    
+                                    if response.status_code == 200:
+                                        print(f"Successfully sent batch {i//batch_size + 1}/{total_batches} ({len(batch)} profiles)")
+                                        successful_batches += 1
+                                    else:
+                                        print(f"API request failed: status {response.status_code}, response: {response.text}")
+                                        
+                                    # Add a 500ms delay between API requests
+                                    sleep(0.5)
+                                except requests.exceptions.RequestException as req_err:
+                                    print(f"Request error sending batch {i//batch_size + 1}: {req_err}")
                                     
                         except Exception as api_error:
                             print(f"Error sending profile IDs to API: {str(api_error)}")
@@ -954,67 +973,6 @@ def send_member_data_to_api(file_path, group_name, environment):
         logger.warning(f"No batches were successfully sent, keeping file: {file_path}")
 
 
-def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
-    """
-    Run Facebook scraper for multiple fanpages using a single browser session
-    
-    Args:
-        game_urls (list): List of game URLs to scrape
-        use_cookies (bool): Whether to use saved cookies for login
-        
-    Returns:
-        bool: True if scraping completed successfully, False otherwise
-    """
-    try:
-        # Choose a random account and login
-        username, password = random.choice(FB_ACCOUNT_LIST)
-        cookies_path = os.path.join(os.getcwd(), "facebook_cookies", f"{username}_cookies.pkl")
-        browser = login_facebook(username, password, use_cookies=use_cookies, cookies_path=cookies_path)
-
-        current_url = browser.current_url
-        if current_url.startswith(f"{FB_DEFAULT_URL}/two_step_verification/authentication"):
-            if not handle_captcha_if_present(browser, username, password):
-                print("CAPTCHA handling failed, exiting.")
-                return False  # Exit if CAPTCHA handling fails
-
-        sleep_time = random.randint(3, 8)
-        logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
-        # sleep(sleep_time)
-            
-        # Add human-like behavior before starting to scrape
-        logger.info("Simulating human-like browsing behavior before scraping...")
-        
-        # Simulate scrolling behavior and get final pause time
-        final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
-        sleep(final_pause)
-        
-        # ----------------------- Scan Spam in Group ----------------------- #
-        scan_spam_in_group(browser, environment)
-        
-        # ----------------------- Crawler member in group competition ----------------------- #
-        crawl_member_in_group_competition(browser, environment)
-        
-        # ----------------------- Scraper fanpages ----------------------- #
-        list_game_fanpages = get_all_game_fanpages(environment)
-
-        # Process each game URL with the same browser session
-        for index, game_url in enumerate(game_urls):
-            process_game_url(browser, game_url, index, game_urls, environment, list_game_fanpages)
-                
-
-    except Exception as e:
-        print(f"Error in main scraper: {e}")
-        return False  # Exit if an error occurs during the main scraper execution
-
-    finally:
-        # Close browser after processing all games
-        try:
-            browser.quit()
-            print("Browser closed successfully.")
-        except Exception as e:
-            print(f"Error closing browser: {e}")
-
-
 def process_game_url(browser, game_url, index, game_urls, environment, list_game_fanpages):
     """
     Process a single game URL for Facebook scraping
@@ -1097,3 +1055,65 @@ def process_game_url(browser, game_url, index, game_urls, environment, list_game
         print(f"Error processing {game_url}: {e}")
 
         return True  # Successfully completed scraping all games
+
+
+def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
+    """
+    Run Facebook scraper for multiple fanpages using a single browser session
+    
+    Args:
+        game_urls (list): List of game URLs to scrape
+        use_cookies (bool): Whether to use saved cookies for login
+        
+    Returns:
+        bool: True if scraping completed successfully, False otherwise
+    """
+    try:
+        # Choose a random account and login
+        username, password = random.choice(FB_ACCOUNT_LIST)
+        cookies_path = os.path.join(os.getcwd(), "facebook_cookies", f"{username}_cookies.pkl")
+        browser = login_facebook(username, password, use_cookies=use_cookies, cookies_path=cookies_path)
+
+        current_url = browser.current_url
+        if current_url.startswith(f"{FB_DEFAULT_URL}/two_step_verification/authentication"):
+            if not handle_captcha_if_present(browser, username, password):
+                print("CAPTCHA handling failed, exiting.")
+                return False  # Exit if CAPTCHA handling fails
+
+        sleep_time = random.randint(3, 8)
+        logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
+        # sleep(sleep_time)
+            
+        # Add human-like behavior before starting to scrape
+        logger.info("Simulating human-like browsing behavior before scraping...")
+        
+        # # Simulate scrolling behavior and get final pause time
+        # final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
+        # sleep(final_pause)
+        
+        # # ----------------------- Scan Spam in Group ----------------------- #
+        # scan_spam_in_group(browser, environment)
+        
+        # # ----------------------- Crawler member in group competition ----------------------- #
+        # crawl_member_in_group_competition(browser, environment)
+        
+        # ----------------------- Scraper fanpages ----------------------- #
+        list_game_fanpages = get_all_game_fanpages(environment)
+
+        # Process each game URL with the same browser session
+        for index, game_url in enumerate(game_urls):
+            process_game_url(browser, game_url, index, game_urls, environment, list_game_fanpages)
+                
+
+    except Exception as e:
+        print(f"Error in main scraper: {e}")
+        return False  # Exit if an error occurs during the main scraper execution
+
+    finally:
+        # Close browser after processing all games
+        try:
+            browser.quit()
+            print("Browser closed successfully.")
+        except Exception as e:
+            print(f"Error closing browser: {e}")
+
