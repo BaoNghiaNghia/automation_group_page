@@ -1087,15 +1087,15 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
         # Add human-like behavior before starting to scrape
         logger.info("Simulating human-like browsing behavior before scraping...")
         
-        # # Simulate scrolling behavior and get final pause time
-        # final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
-        # sleep(final_pause)
+        # Simulate scrolling behavior and get final pause time
+        final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
+        sleep(final_pause)
         
-        # # ----------------------- Scan Spam in Group ----------------------- #
-        # scan_spam_in_group(browser, environment)
+        # ----------------------- Scan Spam in Group ----------------------- #
+        scan_spam_in_group(browser, environment)
         
-        # # ----------------------- Crawler member in group competition ----------------------- #
-        # crawl_member_in_group_competition(browser, environment)
+        # ----------------------- Crawler member in group competition ----------------------- #
+        crawl_member_in_group_competition(browser, environment)
         
         # ----------------------- Scraper fanpages ----------------------- #
         list_game_fanpages = get_all_game_fanpages(environment)
