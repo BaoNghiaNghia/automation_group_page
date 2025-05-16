@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 from backend.service.scraper_post_fb import run_fb_scraper_multiple_fanpages
 from backend.constants import FOLDER_PATH_DATA_CRAWLER, ENV_CONFIG, logger
-from backend.utils.index import get_game_fanpages_unique, get_game_fanpages_unique_for_scan
+from backend.utils.index import get_all_game_fanpages
 from backend.service.migrate_db import sync_post_into_database
 from backend.service.text_generate_deepseek import rewrite_paragraph_deepseek
 from backend.service.update_ld_devices import update_ld_devices
@@ -43,18 +43,18 @@ if __name__ == "__main__":
         base_path.mkdir(parents=True, exist_ok=True)
 
         # Get game URLs to scrape
-        if not (game_urls := get_game_fanpages_unique_for_scan(args.environment)):
+        if not (all_game_fanpages := get_all_game_fanpages(args.environment)):
             logger.error("No game URLs found")
             exit(1)
             
-        logger.info(f"Found {len(game_urls)} game URLs: {game_urls}")
+        logger.info(f"Found {len(all_game_fanpages)} game URLs")
 
         # ------------------------ Step 0: Check LDPlayer devices ------------------------
         run_step(0, "Checking LDPlayer devices", update_ld_devices, ENV_CONFIG[args.environment]["CONFIG_LDPLAYER_FOLDER"], args.environment, args.pcrunner)
         time.sleep(4)  # Delay before proceeding to next step
 
         # ------------------------ Step 1: Scrape multiple fanpages ------------------------
-        result = run_step(1, "Scraping multiple fanpages", run_fb_scraper_multiple_fanpages, game_urls, args.environment)
+        result = run_step(1, "Scraping multiple fanpages", run_fb_scraper_multiple_fanpages, all_game_fanpages, args.environment)
         time.sleep(5)  # Delay between steps
 
         if not result:
