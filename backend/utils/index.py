@@ -30,15 +30,7 @@ def get_game_fanpages_unique_for_scan(environment):
         response.raise_for_status()
         data = response.json()
         
-        # Get all active game fanpages
-        # Extract unique game fanpage URLs by using a set to remove duplicates
-        active_games = list(set(game['fanpage'].split('/')[-1] for game in data['items'] if game.get('status') == 'active'))
-        
-        # If there are active games, randomly shuffle them before returning
-        if active_games:
-            random.shuffle(active_games)
-        
-        return active_games
+        return data['items']
     except requests.exceptions.RequestException as e:
         print(f"Error fetching game fanpages: {e}")
         return []
