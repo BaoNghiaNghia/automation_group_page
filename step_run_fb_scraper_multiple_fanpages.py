@@ -3,7 +3,7 @@ import argparse
 from backend.constants import ENV_CONFIG, logger
 from backend.service.update_ld_devices import update_ld_devices
 from backend.service.scraper_post_fb import run_fb_scraper_multiple_fanpages
-from backend.utils.index import get_game_fanpages_unique
+from backend.utils.index import get_all_game_fanpages
 
 
 if __name__ == "__main__":
@@ -18,13 +18,13 @@ if __name__ == "__main__":
     logger.info(f"Running in {args.environment} environment")
     
     try:
-
+        
         # Get game URLs to scrape
-        if not (game_urls := get_game_fanpages_unique(args.environment)):
+        if not (all_game_fanpages := get_all_game_fanpages(args.environment)):
             logger.error("No game URLs found")
             exit(1)
 
-        run_fb_scraper_multiple_fanpages(game_urls, args.environment)
+        run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
         
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")

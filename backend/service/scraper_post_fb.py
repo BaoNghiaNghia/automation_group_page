@@ -973,7 +973,7 @@ def send_member_data_to_api(file_path, group_name, environment):
         logger.warning(f"No batches were successfully sent, keeping file: {file_path}")
 
 
-def process_game_url(browser, game_url, index, game_urls, environment, list_game_fanpages):
+def process_game_url(browser, game_fanpages_object, index, game_urls, environment, list_game_fanpages):
     """
     Process a single game URL for Facebook scraping
     
@@ -986,6 +986,7 @@ def process_game_url(browser, game_url, index, game_urls, environment, list_game
         list_game_fanpages: List of all game fanpages
     """
     try:
+        game_url = game_fanpages_object['fanpage'].split('/')[-1]
         print(f"\n----- Starting to scrape: {game_url} -----")
         
         # Extract game name from URL
@@ -1035,8 +1036,9 @@ def process_game_url(browser, game_url, index, game_urls, environment, list_game
         post_id_file_name = f"facebook_{game_name}_post_ids.txt"
         post_id_full_path = os.path.join(post_id_file_path, post_id_file_name)
 
-                
-        all_post_id_scanned = filter_existing_posts(all_post_id_scanned, game_name, environment)
+
+        all_post_id_scanned = filter_existing_posts(all_post_id_scanned, game_fanpages_object['id'], environment)
+        logger.info(f"Filtered post IDs for {game_name}: {len(all_post_id_scanned)} posts")
         
         with open(post_id_full_path, "w", encoding="utf-8") as f:
             f.write("\n".join(sorted(all_post_id_scanned)))
@@ -1047,7 +1049,7 @@ def process_game_url(browser, game_url, index, game_urls, environment, list_game
         print(f"----- Done {len(all_post_id_scanned)} posts: Game {game_name} -----")
 
         # Add random delay after processing all games
-        if index < len(game_urls) - 1:  # Only sleep if not the last game
+        if index < len(game_urls) - 1:
             sleep_time = random.randint(70, 100)
             logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
             sleep(sleep_time)
@@ -1060,12 +1062,12 @@ def process_game_url(browser, game_url, index, game_urls, environment, list_game
         return True  # Successfully completed scraping all games
 
 
-def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
+def run_fb_scraper_multiple_fanpages(all_game_fanpages, environment, use_cookies=True):
     """
     Run Facebook scraper for multiple fanpages using a single browser session
     
     Args:
-        game_urls (list): List of game URLs to scrape
+        all_game_fanpages (list): List of game URLs to scrape
         use_cookies (bool): Whether to use saved cookies for login
         
     Returns:
@@ -1091,21 +1093,22 @@ def run_fb_scraper_multiple_fanpages(game_urls, environment, use_cookies=True):
         logger.info("Simulating human-like browsing behavior before scraping...")
         
         # Simulate scrolling behavior and get final pause time
-        final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
-        sleep(final_pause)
+        # final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
+        # sleep(final_pause)
         
-        # ----------------------- Scan Spam in Group ----------------------- #
-        scan_spam_in_group(browser, environment)
+        # # ----------------------- Scan Spam in Group ----------------------- #
+        # scan_spam_in_group(browser, environment)
         
-        # ----------------------- Crawler member in group competition ----------------------- #
-        crawl_member_in_group_competition(browser, environment)
+        # # ----------------------- Crawler member in group competition ----------------------- #
+        # crawl_member_in_group_competition(browser, environment)
         
         # ----------------------- Scraper fanpages ----------------------- #
         list_game_fanpages = get_all_game_fanpages(environment)
 
         # Process each game URL with the same browser session
-        for index, game_url in enumerate(game_urls):
-            process_game_url(browser, game_url, index, game_urls, environment, list_game_fanpages)
+        for index, game_fanpages_object in enumerate(all_game_fanpages):
+            if (game_fanpages_object['status'] == 'active'):
+                process_game_url(browser, game_fanpages_object, index, all_game_fanpages, environment, list_game_fanpages)
         
         return True
 

@@ -65,13 +65,13 @@ def should_scrape_game(game_url, base_path):
         return False
 
 
-def filter_existing_posts(all_post_id_scanned, game_name, environment):
+def filter_existing_posts(all_post_id_scanned, game_fanpage_id, environment):
     """
     Filter out posts that already exist in the database.
     
     Args:
         all_post_id_scanned (set): Set of post IDs to check
-        game_name (str): Name of the game fanpage
+        game_fanpage_id (str): Name of the game fanpage
         environment (str): Current environment configuration
         
     Returns:
@@ -86,7 +86,7 @@ def filter_existing_posts(all_post_id_scanned, game_name, environment):
             headers={'Content-Type': 'application/json'},
             json={
                 "post_id": list(all_post_id_scanned),
-                "game_fanpage_id": game_name
+                "game_fanpage_id": game_fanpage_id
             },
             timeout=30
         )
