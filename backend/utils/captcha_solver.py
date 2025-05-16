@@ -44,7 +44,7 @@ def get_captcha_result(captcha_id):
     else:
         print(f"Error fetching CAPTCHA result: {response_text}")
         return None
-    
+
 # Function to save content to a file
 def writeFileTxtPost(fileName, content, idPost, pathImg="/img/", game_name=""):
     # Normalize and build the path properly

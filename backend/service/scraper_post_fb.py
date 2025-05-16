@@ -18,7 +18,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from backend.utils.captcha_solver import solve_captcha, get_captcha_result, readDataFromFile, writeFileTxtPost
 from backend.service.simulation_behaviour import simulate_human_behavior_when_scraping_game, simulate_scrolling_behavior_when_init_facebook
-from backend.utils.index import get_all_game_fanpages
+from backend.utils.index import get_all_game_fanpages, filter_existing_posts
 from backend.constants import (
     FB_ACCOUNT_LIST, 
     FB_DEFAULT_URL, 
@@ -623,21 +623,21 @@ def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
             # Wait for redirect to the game page
             wait_for_redirect(browser, f"{FB_DEFAULT_URL}/{game_name}")
 
-            all_posts = set()
+            all_post_id_scanned = set()
             last_height = browser.execute_script("return document.body.scrollHeight")
 
             # Scroll and collect posts, with a maximum number of attempts
             for attempt in range(50):
                 print(f"\n[Scrolling Attempt {attempt + 1}]")
                 current_posts = get_posts_by_attribute(browser, game_name)
-                all_posts.update(current_posts)
+                all_post_id_scanned.update(current_posts)
 
-                if len(all_posts) >= LIMIT_POST_PER_DAY:
+                if len(all_post_id_scanned) >= LIMIT_POST_PER_DAY:
                     print("Limit of posts reached.")
                     break
 
                 # Check if no posts found after 3 attempts
-                if attempt >= 3 and len(all_posts) == 0:
+                if attempt >= 3 and len(all_post_id_scanned) == 0:
                     print("No posts found after 3 attempts, exiting.")
                     sleep(random.randint(10, 15))
                     browser.quit()
@@ -666,7 +666,7 @@ def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
                     print("Too many scroll attempts, exiting.")
 
             # Output the number of posts collected
-            print(f"\nTotal unique posts collected: {len(all_posts)}")
+            print(f"\nTotal unique posts collected: {len(all_post_id_scanned)}")
 
             # Save the post IDs to a file
             post_id_file_path = os.path.join(os.getcwd(), FOLDER_PATH_POST_ID_CRAWLER.strip("/\\"))
@@ -677,12 +677,12 @@ def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
             post_id_full_path = os.path.join(post_id_file_path, post_id_file_name)
 
             with open(post_id_full_path, "w", encoding="utf-8") as f:
-                f.write("\n".join(sorted(all_posts)))
+                f.write("\n".join(sorted(all_post_id_scanned)))
 
             # Crawl and download post data
             crawlPostData(browser, readDataFromFile(post_id_full_path), game_name)
 
-            print(f"----- Done {all_posts} posts: Game {game_name} -----")
+            print(f"----- Done {all_post_id_scanned} posts: Game {game_name} -----")
 
         else:
             print("No CAPTCHA image found or failed to handle CAPTCHA.")
@@ -995,21 +995,21 @@ def process_game_url(browser, game_url, index, game_urls, environment, list_game
         browser.get(f"{FB_DEFAULT_URL}/{game_url}")
         sleep(random.randint(7, 13) if index < len(game_urls) - 1 else 0)  # Wait for page load
         
-        all_posts = set()
+        all_post_id_scanned = set()
         last_height = browser.execute_script("return document.body.scrollHeight")
 
         # Scroll and collect posts
         for attempt in range(50):
             print(f"\n[Scrolling Attempt {attempt + 1}]")
             current_posts = get_posts_by_attribute(browser, game_name)
-            all_posts.update(current_posts)
+            all_post_id_scanned.update(current_posts)
             
-            if len(all_posts) >= LIMIT_POST_PER_DAY:
+            if len(all_post_id_scanned) >= LIMIT_POST_PER_DAY:
                 print("Limit of posts reached.")
                 break
 
             # Check if no posts found after 3 attempts
-            if attempt >= 3 and len(all_posts) == 0:
+            if attempt >= 3 and len(all_post_id_scanned) == 0:
                 print("No posts found after 3 attempts, exiting.")
                 break
             
@@ -1034,14 +1034,17 @@ def process_game_url(browser, game_url, index, game_urls, environment, list_game
             
         post_id_file_name = f"facebook_{game_name}_post_ids.txt"
         post_id_full_path = os.path.join(post_id_file_path, post_id_file_name)
+
+                
+        all_post_id_scanned = filter_existing_posts(all_post_id_scanned, game_name, environment)
         
         with open(post_id_full_path, "w", encoding="utf-8") as f:
-            f.write("\n".join(sorted(all_posts)))
+            f.write("\n".join(sorted(all_post_id_scanned)))
 
         # Crawl post data
         crawlPostData(browser, readDataFromFile(post_id_full_path), game_name, environment, list_game_fanpages)
 
-        print(f"----- Done {len(all_posts)} posts: Game {game_name} -----")
+        print(f"----- Done {len(all_post_id_scanned)} posts: Game {game_name} -----")
 
         # Add random delay after processing all games
         if index < len(game_urls) - 1:  # Only sleep if not the last game

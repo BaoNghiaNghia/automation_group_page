@@ -63,3 +63,37 @@ def should_scrape_game(game_url, base_path):
     except OSError as e:
         print(f"Error checking game folders: {e}")
         return False
+
+
+def filter_existing_posts(all_post_id_scanned, game_name, environment):
+    """
+    Filter out posts that already exist in the database.
+    
+    Args:
+        all_post_id_scanned (set): Set of post IDs to check
+        game_name (str): Name of the game fanpage
+        environment (str): Current environment configuration
+        
+    Returns:
+        set: Filtered set of post IDs that don't exist in database
+    """
+    if not all_post_id_scanned:
+        return set()
+
+    try:
+        response = requests.post(
+            f'{ENV_CONFIG[environment]["SERVICE_URL"]}/daily_posts_content/check_exist_post_id',
+            headers={'Content-Type': 'application/json'},
+            json={
+                "post_id": list(all_post_id_scanned),
+                "game_fanpage_id": game_name
+            },
+            timeout=30
+        )
+        response.raise_for_status()
+        return set(response.json().get('data', []))
+            
+    except requests.exceptions.RequestException as e:
+        return all_post_id_scanned
+    except Exception as e:
+        return all_post_id_scanned
