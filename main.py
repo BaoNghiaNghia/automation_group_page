@@ -32,8 +32,6 @@ if __name__ == "__main__":
                         help="Specify the computer name to sync from")
     args = parser.parse_args()
     
-
-    
     logger.info(f"Running in {args.environment} environment")
 
 

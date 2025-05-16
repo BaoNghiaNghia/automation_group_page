@@ -64,7 +64,7 @@ def rewrite_paragraph_gemini():
                         para_text = line[line.find('.')+2:].strip()
                         if para_text and len(paragraphs) < NUMBER_OF_CLONE_PARAGRAPH:
                             paragraphs.append(para_text)
-                
+
                 if len(paragraphs) < NUMBER_OF_CLONE_PARAGRAPH:
                     sleep(1)
 
