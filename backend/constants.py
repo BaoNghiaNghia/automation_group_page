@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 env_path = Path(__file__).resolve().parent.parent / '.env'
 load_dotenv(dotenv_path=env_path)
 
+LIMIT_SCROLL_FRIEND_REACTION_POST = 40
+
 API_KEY_CAPTCHA = 'point_3d0bd505d511c336b6279f4815057b9a'
 FB_DEFAULT_URL = "https://www.facebook.com"
 FB_ACCOUNT_LIST = [
