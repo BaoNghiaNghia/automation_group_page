@@ -1,8 +1,3 @@
-# MiAI_Facebook_Crawl
-Use python to login and crawl facebook
+## How to install
 
-#MìAI <br>
-Fanpage: http://facebook.com/miaiblog<br>
-Group trao đổi, chia sẻ: https://www.facebook.com/groups/miaigroup<br>
-Website: http://miai.vn<br>
-Youtube: http://bit.ly/miaiyoutube<br>
+pip install -r requirements.txt

@@ -15,14 +15,10 @@ LIMIT_SCROLL_FRIEND_REACTION_POST = 20
 
 API_KEY_CAPTCHA = 'point_3d0bd505d511c336b6279f4815057b9a'
 FB_DEFAULT_URL = "https://www.facebook.com"
-FB_ACCOUNT_LIST = [
+SCRAPER_FB_ACCOUNT_LIST = [
     ("0399988593", "p6+p7N&r%M$#B5b"),
-    # ("Cdy006947@gmail.com", "Haha123@"),
-    
-    # ("0928649691", "vutuan1985@"),
-    # ("0921747844", "vutuan1985@"),
-    # ("0928618253", "vutuan1985@"),
 ]
+
 # Environment-specific configurations
 ENV_CONFIG = {
     "local": {
@@ -47,7 +43,10 @@ FOLDER_PATH_DATA_CRAWLER = "/data_crawler/"
 FOLDER_PATH_POST_ID_CRAWLER = "/data_posts_id/"
 LIMIT_POST_PER_DAY = 35
 
-
+# SHA1
+EDITOR_ACCOUNT_FACEBOOK = [
+    ("86ec2edd1535f3a1ccf3f745faba54ee95e6588a", "bb0f68fff346acf117208efbbac2f8c9c4d65baa")
+]
 
 
 GEMINI_API_KEY = "AIzaSyCZCzQFbJIoKf4TPaazA7VvmlfiLuQvhSM"

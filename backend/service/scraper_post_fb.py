@@ -20,7 +20,7 @@ from backend.utils.captcha_solver import solve_captcha, get_captcha_result, read
 from backend.service.simulation_behaviour import simulate_human_behavior_when_scraping_game, simulate_scrolling_behavior_when_init_facebook
 from backend.utils.index import get_all_game_fanpages, filter_existing_posts
 from backend.constants import (
-    FB_ACCOUNT_LIST, 
+    SCRAPER_FB_ACCOUNT_LIST, 
     FB_DEFAULT_URL, 
     FOLDER_PATH_DATA_CRAWLER, 
     LIMIT_POST_PER_DAY, 
@@ -609,7 +609,7 @@ def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
     """Run the Facebook scraper for a single fanpage."""
     try:
         # Choose a random account and login
-        username, password = random.choice(FB_ACCOUNT_LIST)
+        username, password = random.choice(SCRAPER_FB_ACCOUNT_LIST)
         cookies_path = os.path.join(os.getcwd(), "facebook_cookies", f"{username}_cookies.pkl")
         browser = login_facebook(username, password, use_cookies=use_cookies, cookies_path=cookies_path)
 
@@ -1076,7 +1076,7 @@ def run_fb_scraper_multiple_fanpages(all_game_fanpages, environment, use_cookies
     """
     try:
         # Choose a random account and login
-        username, password = random.choice(FB_ACCOUNT_LIST)
+        username, password = random.choice(SCRAPER_FB_ACCOUNT_LIST)
         cookies_path = os.path.join(os.getcwd(), "facebook_cookies", f"{username}_cookies.pkl")
         browser = login_facebook(username, password, use_cookies=use_cookies, cookies_path=cookies_path)
 

@@ -1,7 +1,22 @@
 import os
 import random
 import requests
+from cryptography.fernet import Fernet
 from backend.constants import ENV_CONFIG
+
+
+# Generate a key (do this once and save it securely)
+key = Fernet.generate_key()
+
+# Create Fernet object
+cipher_suite = Fernet(Fernet.generate_key())
+
+def encrypt_string(plain_text: str) -> bytes:
+    return cipher_suite.encrypt(plain_text.encode())
+
+def decrypt_string(encrypted_text: bytes) -> str:
+    return cipher_suite.decrypt(encrypted_text).decode()
+
 
 def get_game_fanpages_unique(environment):
     """Fetch active game fanpage URLs from service and extract game names."""
