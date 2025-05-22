@@ -22,11 +22,7 @@ for /D %%I in ("%SRC_ROOT%\*") do (
     set "INSTANCE=%%~nI"
     echo Backing up !INSTANCE! ...
 
-    if exist "%DST_ROOT%\!INSTANCE!" (
-        echo Removing old backup folder for !INSTANCE! ...
-        rmdir /S /Q "%DST_ROOT%\!INSTANCE!"
-    )
-
+    rem Run robocopy without removing backup folder, syncing changes only
     robocopy "%%I" "%DST_ROOT%\!INSTANCE!" /MIR /R:2 /W:2 /LOG+:"%LOG_FILE%"
     
     if errorlevel 8 (
