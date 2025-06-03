@@ -47,6 +47,7 @@ def init_browser(is_ubuntu=False):
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     chrome_options.add_experimental_option("useAutomationExtension", False)
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    chrome_options.add_argument("--version=136")
 
     if is_ubuntu:
         # Ubuntu-specific options
