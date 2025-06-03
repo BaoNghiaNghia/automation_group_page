@@ -89,7 +89,7 @@ def init_browser(is_ubuntu=False):
     screen_width = browser.execute_script("return window.screen.width")
     screen_height = browser.execute_script("return window.screen.height")
     window_width = int(screen_width * 0.5)
-    window_height = int(screen_height * 0.5)
+    window_height = int(screen_height * 1)
     browser.set_window_position(0, screen_height - window_height)
     browser.set_window_size(window_width, window_height)
 
