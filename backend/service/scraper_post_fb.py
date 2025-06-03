@@ -1,18 +1,18 @@
 import os
 import json
 import random
+import shutil
 import pickle
 import requests
 from PIL import Image
 from io import BytesIO
 from time import sleep
-from selenium import webdriver
+import undetected_chromedriver as uc
 from urllib.parse import urlparse
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -25,52 +25,84 @@ from backend.constants import (
     FOLDER_PATH_DATA_CRAWLER, 
     LIMIT_POST_PER_DAY, 
     FOLDER_PATH_POST_ID_CRAWLER, 
-    ENV_CONFIG, 
-    SPAM_KEYWORDS_IN_POST,
+    ENV_CONFIG,
     LIST_COMPETIOR_GROUP_LINK,
     LIMIT_SCROLL_FRIEND_REACTION_POST,
     logger
 )
 
+def clear_uc_driver_cache():
+    cache_dir = os.path.expandvars(r'%APPDATA%\undetected_chromedriver')
+    if os.path.exists(cache_dir):
+        try:
+            shutil.rmtree(cache_dir)
+            logger.info(f"Deleted undetected-chromedriver cache folder: {cache_dir}")
+        except Exception as e:
+            logger.warning(f"Failed to delete cache folder {cache_dir}: {e}")
+    else:
+        logger.info(f"No undetected-chromedriver cache folder found at {cache_dir}")
+
 
 def init_browser(is_ubuntu=False):
-    """Initialize Chrome browser with required options."""
-    chrome_options = Options()
+    """Initialize Chrome browser with undetected-chromedriver options."""
+    options = uc.ChromeOptions()
 
     # Common options
+    options.add_argument('--disable-gpu')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-software-rasterizer')
+    options.add_argument('--disable-extensions')
+    options.add_argument('--disable-logging')
+    options.add_argument('--log-level=3')
+    options.add_argument('--silent')
+
+    options.add_argument("--disable-session-crashed-bubble")
+    options.add_argument("--no-first-run")
+    options.add_argument("--no-default-browser-check")
+
     prefs = {
-        "profile.default_content_setting_values.notifications": 1
+        "profile.default_content_setting_values.notifications": 1,
+        "profile.default_content_setting_values.media_stream_camera": 1,
+        "profile.default_content_setting_values.media_stream_mic": 1,
+        "profile.default_content_setting_values.geolocation": 1,
+        "profile.managed_default_content_settings.javascript": 1,
+        "profile.default_content_settings.cookies": 1
     }
-    chrome_options.add_experimental_option("prefs", prefs)
-    
-    # Remove the "Chrome is being controlled by automated test software" message
-    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    chrome_options.add_experimental_option("useAutomationExtension", False)
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    chrome_options.add_argument("--version=136")
+    options.add_experimental_option("prefs", prefs)
+
+    options.add_argument("--disable-blink-features=AutomationControlled")
 
     if is_ubuntu:
-        # Ubuntu-specific options
-        chrome_options.binary_location = "/usr/bin/chromium"
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--disable-gpu")
-        service = Service("/usr/bin/chromedriver")
+        options.binary_location = "/usr/bin/chromium"
+        options.add_argument("--headless")
+        browser = uc.Chrome(options=options, browser_executable_path="/usr/bin/chromium", headless=True, version_main=136)
     else:
-        # Windows-specific options
-        service = Service(executable_path="./chromedriver.exe")
+        browser = uc.Chrome(options=options, version_main=136)
 
-    browser = webdriver.Chrome(service=service, options=chrome_options)
-    
-    # Additional step to modify navigator.webdriver property
+    # Set user agent
+    browser.execute_cdp_cmd('Network.setUserAgentOverride', {
+        "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    })
+
+    # Set window position and size
+    screen_width = browser.execute_script("return window.screen.width")
+    screen_height = browser.execute_script("return window.screen.height")
+    window_width = int(screen_width * 0.5)
+    window_height = int(screen_height * 0.5)
+    browser.set_window_position(0, screen_height - window_height)
+    browser.set_window_size(window_width, window_height)
+
+    # Modify navigator.webdriver property
     browser.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
     
     return browser
 
+
 def login_facebook(username, password, is_ubuntu=False, use_cookies=True, cookies_path=None):
-    """Login to Facebook using Selenium with option to use saved cookies."""
+    """Login to Facebook using undetected-chromedriver with option to use saved cookies."""
     browser = init_browser(is_ubuntu)
     
-    # Set default cookies path if not provided
     if not cookies_path:
         cookies_dir = os.path.join(os.getcwd(), "facebook_cookies")
         if not os.path.exists(cookies_dir):
@@ -78,7 +110,6 @@ def login_facebook(username, password, is_ubuntu=False, use_cookies=True, cookie
         cookies_path = os.path.join(cookies_dir, f"{username}_cookies.pkl")
     
     if use_cookies and os.path.exists(cookies_path):
-        # Load cookies if available
         browser.get(FB_DEFAULT_URL)
         try:
             logger.info(f"Attempting to login using cookies from {cookies_path}")
@@ -86,12 +117,8 @@ def login_facebook(username, password, is_ubuntu=False, use_cookies=True, cookie
                 cookies = pickle.load(cookiesfile)
                 for cookie in cookies:
                     browser.add_cookie(cookie)
-            
-            # Refresh page to apply cookies
             browser.refresh()
             sleep(random.randint(3, 6))
-            
-            # Check if login was successful
             if is_logged_in(browser):
                 logger.info(f"Successfully logged in using cookies for {username}")
                 return browser
@@ -99,46 +126,34 @@ def login_facebook(username, password, is_ubuntu=False, use_cookies=True, cookie
                 logger.info("Cookie login failed, proceeding with normal login")
         except Exception as e:
             logger.error(f"Error loading cookies: {e}")
-    
-    # Normal login if cookies not available or failed
+
     browser.get(FB_DEFAULT_URL)
     sleep(random.randint(6, 12))
-    
-    # Wait for login elements and enter credentials
     WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "email")))
     browser.find_element(By.ID, "email").send_keys(username)
     browser.find_element(By.ID, "pass").send_keys(password)
     browser.find_element(By.ID, "pass").send_keys(Keys.ENTER)
-
-    # Wait for Facebook to respond after login
     sleep(random.randint(5, 10))
 
-    # Check if login was successful and save cookies
     if is_logged_in(browser):
         logger.info(f"Successfully logged in with credentials for {username}")
         save_cookies(browser, username, cookies_path)
     else:
         logger.warning(f"Login may have failed for {username}")
-
-        # Check for CAPTCHA or other verification
         if "checkpoint" in browser.current_url or "captcha" in browser.page_source.lower():
             logger.warning("Detected security checkpoint or CAPTCHA")
-            # Handle CAPTCHA if present
             if handle_captcha_if_present(browser, username, password):
-                # After handling CAPTCHA, check login again and save cookies
                 if is_logged_in(browser):
                     logger.info("Successfully logged in after CAPTCHA verification")
                     save_cookies(browser, username, cookies_path)
-
     return browser
+
 
 def is_logged_in(browser):
     """Check if the user is logged in to Facebook."""
     try:
-        # Look for elements that indicate a successful login
-        # This could be a profile picture, notifications icon, etc.
         WebDriverWait(browser, 5).until(
-            EC.presence_of_element_located((By.XPATH, "//div[@aria-label='Your profile' or @aria-label='Account' or contains(@class, 'x1qhmfi1')]"))
+            EC.presence_of_element_located((By.XPATH, "//div[@aria-label='Your profile' or @aria-label='Account' or contains(@class, 'x1qhmfi1')]") )
         )
         logger.info("Login verification successful - user is logged in")
         return True
@@ -146,29 +161,26 @@ def is_logged_in(browser):
         logger.warning("Login verification failed - user is not logged in")
         return False
 
+
 def save_cookies(browser, username, cookies_path=None):
     """Save browser cookies to a file."""
     if not cookies_path:
-        # Create cookies directory if it doesn't exist
         cookies_dir = os.path.join(os.getcwd(), "facebook_cookies")
         if not os.path.exists(cookies_dir):
             os.makedirs(cookies_dir)
         cookies_path = os.path.join(cookies_dir, f"{username}_cookies.pkl")
-    
-    # Save cookies
     try:
         cookies = browser.get_cookies()
         with open(cookies_path, 'wb') as file:
             pickle.dump(cookies, file)
         logger.info(f"Cookies saved successfully to {cookies_path}")
-        
-        # Verify cookie file was created
         if os.path.exists(cookies_path) and os.path.getsize(cookies_path) > 0:
             logger.info(f"Cookie file verified: {os.path.getsize(cookies_path)} bytes")
         else:
             logger.warning("Cookie file may be empty or not created properly")
     except Exception as e:
         logger.error(f"Error saving cookies: {e}")
+
 
 def login_facebook_ubuntu(username, password, use_cookies=True):
     """Convenience function for Ubuntu login."""

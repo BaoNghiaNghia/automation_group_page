@@ -11,3 +11,4 @@ google-genai
 openai
 Pillow
 pycryptodome
+undetected-chromedriver
