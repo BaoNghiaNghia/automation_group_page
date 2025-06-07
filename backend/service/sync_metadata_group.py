@@ -294,7 +294,7 @@ def run_sync_metadata_group(environment, use_cookies=True):
                 return False  # Exit if CAPTCHA handling fails
 
         sleep_time = random.randint(3, 8)
-        logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
+        logger.info(f":::::: Sleeping for {sleep_time} seconds sync metadata of group...")
         
         # ----------------------- Scraper fanpages ----------------------- #
         list_game_fanpages = get_all_game_fanpages(environment)
@@ -314,18 +314,34 @@ def run_sync_metadata_group(environment, use_cookies=True):
                 sleep(6)
                 
                 try:
-                    group_name_element = WebDriverWait(browser, 10).until(
-                        EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[1]/h1/span/a"))
-                    )
+                    # Try first XPath
+                    try:
+                        group_name_element = WebDriverWait(browser, 10).until(
+                            EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[1]/h1/span/a"))
+                        )
+                    except:
+                        # If first XPath fails, try second XPath
+                        group_name_element = WebDriverWait(browser, 10).until(
+                            EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[1]/h1/span/a"))
+                        )
+                    
                     group_name = group_name_element.text
                     logger.info(f"Group name: {group_name}")
                 except Exception as e:
                     logger.error(f"Error getting group name: {e}")
 
                 try:
-                    group_members_element = WebDriverWait(browser, 10).until(
-                        EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[2]/span/div/div/span/div/div[3]/a"))
-                    )
+                    # Try first XPath
+                    try:
+                        group_members_element = WebDriverWait(browser, 10).until(
+                            EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[2]/span/div/div/span/div/div[3]/a"))
+                        )
+                    except:
+                        # If first XPath fails, try second XPath
+                        group_members_element = WebDriverWait(browser, 10).until(
+                            EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[2]/span/div/div/span/div/div[3]/a"))
+                        )
+                    
                     group_members = group_members_element.text
                     logger.info(f"Group members: {group_members}")
                 except Exception as e:
