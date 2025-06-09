@@ -119,7 +119,7 @@ def login_facebook(username, password, is_ubuntu=False, use_cookies=True, cookie
 
     browser.get(FB_DEFAULT_URL)
     sleep(random.randint(6, 12))
-    WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "email")))
+    WebDriverWait(browser, 3).until(EC.presence_of_element_located((By.ID, "email")))
     browser.find_element(By.ID, "email").send_keys(username)
     browser.find_element(By.ID, "pass").send_keys(password)
     browser.find_element(By.ID, "pass").send_keys(Keys.ENTER)
@@ -176,7 +176,7 @@ def submit_captcha(browser):
     """Click the 'Continue' button after entering the CAPTCHA text."""
     try:
         # Locate the div with role="button" and containing a span with the text "Continue"
-        continue_button = WebDriverWait(browser, 10).until(
+        continue_button = WebDriverWait(browser, 3).until(
             EC.element_to_be_clickable((By.XPATH, "//div[@role='button']//span[text()='Continue']"))
         )
         continue_button.click()
@@ -255,7 +255,7 @@ def handle_captcha_if_present(browser, username, password):
 
             # Try to re-login if necessary
             try:
-                WebDriverWait(browser, 10).until(
+                WebDriverWait(browser, 3).until(
                     EC.presence_of_element_located((By.ID, "email"))
                 )
                 # Re-enter login credentials and submit
@@ -317,7 +317,7 @@ def run_sync_metadata_group(environment, use_cookies=True):
                 
                 try:
                     # Check if we need to go to the news feed
-                    news_feed_element = WebDriverWait(browser, 10).until(
+                    news_feed_element = WebDriverWait(browser, 3).until(
                         EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[1]/div[3]/a/div/div[1]/div/span/span"))
                     )
                     if news_feed_element.text == "Đi tới Bảng tin":
@@ -328,12 +328,12 @@ def run_sync_metadata_group(environment, use_cookies=True):
                 try:
                     # Try first XPath
                     try:
-                        group_name_element = WebDriverWait(browser, 10).until(
+                        group_name_element = WebDriverWait(browser, 3).until(
                             EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[1]/h1/span/a"))
                         )
                     except:
                         # If first XPath fails, try second XPath
-                        group_name_element = WebDriverWait(browser, 10).until(
+                        group_name_element = WebDriverWait(browser, 3).until(
                             EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[1]/h1/span/a"))
                         )
                     
@@ -345,12 +345,12 @@ def run_sync_metadata_group(environment, use_cookies=True):
                 try:
                     # Try first XPath
                     try:
-                        group_members_element = WebDriverWait(browser, 10).until(
+                        group_members_element = WebDriverWait(browser, 3).until(
                             EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[2]/span/div/div/span/div/div[3]/a"))
                         )
                     except:
                         # If first XPath fails, try second XPath
-                        group_members_element = WebDriverWait(browser, 10).until(
+                        group_members_element = WebDriverWait(browser, 3).until(
                             EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[2]/span/div/div/span/div/div[3]/a"))
                         )
                     
@@ -362,12 +362,12 @@ def run_sync_metadata_group(environment, use_cookies=True):
                 # Try to get group image
                 try:
                     # Try first XPath
-                    group_image_element = WebDriverWait(browser, 10).until(
+                    group_image_element = WebDriverWait(browser, 3).until(
                         EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[1]/div/div/div/div/div[2]/div/a/div[1]/div/div/div/div/img"))
                     )
                 except:
                     # If first XPath fails, try second XPath
-                    group_image_element = WebDriverWait(browser, 10).until(
+                    group_image_element = WebDriverWait(browser, 3).until(
                         EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[1]/div/div/div/div/div[2]/div/a/div[1]/div/div/div/img"))
                     )
                 image_url = group_image_element.get_attribute('src')
