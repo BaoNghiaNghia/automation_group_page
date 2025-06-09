@@ -1,7 +1,9 @@
 import os
+import re
 import random
 import shutil
 import pickle
+import tempfile
 import requests
 from time import sleep
 import undetected_chromedriver as uc
@@ -311,7 +313,17 @@ def run_sync_metadata_group(environment, use_cookies=True):
                     
                 browser.get('https://' + group_url)
                 
-                sleep(6)
+                sleep(5)
+                
+                try:
+                    # Check if we need to go to the news feed
+                    news_feed_element = WebDriverWait(browser, 10).until(
+                        EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[1]/div[3]/a/div/div[1]/div/span/span"))
+                    )
+                    if news_feed_element.text == "Đi tới Bảng tin":
+                        continue
+                except Exception as e:
+                    logger.error(f"Error navigating to news feed")
                 
                 try:
                     # Try first XPath
@@ -347,13 +359,74 @@ def run_sync_metadata_group(environment, use_cookies=True):
                 except Exception as e:
                     logger.error(f"Error getting group members: {e}")
                     
+                # Try to get group image
+                try:
+                    # Try first XPath
+                    group_image_element = WebDriverWait(browser, 10).until(
+                        EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[1]/div/div/div/div/div[2]/div/a/div[1]/div/div/div/div/img"))
+                    )
+                except:
+                    # If first XPath fails, try second XPath
+                    group_image_element = WebDriverWait(browser, 10).until(
+                        EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[1]/div/div/div/div/div[2]/div/a/div[1]/div/div/div/img"))
+                    )
+                image_url = group_image_element.get_attribute('src')
+                
+                logger.info(f"Image URL: {image_url}")
+                if image_url:
+                    # Download the image
+                    response = requests.get(image_url)
+                    if response.status_code == 200:
+                        cleaned_group_name = group_name.encode('ascii', 'ignore').decode('ascii')
+                        cleaned_group_name = re.sub(r'[^\w\s]', '', cleaned_group_name)  # Remove special characters
+                        cleaned_group_name = re.sub(r'\s+', '_', cleaned_group_name.strip())  # Replace spaces with underscores
+                        
+                        # Create a temporary file to store the image with cleaned group name
+                        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg', prefix=f"{cleaned_group_name}_") as temp_file:
+                            temp_file.write(response.content)
+                            temp_file_path = temp_file.name
+                        
+                        try:
+                            # Upload the image using the API
+                            with open(temp_file_path, 'rb') as file:
+                                files = {'file': file}
+                                upload_response = requests.post(
+                                    f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages/upload-image',
+                                    files=files
+                                )
+                            
+                            if upload_response.status_code == 200:
+                                logger.info(f"Successfully uploaded image for game {game['id']}")
+                                logger.info(f"Temporary file path: {os.path.basename(temp_file_path)}")
+                                # Update screenshot_path after successful upload
+                                update_data = {
+                                    "screenshot_path": os.path.basename(temp_file_path)
+                                }
+                                update_response = requests.patch(
+                                    f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages/update/{game["id"]}',
+                                    headers={'Content-Type': 'application/json'},
+                                    json=update_data
+                                )
+                                
+                                if update_response.status_code == 200:
+                                    logger.info(f"Successfully updated screenshot_path for game {game['id']}")
+                                else:
+                                    logger.error(f"Failed to update screenshot_path for game {game['id']}. Status code: {update_response.status_code}")
+                            else:
+                                logger.error(f"Failed to upload image for game {game['id']}. Status code: {upload_response.status_code}")
+                        finally:
+                            # Clean up the temporary file
+                            try:
+                                os.unlink(temp_file_path)
+                            except Exception as e:
+                                logger.error(f"Error cleaning up temporary file: {e}")
+                
                 try:
                     # Prepare data for API update
                     update_data = {
                         "name_of_game": group_name or "",
                         "group_search_name": group_members or ""
                     }
-                    
                     # Make API request to update game fanpage
                     response = requests.patch(
                         f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages/update/{game["id"]}',
@@ -372,7 +445,7 @@ def run_sync_metadata_group(environment, use_cookies=True):
                 sleep(random.randint(6, 9))
                 
             except Exception as e:
-                logger.error(f"Error redirecting to group URL: {e}")
+                logger.error(f"Error redirecting to group URL")
                 continue
         
         return True
