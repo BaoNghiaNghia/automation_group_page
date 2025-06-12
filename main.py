@@ -74,3 +74,8 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"Error occurred: {str(e)}")
         exit(1)
+
+
+# TODO 1: Quét tất cả các group đối thủ, kiếm bài post có nhiều tương tác, ghi chép lại rồi scrape về. viết lại content. sau đó cho tool đăng
+# TODO 2: Cho 1 form nhập lên các bài, upload hình ảnh.
+# TODO 3: Tool chạy seeding tay, nhập url + số lượng like hoặc tim

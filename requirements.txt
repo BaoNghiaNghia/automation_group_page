@@ -12,3 +12,4 @@ openai
 Pillow
 pycryptodome
 undetected-chromedriver
+cryptography
