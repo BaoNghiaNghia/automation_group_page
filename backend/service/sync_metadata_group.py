@@ -404,10 +404,14 @@ def run_sync_metadata_group(environment, use_cookies=True):
                             
                             if upload_response.status_code == 200:
                                 logger.info(f"Successfully uploaded image for game {game['id']}")
-                                logger.info(f"Temporary file path: {os.path.basename(temp_file_path)}")
+                                # Get the filename without the random suffix
+                                filename = os.path.basename(temp_file_path)
+                                filename_without_suffix = re.sub(r'_[a-zA-Z0-9]+\.jpg$', '.jpg', filename)
+                                logger.info(f"Temporary file path: {filename_without_suffix}")
+                                
                                 # Update screenshot_path after successful upload
                                 update_data = {
-                                    "screenshot_path": os.path.basename(temp_file_path)
+                                    "screenshot_path": filename_without_suffix
                                 }
                                 update_response = requests.patch(
                                     f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages/update/{game["id"]}',
