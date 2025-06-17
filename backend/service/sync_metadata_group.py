@@ -301,7 +301,8 @@ def run_sync_metadata_group(environment, use_cookies=True):
         # ----------------------- Scraper fanpages ----------------------- #
         query = {
             "page": 1,
-            "limit": 300
+            "limit": 300,
+            "priority": 1
         }
         list_game_fanpages = get_all_game_fanpages(environment, query)
         for idx, game in enumerate(list_game_fanpages, 1):
@@ -347,7 +348,6 @@ def run_sync_metadata_group(environment, use_cookies=True):
                     logger.error(f"Error getting group name: {e}")
 
                 try:
-                    # Try first XPath
                     try:
                         group_members_element = WebDriverWait(browser, 3).until(
                             EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[2]/span/div/div/span/div/div[3]/a"))
@@ -363,7 +363,6 @@ def run_sync_metadata_group(environment, use_cookies=True):
                 except Exception as e:
                     logger.error(f"Error getting group members: {e}")
                     
-                # Try to get group image
                 try:
                     # Try first XPath
                     group_image_element = WebDriverWait(browser, 3).until(
@@ -378,7 +377,6 @@ def run_sync_metadata_group(environment, use_cookies=True):
                 
                 logger.info(f"Image URL: {image_url}")
                 if image_url:
-                    # Download the image
                     response = requests.get(image_url)
                     if response.status_code == 200:
                         cleaned_group_name = group_name.encode('ascii', 'ignore').decode('ascii')
@@ -419,19 +417,17 @@ def run_sync_metadata_group(environment, use_cookies=True):
                             else:
                                 logger.error(f"Failed to upload image for game {game['id']}. Status code: {upload_response.status_code}")
                         finally:
-                            # Clean up the temporary file
                             try:
                                 os.unlink(temp_file_path)
                             except Exception as e:
                                 logger.error(f"Error cleaning up temporary file: {e}")
-                
+
                 try:
-                    # Prepare data for API update
                     update_data = {
                         "name_of_game": group_name or "",
                         "group_search_name": group_members or ""
                     }
-                    # Make API request to update game fanpage
+
                     response = requests.patch(
                         f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages/update/{game["id"]}',
                         headers={'Content-Type': 'application/json'},
@@ -456,10 +452,9 @@ def run_sync_metadata_group(environment, use_cookies=True):
 
     except Exception as e:
         print(f"Error in main scraper: {e}")
-        return False  # Exit if an error occurs during the main scraper execution
+        return False
 
     finally:
-        # Close browser after processing all games
         try:
             browser.quit()
             print("Browser closed successfully.")

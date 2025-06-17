@@ -23,12 +23,16 @@ if __name__ == "__main__":
         if not (all_game_fanpages := get_all_game_fanpages(args.environment, query)):
             logger.error("No game URLs found")
             exit(1)
-            
         logger.info(f"Found {len(all_game_fanpages)} game fanpages to scrape")
-        logger.debug(f"Game fanpages: {all_game_fanpages}")
-
-        run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
         
+        
+        for idx, game in enumerate(all_game_fanpages, 1):
+            logger.info(f"Game name {idx}:")
+            logger.info(f"  ID: {game.get('name_of_game', 'N/A')}")
+            logger.info(f"  Note: {game.get('note', 'N/A')}")
+
+        # run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
+
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
         print(f"Process failed with error: {str(e)}")
