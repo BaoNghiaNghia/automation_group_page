@@ -366,16 +366,21 @@ def run_sync_metadata_group(environment, use_cookies=True):
                 try:
                     # Try first XPath
                     group_image_element = WebDriverWait(browser, 3).until(
-                        EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[1]/div/div/div/div/div[2]/div/a/div[1]/div/div/div/div/img"))
+                        EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div[1]/div[1]/div/div/div/div/div[2]/div/a/div[1]/div/div/div/img"))
                     )
                 except:
-                    # If first XPath fails, try second XPath
-                    group_image_element = WebDriverWait(browser, 3).until(
-                        EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[1]/div/div/div/div/div[2]/div/a/div[1]/div/div/div/img"))
-                    )
+                    try:
+                        # Try second XPath
+                        group_image_element = WebDriverWait(browser, 3).until(
+                            EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[1]/div/div/div/div/div[2]/div/a/div[1]/div/div/div/div/img"))
+                        )
+                    except:
+                        # Try third XPath
+                        group_image_element = WebDriverWait(browser, 3).until(
+                            EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[1]/div/div/div/div/div[2]/div/a/div[1]/div/div/div/img"))
+                        )
                 image_url = group_image_element.get_attribute('src')
-                
-                logger.info(f"Image URL: {image_url}")
+
                 if image_url:
                     response = requests.get(image_url)
                     if response.status_code == 200:
