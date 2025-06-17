@@ -388,49 +388,33 @@ def run_sync_metadata_group(environment, use_cookies=True):
                         cleaned_group_name = re.sub(r'[^\w\s]', '', cleaned_group_name)  # Remove special characters
                         cleaned_group_name = re.sub(r'\s+', '_', cleaned_group_name.strip())  # Replace spaces with underscores
                         
-                        # Create a temporary file to store the image with cleaned group name
-                        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg', prefix=f"{cleaned_group_name}_") as temp_file:
-                            temp_file.write(response.content)
-                            temp_file_path = temp_file.name
+                        # Upload the image using the API
+                        files = {'file': (f"{cleaned_group_name}.jpg", response.content)}
+                        upload_response = requests.post(
+                            f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages/upload-image',
+                            files=files,
+                            timeout=30
+                        )
                         
-                        try:
-                            # Upload the image using the API
-                            with open(temp_file_path, 'rb') as file:
-                                files = {'file': file}
-                                upload_response = requests.post(
-                                    f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages/upload-image',
-                                    files=files,
-                                    timeout=30
-                                )
+                        if upload_response.status_code == 200:
+                            logger.info(f"Successfully uploaded image for game {game['id']}")
                             
-                            if upload_response.status_code == 200:
-                                logger.info(f"Successfully uploaded image for game {game['id']}")
-                                # Get the filename without the random suffix
-                                filename = os.path.basename(temp_file_path)
-                                filename_without_suffix = re.sub(r'_[a-zA-Z0-9]+\.jpg$', '.jpg', filename)
-                                logger.info(f"Temporary file path: {filename_without_suffix}")
-                                
-                                # Update screenshot_path after successful upload 
-                                update_response = requests.patch(
-                                    f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages/update/{game["id"]}',
-                                    headers={'Content-Type': 'application/json'},
-                                    json={
-                                        "screenshot_path": filename_without_suffix
-                                    },
-                                    timeout=30
-                                )
-                                
-                                if update_response.status_code == 200:
-                                    logger.info(f"Successfully updated screenshot_path for game {game['id']}")
-                                else:
-                                    logger.error(f"Failed to update screenshot_path for game {game['id']}. Status code: {update_response.status_code}")
+                            # Update screenshot_path after successful upload 
+                            update_response = requests.patch(
+                                f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages/update/{game["id"]}',
+                                headers={'Content-Type': 'application/json'},
+                                json={
+                                    "screenshot_path": f"{cleaned_group_name}.jpg"
+                                },
+                                timeout=30
+                            )
+                            
+                            if update_response.status_code == 200:
+                                logger.info(f"Successfully updated screenshot_path for game {game['id']}")
                             else:
-                                logger.error(f"Failed to upload image for game {game['id']}. Status code: {upload_response.status_code}")
-                        finally:
-                            try:
-                                os.unlink(temp_file_path)
-                            except Exception as e:
-                                logger.error(f"Error cleaning up temporary file: {e}")
+                                logger.error(f"Failed to update screenshot_path for game {game['id']}. Status code: {update_response.status_code}")
+                        else:
+                            logger.error(f"Failed to upload image for game {game['id']}. Status code: {upload_response.status_code}")
 
                 try:
                     response = requests.patch(
