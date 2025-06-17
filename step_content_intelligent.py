@@ -1,6 +1,6 @@
 import argparse
 from backend.constants import ENV_CONFIG, logger
-from backend.service.scraper_post_fb import run_fb_scraper_multiple_fanpages
+from backend.service.scraper.scraper_post_fb import run_fb_scraper_multiple_fanpages
 from backend.utils.index import get_all_game_fanpages
 
 
@@ -16,7 +16,8 @@ if __name__ == "__main__":
     try:
         query = {
             "page": 1,
-            "limit": 300
+            "limit": 300,
+            "priority": 1        # 0 (normal) and 1 (priority)
         }
         # Get game URLs to scrape
         if not (all_game_fanpages := get_all_game_fanpages(args.environment, query)):

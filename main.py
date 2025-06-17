@@ -1,11 +1,11 @@
 import time
 import argparse
 from pathlib import Path
-from backend.service.scraper_post_fb import run_fb_scraper_multiple_fanpages
+from backend.service.scraper.scraper_post_fb import run_fb_scraper_multiple_fanpages
 from backend.constants import FOLDER_PATH_DATA_CRAWLER, ENV_CONFIG, logger
 from backend.utils.index import get_game_fanpages_unique_for_scan
 from backend.service.migrate_db import sync_post_into_database
-from backend.service.text_generate_deepseek import rewrite_paragraph_deepseek
+from backend.service.llm.text_generate_deepseek import rewrite_paragraph_deepseek
 from backend.service.update_ld_devices import update_ld_devices
 
 
