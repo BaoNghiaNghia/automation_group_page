@@ -1,6 +1,4 @@
 import argparse
-from backend.service.text_generate_gemini import rewrite_paragraph_gemini
-from backend.service.text_generate_deepseek import rewrite_paragraph_deepseek
 from backend.service.migrate_db import sync_post_into_database
 from backend.constants import logger
 

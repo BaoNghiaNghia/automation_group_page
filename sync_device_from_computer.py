@@ -1,4 +1,3 @@
-import logging
 import argparse
 from backend.constants import ENV_CONFIG, logger
 from backend.service.update_ld_devices import update_ld_devices

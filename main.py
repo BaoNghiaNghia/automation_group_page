@@ -1,5 +1,4 @@
 import time
-import logging
 import argparse
 from pathlib import Path
 from backend.service.scraper_post_fb import run_fb_scraper_multiple_fanpages

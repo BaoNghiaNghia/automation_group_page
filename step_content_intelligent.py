@@ -1,4 +1,3 @@
-import logging
 import argparse
 from backend.constants import ENV_CONFIG, logger
 from backend.service.scraper_post_fb import run_fb_scraper_multiple_fanpages
@@ -20,6 +19,9 @@ if __name__ == "__main__":
         if not (all_game_fanpages := get_all_game_fanpages(args.environment)):
             logger.error("No game URLs found")
             exit(1)
+            
+        logger.info(f"Found {len(all_game_fanpages)} game fanpages to scrape")
+        logger.debug(f"Game fanpages: {all_game_fanpages}")
 
         run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
         
