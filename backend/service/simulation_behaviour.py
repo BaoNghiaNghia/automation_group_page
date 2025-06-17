@@ -1,4 +1,3 @@
-import os
 import time
 import random
 from selenium.webdriver.common.by import By
@@ -12,8 +11,11 @@ from backend.constants import FB_DEFAULT_URL, FB_DEFAULT_URL, SHARE_COMMENT_IN_P
 def simulate_human_behavior_when_scraping_game(browser, environment):
     try:
         logger.info("Simulating human behavior...")
-        
-        game_fanpages = get_all_game_fanpages(environment)
+        query = {
+            "page": 1,
+            "limit": 300
+        }
+        game_fanpages = get_all_game_fanpages(environment, query)
         if not game_fanpages:
             logger.error("No game URLs found from get_game_fanpages_unique")
             raise Exception("No game URLs found from get_game_fanpages_unique")

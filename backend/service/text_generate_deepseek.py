@@ -29,7 +29,11 @@ def replace_facebook_links(content, group_by_game):
 
 def rewrite_paragraph_deepseek(environment):
     try:
-        game_fanpages = get_all_game_fanpages(environment)
+        query = {
+            "page": 1,
+            "limit": 300
+        }
+        game_fanpages = get_all_game_fanpages(environment, query)
         if not game_fanpages:
             logger.error("No game URLs found from get_game_fanpages_unique")
             raise Exception("No game URLs found from get_game_fanpages_unique")

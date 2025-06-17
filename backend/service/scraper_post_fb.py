@@ -1117,7 +1117,11 @@ def run_fb_scraper_multiple_fanpages(all_game_fanpages, environment, use_cookies
         crawl_member_in_group_competition(browser, environment)
         
         # ----------------------- Scraper fanpages ----------------------- #
-        list_game_fanpages = get_all_game_fanpages(environment)
+        query = {
+            "page": 1,
+            "limit": 300
+        }
+        list_game_fanpages = get_all_game_fanpages(environment, query)
 
         # Process each game URL with the same browser session
         for index, game_fanpages_object in enumerate(all_game_fanpages):

@@ -23,7 +23,11 @@ def sync_post_into_database(environment):
         batch_data = []
         
         with open(output_file, 'w', encoding='utf-8') as f:
-            game_fanpages = get_all_game_fanpages(environment)
+            query = {
+                "page": 1,
+                "limit": 300
+            }
+            game_fanpages = get_all_game_fanpages(environment, query)
             if not game_fanpages:
                 logger.error("No game URLs found from get_game_fanpages_unique")
                 raise Exception("No game URLs found from get_game_fanpages_unique")

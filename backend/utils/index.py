@@ -48,10 +48,13 @@ def get_game_fanpages_unique_for_scan(environment):
         print(f"Error fetching game fanpages: {e}")
         return []
     
-def get_all_game_fanpages(environment):
+def get_all_game_fanpages(environment, query):
     """Fetch game fanpage URLs from service and extract game names."""
     try:
-        response = requests.get(f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages?page=1&limit=300')
+        response = requests.get(
+            f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages',
+            params=query
+        )
         response.raise_for_status()
         data = response.json()
         return data['data']['items']

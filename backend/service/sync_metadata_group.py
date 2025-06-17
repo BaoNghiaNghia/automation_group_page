@@ -299,7 +299,11 @@ def run_sync_metadata_group(environment, use_cookies=True):
         logger.info(f":::::: Sleeping for {sleep_time} seconds sync metadata of group...")
         
         # ----------------------- Scraper fanpages ----------------------- #
-        list_game_fanpages = get_all_game_fanpages(environment)
+        query = {
+            "page": 1,
+            "limit": 300
+        }
+        list_game_fanpages = get_all_game_fanpages(environment, query)
         for idx, game in enumerate(list_game_fanpages, 1):
             try:
                 if not game.get('my_group'):

@@ -14,9 +14,12 @@ if __name__ == "__main__":
     logger.info(f"Running in {args.environment} environment")
     
     try:
-        
+        query = {
+            "page": 1,
+            "limit": 300
+        }
         # Get game URLs to scrape
-        if not (all_game_fanpages := get_all_game_fanpages(args.environment)):
+        if not (all_game_fanpages := get_all_game_fanpages(args.environment, query)):
             logger.error("No game URLs found")
             exit(1)
             
