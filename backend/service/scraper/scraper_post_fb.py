@@ -326,7 +326,7 @@ def download_image_file(image_url, file_number, post_id, folder_path="/data_craw
 
         # If no file extension is found in the URL, request the file to get the content type
         if not file_extension:
-            response = requests.get(image_url, stream=True)
+            response = requests.get(image_url, stream=True, timeout=30)
             if response.status_code == 200:
                 content_type = response.headers.get('Content-Type', '')
                 if 'image/jpeg' in content_type:
@@ -343,7 +343,7 @@ def download_image_file(image_url, file_number, post_id, folder_path="/data_craw
                 return
 
         # Check image dimensions before downloading
-        response = requests.get(image_url, stream=True)
+        response = requests.get(image_url, stream=True, timeout=30)
         if response.status_code == 200:
             img = Image.open(BytesIO(response.content))
             width, height = img.size

@@ -6,7 +6,7 @@ from backend.constants import API_KEY_CAPTCHA, DOMAIN_CAPTCHA
 
 def image_to_base64(image_url):
     """Convert an image URL to base64."""
-    response = requests.get(image_url)
+    response = requests.get(image_url, timeout=30)
     return base64.b64encode(response.content).decode('utf-8')
 
 def solve_captcha(image_url):
@@ -18,7 +18,7 @@ def solve_captcha(image_url):
         'method': 'base64',
         'body': base64_image
     }
-    response = requests.post(f'{DOMAIN_CAPTCHA}/in.php', data=payload)
+    response = requests.post(f'{DOMAIN_CAPTCHA}/in.php', data=payload, timeout=30)
     response_text = response.text
 
     # Ensure we got a valid captcha_id
@@ -35,7 +35,7 @@ def get_captcha_result(captcha_id):
         'action': 'get',
         'id': captcha_id
     }
-    response = requests.post(f'{DOMAIN_CAPTCHA}/res.php', data=payload)
+    response = requests.post(f'{DOMAIN_CAPTCHA}/res.php', data=payload, timeout=30)
     response_text = response.text
 
     # Check if the response is valid and contains the expected result

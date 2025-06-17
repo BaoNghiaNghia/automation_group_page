@@ -21,7 +21,7 @@ def decrypt_string(encrypted_text: bytes) -> str:
 def get_game_fanpages_unique(environment):
     """Fetch active game fanpage URLs from service and extract game names."""
     try:
-        response = requests.get(f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages?page=1&limit=300')
+        response = requests.get(f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages?page=1&limit=300', timeout=30)
         response.raise_for_status()
         data = response.json()
 
@@ -39,7 +39,7 @@ def get_game_fanpages_unique(environment):
 def get_game_fanpages_unique_for_scan(environment):
     """Fetch active game fanpage URLs from service and extract game names."""
     try:
-        response = requests.get(f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages/available-scan')
+        response = requests.get(f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages/available-scan', timeout=30)
         response.raise_for_status()
         data = response.json()
         
@@ -53,7 +53,8 @@ def get_all_game_fanpages(environment, query):
     try:
         response = requests.get(
             f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages',
-            params=query
+            params=query,
+            timeout=30
         )
         response.raise_for_status()
         data = response.json()

@@ -382,7 +382,7 @@ def run_sync_metadata_group(environment, use_cookies=True):
                 image_url = group_image_element.get_attribute('src')
 
                 if image_url:
-                    response = requests.get(image_url)
+                    response = requests.get(image_url, timeout=30)
                     if response.status_code == 200:
                         cleaned_group_name = group_name.encode('ascii', 'ignore').decode('ascii')
                         cleaned_group_name = re.sub(r'[^\w\s]', '', cleaned_group_name)  # Remove special characters
@@ -399,7 +399,8 @@ def run_sync_metadata_group(environment, use_cookies=True):
                                 files = {'file': file}
                                 upload_response = requests.post(
                                     f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages/upload-image',
-                                    files=files
+                                    files=files,
+                                    timeout=30
                                 )
                             
                             if upload_response.status_code == 200:
@@ -409,14 +410,14 @@ def run_sync_metadata_group(environment, use_cookies=True):
                                 filename_without_suffix = re.sub(r'_[a-zA-Z0-9]+\.jpg$', '.jpg', filename)
                                 logger.info(f"Temporary file path: {filename_without_suffix}")
                                 
-                                # Update screenshot_path after successful upload
-                                update_data = {
-                                    "screenshot_path": filename_without_suffix
-                                }
+                                # Update screenshot_path after successful upload 
                                 update_response = requests.patch(
                                     f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages/update/{game["id"]}',
                                     headers={'Content-Type': 'application/json'},
-                                    json=update_data
+                                    json={
+                                        "screenshot_path": filename_without_suffix
+                                    },
+                                    timeout=30
                                 )
                                 
                                 if update_response.status_code == 200:
@@ -432,15 +433,14 @@ def run_sync_metadata_group(environment, use_cookies=True):
                                 logger.error(f"Error cleaning up temporary file: {e}")
 
                 try:
-                    update_data = {
-                        "name_of_game": group_name or "",
-                        "group_search_name": group_members or ""
-                    }
-
                     response = requests.patch(
                         f'{ENV_CONFIG[environment]["SERVICE_URL"]}/game_fanpages/update/{game["id"]}',
                         headers={'Content-Type': 'application/json'},
-                        json=update_data
+                        json={
+                            "name_of_game": group_name or "",
+                            "group_search_name": group_members or ""
+                        },
+                        timeout=30
                     )
                     
                     if response.status_code == 200:

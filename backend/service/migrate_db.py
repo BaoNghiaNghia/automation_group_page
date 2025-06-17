@@ -90,7 +90,7 @@ def sync_post_into_database(environment):
                                 files = {'file': (image_file, img_file, 'multipart/form-data')}
                                 
                                 # Send the request to upload the image
-                                response = requests.post(upload_url, files=files)
+                                response = requests.post(upload_url, files=files, timeout=30)
                                 
                                 # Check if the upload was successful
                                 if response.status_code == 200:
@@ -175,7 +175,7 @@ def sync_post_into_database(environment):
                 logger.info(f"Sending batch {batch_num}/{total_batches} ({len(batch)} records)")
 
                 try:
-                    response = requests.post(api_url, headers=headers, data=json.dumps(batch))
+                    response = requests.post(api_url, headers=headers, data=json.dumps(batch), timeout=30)
 
                     if response.status_code in [200, 201]:
                         logger.info(f"Batch {batch_num} successfully sent. Response: {response.text}")

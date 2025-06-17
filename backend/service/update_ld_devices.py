@@ -24,7 +24,7 @@ def update_ld_devices(config_folder, environment, pcrunner):
             api_url = f"{service_url}/ldplayer_devices/all"
 
             # Make the API request
-            response = requests.get(api_url)
+            response = requests.get(api_url, timeout=30)
             if response.status_code == 200:
                 data = response.json()
                 
@@ -198,7 +198,7 @@ def update_ld_devices(config_folder, environment, pcrunner):
                 payload.append(device_data)
             
             # Make the API request
-            response = requests.post(url, headers=headers, json=payload)
+            response = requests.post(url, headers=headers, json=payload, timeout=30)
             
             if response.status_code in (200, 201):
                 logger.info(f"Successfully created {len(device_names)} devices in batch")
