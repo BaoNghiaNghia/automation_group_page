@@ -789,7 +789,7 @@ def scan_spam_in_group(browser, environment):
 
 
 
-def crawl_member_in_group_competition(browser, environment):
+# def crawl_member_in_group_competition(browser, environment):
     """
     Crawl member information from competitor groups
     
@@ -1120,10 +1120,10 @@ def run_fb_scraper_multiple_fanpages(all_game_fanpages, environment, use_cookies
                 process_game_url(browser, game_fanpages_object, index, all_game_fanpages, environment)
 
         # ----------------------- Scan Spam in Group ----------------------- #
-        scan_spam_in_group(browser, environment)
+        # scan_spam_in_group(browser, environment)
         
         # ----------------------- Crawler member in group competition ----------------------- #
-        crawl_member_in_group_competition(browser, environment)
+        # crawl_member_in_group_competition(browser, environment)
 
         return True
 
