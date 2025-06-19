@@ -1,6 +1,6 @@
 import argparse
 from backend.constants import ENV_CONFIG, logger
-from backend.service.scraper.scraper_post_fb import run_fb_scraper_multiple_fanpages
+from backend.service.scraper.scraper_post_fanpage import run_fb_scraper_multiple_fanpages
 from backend.utils.index import get_all_game_fanpages
 
 
@@ -46,6 +46,10 @@ if __name__ == "__main__":
         logger.info(f"x_refs_total: {x_refs_total}")
 
         run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
+        
+        run_scraper_multiple_groups(all_game_fanpages, args.environment)
+        
+        run_scraper_multiple_twitter(all_game_fanpages, args.environment)
 
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
