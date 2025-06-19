@@ -248,8 +248,7 @@ def get_posts_by_attribute(browser, game_name):
     posts_found = []
     try:
         # Use the more specific XPath pattern to find post links
-        post_links = browser.find_elements(By.XPATH, "//div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/a")
-        
+        post_links = browser.find_elements(By.XPATH, "//div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/a | //div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/span/a | //div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/span[@role='link']")
         for link in post_links:
             href = link.get_attribute('href')
             post_id = extract_post_id_from_url(href)
