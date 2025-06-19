@@ -11,7 +11,7 @@ from backend.utils.index import get_all_game_fanpages
 client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
 
 
-NUMBER_OF_CLONE_PARAGRAPH = 10
+NUMBER_OF_CLONE_PARAGRAPH = 2
 
 
 # TODO: Giúp tôi tổng hợp các chủ đề để viết bài cho game Dragon Sword. VD: giới thiệu game, gameplay, các nhân vật trong game, hệ thống hoặc cơ chế, hay các mẹo hoặc chiến lược chơi game, đồ họa và  thanh, cốt truyện và bối cảnh, tính năng sắp ra mắt, ,....
