@@ -7,7 +7,7 @@ from backend.utils.index import get_all_game_fanpages
 if __name__ == "__main__":
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Run the text generation process")
-    parser.add_argument("--environment", "-e", choices=["local", "production"], default="local",
+    parser.add_argument("--environment", "-e", choices=["local", "production"], default="production",
                         help="Specify the environment: local or production")
     args = parser.parse_args()
     
@@ -26,11 +26,10 @@ if __name__ == "__main__":
         
         
         for idx, game in enumerate(all_game_fanpages, 1):
-            logger.info(f"Game name {idx}:")
             logger.info(f"  ID: {game.get('name_of_game', 'N/A')}")
             logger.info(f"  Note: {game.get('note', 'N/A')}")
 
-        run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
+        # run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
 
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")

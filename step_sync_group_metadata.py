@@ -6,7 +6,7 @@ from backend.service.sync_metadata_group import run_sync_metadata_group
 if __name__ == "__main__":
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Run the text generation process")
-    parser.add_argument("--environment", "-e", choices=["local", "production"], default="local",
+    parser.add_argument("--environment", "-e", choices=["local", "production"], default="production",
                         help="Specify the environment: local or production")
     args = parser.parse_args()
     

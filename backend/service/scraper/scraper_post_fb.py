@@ -1121,7 +1121,7 @@ def run_fb_scraper_multiple_fanpages(all_game_fanpages, environment, use_cookies
         for index, game_fanpages_object in enumerate(all_game_fanpages):
             if (game_fanpages_object['status'] == 'active'):
                 process_game_url(browser, game_fanpages_object, index, all_game_fanpages, environment, list_game_fanpages)
-                
+
         # ----------------------- Scan Spam in Group ----------------------- #
         scan_spam_in_group(browser, environment)
         
