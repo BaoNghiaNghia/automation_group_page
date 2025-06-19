@@ -329,7 +329,7 @@ def download_image_file(image_url, file_number, post_id, folder_path="/data_craw
         # If no file extension is found in the URL, request the file to get the content type
         if not file_extension:
             response = requests.get(image_url, stream=True, timeout=30)
-            if response.status_code == 200:
+            if response.status_code in [200, 201]:
                 content_type = response.headers.get('Content-Type', '')
                 if 'image/jpeg' in content_type:
                     file_extension = '.jpg'
@@ -346,7 +346,7 @@ def download_image_file(image_url, file_number, post_id, folder_path="/data_craw
 
         # Check image dimensions before downloading
         response = requests.get(image_url, stream=True, timeout=30)
-        if response.status_code == 200:
+        if response.status_code in [200, 201]:
             img = Image.open(BytesIO(response.content))
             width, height = img.size
             
@@ -594,7 +594,7 @@ def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
                                 try:
                                     response = requests.post(api_url, headers=headers, data=json.dumps(payload), timeout=30)
                                     
-                                    if response.status_code == 200:
+                                    if response.status_code in [200, 201]:
                                         print(f"Successfully sent batch {i//batch_size + 1}/{total_batches} ({len(batch)} profiles)")
                                         successful_batches += 1
                                     else:
@@ -972,7 +972,7 @@ def send_member_data_to_api(file_path, group_name, environment):
         try:
             response = requests.post(api_url, headers=headers, data=json.dumps(payload), timeout=30)
             
-            if response.status_code == 200:
+            if response.status_code in [200, 201]:
                 logger.info(f"Successfully sent batch {i//batch_size + 1}/{total_batches} ({len(batch)} profiles)")
                 successful_batches += 1
             else:

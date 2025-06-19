@@ -25,7 +25,7 @@ def update_ld_devices(config_folder, environment, pcrunner):
 
             # Make the API request
             response = requests.get(api_url, timeout=30)
-            if response.status_code == 200:
+            if response.status_code in [200, 201]:
                 data = response.json()
                 
                 if 'devices' in data and 'items' in data['devices']:

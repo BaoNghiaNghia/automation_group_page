@@ -93,7 +93,7 @@ def sync_post_into_database(environment):
                                 response = requests.post(upload_url, files=files, timeout=30)
                                 
                                 # Check if the upload was successful
-                                if response.status_code == 200:
+                                if response.status_code in [200, 201]:
                                     logger.info(f"Successfully uploaded image: {image_file}")
                                 else:
                                     logger.error(f"Failed to upload image {image_file}. Status code: {response.status_code}")

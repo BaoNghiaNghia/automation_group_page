@@ -383,7 +383,7 @@ def run_sync_metadata_group(environment, use_cookies=True):
 
                 if image_url:
                     response = requests.get(image_url, timeout=30)
-                    if response.status_code == 200:
+                    if response.status_code in [200, 201]:
                         cleaned_group_name = group_name.encode('ascii', 'ignore').decode('ascii')
                         cleaned_group_name = re.sub(r'[^\w\s]', '', cleaned_group_name)  # Remove special characters
                         cleaned_group_name = re.sub(r'\s+', '_', cleaned_group_name.strip())  # Replace spaces with underscores
@@ -396,7 +396,7 @@ def run_sync_metadata_group(environment, use_cookies=True):
                             timeout=30
                         )
                         
-                        if upload_response.status_code == 200:
+                        if upload_response.status_code in [200, 201]:
                             logger.info(f"Successfully uploaded image for game {game['id']}")
                             
                             # Update screenshot_path after successful upload 
@@ -409,7 +409,7 @@ def run_sync_metadata_group(environment, use_cookies=True):
                                 timeout=30
                             )
                             
-                            if update_response.status_code == 200:
+                            if update_response.status_code in [200, 201]:
                                 logger.info(f"Successfully updated screenshot_path for game {game['id']}")
                             else:
                                 logger.error(f"Failed to update screenshot_path for game {game['id']}. Status code: {update_response.status_code}")
@@ -427,7 +427,7 @@ def run_sync_metadata_group(environment, use_cookies=True):
                         timeout=30
                     )
                     
-                    if response.status_code == 200:
+                    if response.status_code in [200, 201]:
                         logger.info(f"Successfully updated metadata for game {game['id']}")
                     else:
                         logger.error(f"Failed to update metadata for game {game['id']}. Status code: {response.status_code}")
