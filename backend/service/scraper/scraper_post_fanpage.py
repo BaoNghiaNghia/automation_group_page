@@ -646,7 +646,7 @@ def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
             for attempt in range(50):
                 print(f"\n[Scrolling Attempt {attempt + 1}]")
                 current_posts = get_posts_by_attribute(browser, game_name)
-                logger.info(f"Current post: {len(current_posts)}")
+                
                 all_post_id_scanned.update(current_posts)
                 
 
@@ -1044,7 +1044,7 @@ def process_game_url(browser, game_fanpages_object, index, all_game_fanpages, en
             if attempt == 49:
                 print("Too many scroll attempts, exiting.")
 
-
+        logger.info(f"Filtered post IDs for {game_name}: {len(all_post_id_scanned)} posts")
         # Save post IDs
         post_id_file_path = os.path.join(os.getcwd(), FOLDER_PATH_POST_ID_CRAWLER.strip("/\\"))
         if not os.path.exists(post_id_file_path):
@@ -1055,7 +1055,6 @@ def process_game_url(browser, game_fanpages_object, index, all_game_fanpages, en
 
 
         all_post_id_scanned = filter_existing_posts(all_post_id_scanned, game_fanpages_object['id'], environment)
-        logger.info(f"Filtered post IDs for {game_name}: {len(all_post_id_scanned)} posts")
         
         with open(post_id_full_path, "w", encoding="utf-8") as f:
             f.write("\n".join(sorted(all_post_id_scanned)))
