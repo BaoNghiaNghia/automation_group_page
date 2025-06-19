@@ -1109,24 +1109,24 @@ def run_fb_scraper_multiple_fanpages(all_game_fanpages, environment, use_cookies
         # Simulate scrolling behavior and get final pause time
         final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
         sleep(final_pause)
-        
-        # ----------------------- Scan Spam in Group ----------------------- #
-        scan_spam_in_group(browser, environment)
-        
-        # ----------------------- Crawler member in group competition ----------------------- #
-        crawl_member_in_group_competition(browser, environment)
+
         
         # ----------------------- Scraper fanpages ----------------------- #
-        query = {
+        list_game_fanpages = get_all_game_fanpages(environment, {
             "page": 1,
             "limit": 300
-        }
-        list_game_fanpages = get_all_game_fanpages(environment, query)
+        })
 
         # Process each game URL with the same browser session
         for index, game_fanpages_object in enumerate(all_game_fanpages):
             if (game_fanpages_object['status'] == 'active'):
                 process_game_url(browser, game_fanpages_object, index, all_game_fanpages, environment, list_game_fanpages)
+                
+        # ----------------------- Scan Spam in Group ----------------------- #
+        scan_spam_in_group(browser, environment)
+        
+        # ----------------------- Crawler member in group competition ----------------------- #
+        crawl_member_in_group_competition(browser, environment)
 
         return True
 
