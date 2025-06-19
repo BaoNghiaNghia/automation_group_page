@@ -446,10 +446,6 @@ def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
         except Exception as e:
             print(f"Error in crawlPostData")
 
-    # Print total counts after processing
-    print(f"\nTotal empty posts skipped: {empty_post_count}")
-    print(f"Total posts written to file: {written_post_count}")
-
 # Function to handle reaction panel scrolling and profile extraction
 def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
     """Handle the reaction panel scrolling and profile extraction."""
