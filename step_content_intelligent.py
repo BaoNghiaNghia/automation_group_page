@@ -27,7 +27,10 @@ if __name__ == "__main__":
         group_refs_total, page_refs_total, x_refs_total = [], [], []
         for idx, game in enumerate(all_game_fanpages, 1):
             logger.info(f"  ID: {game.get('name_of_game', 'N/A')}")
-            note = game.get('note', 'N/A')
+            note = game.get('note')
+            if note is None:
+                logger.warning(f"  Note is None for game: {game.get('name_of_game', 'N/A')}")
+                note = ''
             logger.info(f"  Note: {note}")
 
             for line in note.split('\n'):
