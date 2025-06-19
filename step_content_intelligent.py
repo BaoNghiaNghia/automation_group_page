@@ -1,6 +1,8 @@
 import argparse
 from backend.constants import ENV_CONFIG, logger
 from backend.service.scraper.scraper_post_fanpage import run_fb_scraper_multiple_fanpages
+from backend.service.scraper.scraper_post_group import run_scraper_multiple_groups
+from backend.service.scraper.scraper_post_twitter import run_scraper_multiple_twitter
 from backend.utils.index import get_all_game_fanpages
 
 
