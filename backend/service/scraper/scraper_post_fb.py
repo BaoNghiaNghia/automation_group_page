@@ -270,8 +270,6 @@ def get_posts_by_attribute(browser, game_name):
                     print(f"Post ID: {post_id}")
     except Exception as e:
         print(f"Error retrieving posts")
-    
-    logger.info(f"Number of posts found: {len(posts_found)}")
 
     return posts_found
 
@@ -649,6 +647,8 @@ def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
                 print(f"\n[Scrolling Attempt {attempt + 1}]")
                 current_posts = get_posts_by_attribute(browser, game_name)
                 all_post_id_scanned.update(current_posts)
+                
+                logger.info(f"Number of unique posts collected so far: {len(all_post_id_scanned)}")
 
                 if len(all_post_id_scanned) >= LIMIT_POST_PER_DAY:
                     print("Limit of posts reached.")
