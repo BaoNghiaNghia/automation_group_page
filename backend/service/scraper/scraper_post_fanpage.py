@@ -646,9 +646,9 @@ def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
             for attempt in range(50):
                 print(f"\n[Scrolling Attempt {attempt + 1}]")
                 current_posts = get_posts_by_attribute(browser, game_name)
+                logger.info(f"Current post: {len(current_posts)}")
                 all_post_id_scanned.update(current_posts)
                 
-                logger.info(f"Number of unique posts collected so far: {len(all_post_id_scanned)}")
 
                 if len(all_post_id_scanned) >= LIMIT_POST_PER_DAY:
                     print("Limit of posts reached.")
