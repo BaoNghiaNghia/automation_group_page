@@ -29,7 +29,7 @@ if __name__ == "__main__":
             logger.info(f"  ID: {game.get('name_of_game', 'N/A')}")
             logger.info(f"  Note: {game.get('note', 'N/A')}")
 
-        # run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
+        run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
 
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
