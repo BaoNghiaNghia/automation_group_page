@@ -60,7 +60,7 @@ def writeFileTxtPost(fileName, content, idPost, pathImg="/img/", game_name=""):
             f1.write(content + os.linesep)
         print(f"Content written to {file_path}")
     except Exception as e:
-        print(f"Error writing to file {file_path}: {e}")
+        print(f"Error writing to file {file_path}")
 
 
 # Read Post IDs from file (assumed function)

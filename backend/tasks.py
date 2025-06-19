@@ -37,7 +37,7 @@ def run_main_task_minutes():
             break
 
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        print(f"Unexpected error")
 
 @shared_task(name="backend.tasks.delete_data_folders")  # Match the name in celery_config.py
 def delete_data_folders():
@@ -56,4 +56,4 @@ def delete_data_folders():
             shutil.rmtree(posts_id_path)
             print(f"Deleted folder: {posts_id_path}")
     except Exception as e:
-        print(f"Error deleting folders: {e}")
+        print(f"Error deleting folders")

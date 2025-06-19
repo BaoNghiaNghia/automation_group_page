@@ -38,7 +38,7 @@ def clear_uc_driver_cache():
             shutil.rmtree(cache_dir)
             logger.info(f"Deleted undetected-chromedriver cache folder: {cache_dir}")
         except Exception as e:
-            logger.warning(f"Failed to delete cache folder {cache_dir}: {e}")
+            logger.warning(f"Failed to delete cache folder {cache_dir}")
     else:
         logger.info(f"No undetected-chromedriver cache folder found at {cache_dir}")
 
@@ -125,7 +125,7 @@ def login_facebook(username, password, is_ubuntu=False, use_cookies=True, cookie
             else:
                 logger.info("Cookie login failed, proceeding with normal login")
         except Exception as e:
-            logger.error(f"Error loading cookies: {e}")
+            logger.error(f"Error loading cookies")
 
     browser.get(FB_DEFAULT_URL)
     sleep(random.randint(6, 12))
@@ -179,7 +179,7 @@ def save_cookies(browser, username, cookies_path=None):
         else:
             logger.warning("Cookie file may be empty or not created properly")
     except Exception as e:
-        logger.error(f"Error saving cookies: {e}")
+        logger.error(f"Error saving cookies")
 
 
 def login_facebook_ubuntu(username, password, use_cookies=True):
@@ -198,7 +198,7 @@ def extract_post_id_from_url(url):
         elif "story_fbid=" in url:
             return url.split("story_fbid=")[1].split("&")[0]
     except Exception as e:
-        print(f"Failed to extract post ID from {url}: {e}")
+        print(f"Failed to extract post ID from {url}")
     return None
 
 
@@ -211,7 +211,7 @@ def submit_captcha(browser):
         )
         continue_button.click()
     except Exception as e:
-        print(f"Error locating or clicking the 'Continue' button: {e}")
+        print(f"Error locating or clicking the 'Continue' button")
         
         
 def wait_for_redirect(browser, expected_url):
@@ -222,7 +222,7 @@ def wait_for_redirect(browser, expected_url):
         print(f"Page has been redirected to: {browser.current_url}")
     except Exception as e:
         print(f"Error: Page did not redirect to {expected_url}. Current URL: {browser.current_url}")
-        print(f"Error details: {e}")
+        print(f"Error details")
 
 def wait_for_page_load(browser):
     """Wait for the page to load after submitting the CAPTCHA."""
@@ -269,7 +269,7 @@ def get_posts_by_attribute(browser, game_name):
                     posts.append(post_id)
                     print(f"Post ID found (fallback): {post_id}")
     except Exception as e:
-        print(f"Error retrieving posts: {e}")
+        print(f"Error retrieving posts")
     return posts
 
 def scroll_down(browser):
@@ -306,7 +306,7 @@ def clonePostContent(driver, postId):
 
         return postData
     except Exception as e:
-        print(f"Error in clonePostContent: {e}")
+        print(f"Error in clonePostContent")
         return False
 
 # Function to download image and save with the correct extension
@@ -364,7 +364,7 @@ def download_image_file(image_url, file_number, post_id, folder_path="/data_craw
             print(f"Failed to fetch image, Status code: {response.status_code}")
             
     except Exception as e:
-        print(f"Error downloading image from {image_url}: {e}")
+        print(f"Error downloading image from {image_url}")
 
 
 def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
@@ -439,11 +439,11 @@ def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
                 # Wait a moment after clicking
                 sleep(random.uniform(1.0, 2.0))
             except Exception as e:
-                print(f"Could not click on reaction element: {e}")
+                print(f"Could not click on reaction element")
 
             sleep(random.randint(12, 14))
         except Exception as e:
-            print(f"Error in crawlPostData: {e}")
+            print(f"Error in crawlPostData")
 
     # Print total counts after processing
     print(f"\nTotal empty posts skipped: {empty_post_count}")
@@ -608,14 +608,14 @@ def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
                 else:
                     print("No reaction links found in the panel")
             except Exception as e:
-                print(f"Error extracting reaction links: {e}")
+                print(f"Error extracting reaction links")
 
             print("Completed scrolling through the reaction panel")
         else:
             print("No reaction panel found with any XPATH option, skipping panel interaction")
 
     except Exception as e:
-        print(f"Could not scroll through reaction panel: {e}")
+        print(f"Could not scroll through reaction panel")
         
     
 def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
@@ -702,7 +702,7 @@ def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
             print("No CAPTCHA image found or failed to handle CAPTCHA.")
 
     except Exception as e:
-        print(f"Error in main: {e}")
+        print(f"Error in main")
 
     finally:
         # Ensure the browser is closed properly
@@ -710,7 +710,7 @@ def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
             browser.quit()
             print("Browser closed successfully.")
         except Exception as e:
-            print(f"Error closing browser: {e}")
+            print(f"Error closing browser")
     
 def get_captcha_image(browser):
     """Retrieve CAPTCHA image if present on Facebook login page."""
@@ -771,7 +771,7 @@ def handle_captcha_if_present(browser, username, password):
             print("No CAPTCHA image found, continuing process.")
 
     except Exception as e:
-        print(f"Error while handling CAPTCHA: {e}")
+        print(f"Error while handling CAPTCHA")
         
 
 
@@ -858,7 +858,7 @@ def crawl_member_in_group_competition(browser, environment):
                 sleep(sleep_time)
 
     except Exception as e:
-        logger.error(f"Error while crawling members from competitor groups: {e}")
+        logger.error(f"Error while crawling members from competitor groups")
 
 def collect_member_links(browser):
     """
@@ -898,7 +898,7 @@ def collect_member_links(browser):
                             href = f"www.facebook.com/{user_id}"
                         member_links.add(href)
         except Exception as e:
-            logger.error(f"Error finding member links: {e}")
+            logger.error(f"Error finding member links")
             continue
 
         # Log progress every 5 scroll attempts
@@ -1071,7 +1071,7 @@ def process_game_url(browser, game_fanpages_object, index, game_urls, environmen
             sleep(sleep_time)
         
     except Exception as e:
-        print(f"Error processing {game_url}: {e}")
+        print(f"Error processing {game_url}")
 
         return True  # Successfully completed scraping all games
 
@@ -1131,7 +1131,7 @@ def run_fb_scraper_multiple_fanpages(all_game_fanpages, environment, use_cookies
         return True
 
     except Exception as e:
-        print(f"Error in main scraper: {e}")
+        print(f"Error in main scraper")
         return False  # Exit if an error occurs during the main scraper execution
 
     finally:
@@ -1140,5 +1140,5 @@ def run_fb_scraper_multiple_fanpages(all_game_fanpages, environment, use_cookies
             browser.quit()
             print("Browser closed successfully.")
         except Exception as e:
-            print(f"Error closing browser: {e}")
+            print(f"Error closing browser")
 

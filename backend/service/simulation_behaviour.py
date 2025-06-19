@@ -226,17 +226,17 @@ def simulate_human_behavior_when_scraping_game(browser, environment):
                                             ActionChains(browser).move_by_offset(200, 200).perform()
                                             logger.info("Moving away from reaction panel")
                                         except Exception as e:
-                                            logger.debug(f"Could not find or interact with emotion element: {e}")
+                                            logger.debug(f"Could not find or interact with emotion element")
                                             # Move away to close the reaction panel
                                             ActionChains(browser).move_by_offset(200, 200).perform()
                                     except Exception as e:
-                                        logger.debug(f"Reaction panel did not appear or could not be interacted with: {e}")
+                                        logger.debug(f"Reaction panel did not appear or could not be interacted with")
                                         # Try to move mouse away anyway to ensure we don't get stuck
                                         ActionChains(browser).move_by_offset(200, 200).perform()
                                 except Exception as e:
-                                    logger.debug(f"Failed to interact with reactions: {e}")
+                                    logger.debug(f"Failed to interact with reactions")
                     except Exception as e:
-                        logger.debug(f"Failed to simulate reaction: {e}")
+                        logger.debug(f"Failed to simulate reaction")
 
             # Occasionally click on videos that look interesting
             if random.random() < 0.15:  # 15% chance
@@ -256,7 +256,7 @@ def simulate_human_behavior_when_scraping_game(browser, environment):
                         browser.back()
                         time.sleep(random.uniform(2.0, 4.0))
                 except Exception as e:
-                    logger.debug(f"Failed to interact with video: {e}")
+                    logger.debug(f"Failed to interact with video")
         
         # Navigate to Facebook homepage with natural browsing pattern
         logger.info("Navigating to Facebook homepage...")
@@ -406,7 +406,7 @@ def simulate_human_behavior_when_scraping_game(browser, environment):
                             except Exception:
                                 pass
                 except Exception as e:
-                    logger.debug(f"Failed to interact with content: {e}")
+                    logger.debug(f"Failed to interact with content")
 
             # Occasionally search for topics related to games (more targeted)
             if random.random() < 0.4:
@@ -451,12 +451,12 @@ def simulate_human_behavior_when_scraping_game(browser, environment):
                     browser.get(FB_DEFAULT_URL)
                     time.sleep(random.uniform(2.0, 4.0))
                 except Exception as e:
-                    logger.debug(f"Search simulation failed: {e}")
+                    logger.debug(f"Search simulation failed")
         
         logger.info("Human behavior simulation completed")
         
     except Exception as e:
-        logger.error(f"Error during human behavior simulation: {e}")
+        logger.error(f"Error during human behavior simulation")
 
 
 def simulate_scrolling_behavior_when_init_facebook(browser):
@@ -512,7 +512,7 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
                             logger.info("Hovering over reaction button")
                             time.sleep(random.uniform(1.0, 2.5))
                     except Exception as e:
-                        logger.debug(f"Failed to simulate reaction: {e}")
+                        logger.debug(f"Failed to simulate reaction")
                         
             # SHARE A POST
             if random.random() < 0.1:
@@ -679,7 +679,7 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
                                         )
                                         logger.info(f"Confirmed {selected_emotion} reaction was registered")
                                     except Exception as e:
-                                        logger.debug(f"Could not confirm reaction was registered: {e}")
+                                        logger.debug(f"Could not confirm reaction was registered")
                                         # Additional wait to ensure reaction processing
                                         time.sleep(random.uniform(1.0, 2.0))
                                     
@@ -692,15 +692,15 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
                                 ActionChains(browser).move_by_offset(200, 200).perform()
                                 logger.info("Moving away from reaction panel")
                             except Exception as e:
-                                logger.debug(f"Could not find or interact with emotion element: {e}")
+                                logger.debug(f"Could not find or interact with emotion element")
                                 # Move away to close the reaction panel
                                 ActionChains(browser).move_by_offset(200, 200).perform()
                         except Exception as e:
-                            logger.debug(f"Reaction panel did not appear or could not be interacted with: {e}")
+                            logger.debug(f"Reaction panel did not appear or could not be interacted with")
                             # Try to move mouse away anyway to ensure we don't get stuck
                             ActionChains(browser).move_by_offset(200, 200).perform()
                 except Exception as e:
-                    logger.debug(f"Failed to interact with reactions: {e}")
+                    logger.debug(f"Failed to interact with reactions")
         
         # Occasionally navigate to a different section before returning to main task
         if random.random() < 0.3:  # 30% chance
@@ -712,13 +712,13 @@ def simulate_scrolling_behavior_when_init_facebook(browser):
                 time.sleep(random.uniform(5.0, 10.0))
                 browser.get(FB_DEFAULT_URL)  # Return to homepage
             except Exception as e:
-                logger.debug(f"Failed to visit section: {e}")
+                logger.debug(f"Failed to visit section")
         
         # Final pause before starting the actual scraping
         final_pause = random.uniform(5, 8)
         logger.info(f"Finished human-like browsing behavior, pausing for {final_pause:.1f} seconds before scraping...")
         return final_pause
     except Exception as e:
-        logger.error(f"Error during scrolling behavior simulation: {e}")
+        logger.error(f"Error during scrolling behavior simulation")
         return random.uniform(3, 5)  # Fallback pause time
 

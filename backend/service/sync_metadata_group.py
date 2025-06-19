@@ -28,7 +28,7 @@ def clear_uc_driver_cache():
             shutil.rmtree(cache_dir)
             logger.info(f"Deleted undetected-chromedriver cache folder: {cache_dir}")
         except Exception as e:
-            logger.warning(f"Failed to delete cache folder {cache_dir}: {e}")
+            logger.warning(f"Failed to delete cache folder {cache_dir}")
     else:
         logger.info(f"No undetected-chromedriver cache folder found at {cache_dir}")
 
@@ -115,7 +115,7 @@ def login_facebook(username, password, is_ubuntu=False, use_cookies=True, cookie
             else:
                 logger.info("Cookie login failed, proceeding with normal login")
         except Exception as e:
-            logger.error(f"Error loading cookies: {e}")
+            logger.error(f"Error loading cookies")
 
     browser.get(FB_DEFAULT_URL)
     sleep(random.randint(6, 12))
@@ -169,7 +169,7 @@ def save_cookies(browser, username, cookies_path=None):
         else:
             logger.warning("Cookie file may be empty or not created properly")
     except Exception as e:
-        logger.error(f"Error saving cookies: {e}")
+        logger.error(f"Error saving cookies")
 
 
 def submit_captcha(browser):
@@ -181,7 +181,7 @@ def submit_captcha(browser):
         )
         continue_button.click()
     except Exception as e:
-        print(f"Error locating or clicking the 'Continue' button: {e}")
+        print(f"Error locating or clicking the 'Continue' button")
         
         
 def wait_for_redirect(browser, expected_url):
@@ -192,7 +192,7 @@ def wait_for_redirect(browser, expected_url):
         print(f"Page has been redirected to: {browser.current_url}")
     except Exception as e:
         print(f"Error: Page did not redirect to {expected_url}. Current URL: {browser.current_url}")
-        print(f"Error details: {e}")
+        print(f"Error details")
 
 def wait_for_page_load(browser):
     """Wait for the page to load after submitting the CAPTCHA."""
@@ -269,7 +269,7 @@ def handle_captcha_if_present(browser, username, password):
             print("No CAPTCHA image found, continuing process.")
 
     except Exception as e:
-        print(f"Error while handling CAPTCHA: {e}")
+        print(f"Error while handling CAPTCHA")
 
 
 def run_sync_metadata_group(environment, use_cookies=True):
@@ -345,7 +345,7 @@ def run_sync_metadata_group(environment, use_cookies=True):
                     group_name = group_name_element.text
                     logger.info(f"Group name: {group_name}")
                 except Exception as e:
-                    logger.error(f"Error getting group name: {e}")
+                    logger.error(f"Error getting group name")
 
                 try:
                     try:
@@ -361,7 +361,7 @@ def run_sync_metadata_group(environment, use_cookies=True):
                     group_members = group_members_element.text
                     logger.info(f"Group members: {group_members}")
                 except Exception as e:
-                    logger.error(f"Error getting group members: {e}")
+                    logger.error(f"Error getting group members")
                     
                 try:
                     # Try first XPath
@@ -433,7 +433,7 @@ def run_sync_metadata_group(environment, use_cookies=True):
                         logger.error(f"Failed to update metadata for game {game['id']}. Status code: {response.status_code}")
                         
                 except Exception as e:
-                    logger.error(f"Error updating metadata for game {game['id']}: {e}")
+                    logger.error(f"Error updating metadata for game {game['id']}")
                 
                 sleep(random.randint(6, 9))
                 
@@ -444,7 +444,7 @@ def run_sync_metadata_group(environment, use_cookies=True):
         return True
 
     except Exception as e:
-        print(f"Error in main scraper: {e}")
+        print(f"Error in main scraper")
         return False
 
     finally:
@@ -452,5 +452,5 @@ def run_sync_metadata_group(environment, use_cookies=True):
             browser.quit()
             print("Browser closed successfully.")
         except Exception as e:
-            print(f"Error closing browser: {e}")
+            print(f"Error closing browser")
 

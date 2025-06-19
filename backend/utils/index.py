@@ -33,7 +33,7 @@ def get_game_fanpages_unique(environment):
 
         return active_games
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching game fanpages: {e}")
+        print(f"Error fetching game fanpages")
         return []
     
 def get_game_fanpages_unique_for_scan(environment):
@@ -45,7 +45,7 @@ def get_game_fanpages_unique_for_scan(environment):
         
         return data['items']
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching game fanpages: {e}")
+        print(f"Error fetching game fanpages")
         return []
     
 def get_all_game_fanpages(environment, query):
@@ -61,7 +61,7 @@ def get_all_game_fanpages(environment, query):
         return data['data']['items']
 
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching game fanpages: {e}")
+        print(f"Error fetching game fanpages")
         return []
 
 def should_scrape_game(game_url, base_path):
@@ -70,7 +70,7 @@ def should_scrape_game(game_url, base_path):
         game_folders = [f for f in os.listdir(base_path) if f.startswith(f"{game_url}_")]
         return len(game_folders) == 0
     except OSError as e:
-        print(f"Error checking game folders: {e}")
+        print(f"Error checking game folders")
         return False
 
 
