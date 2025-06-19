@@ -245,7 +245,7 @@ def get_posts_by_attribute(browser, game_name):
         _type_: _description_
     """
     
-    posts = []
+    posts_found = []
     try:
         # Use the more specific XPath pattern to find post links
         post_links = browser.find_elements(By.XPATH, "//div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/a")
@@ -253,24 +253,28 @@ def get_posts_by_attribute(browser, game_name):
         for link in post_links:
             href = link.get_attribute('href')
             post_id = extract_post_id_from_url(href)
-            if post_id and post_id not in posts:
-                posts.append(post_id)
-                print(f"Post ID found: {post_id}")
+            if post_id and post_id not in posts_found:
+                posts_found.append(post_id)
+                print(f"Post ID: {post_id}")
                 
         # If no posts found with the specific XPath, fall back to the URL-based approach
-        if not posts:
+        if not posts_found:
             base_url = f"{FB_DEFAULT_URL}/{game_name}/posts"
             fallback_links = browser.find_elements(By.XPATH, f"//a[starts-with(@href, '{base_url}')]")
             
             for link in fallback_links:
                 href = link.get_attribute('href')
                 post_id = extract_post_id_from_url(href)
-                if post_id and post_id not in posts:
-                    posts.append(post_id)
-                    print(f"Post ID found (fallback): {post_id}")
+                if post_id and post_id not in posts_found:
+                    posts_found.append(post_id)
+                    print(f"Post ID: {post_id}")
     except Exception as e:
         print(f"Error retrieving posts")
-    return posts
+    
+    logger.info(f"Number of posts found: {len(posts_found)}")
+
+    return posts_found
+
 
 def scroll_down(browser):
     """Scroll down the page to load more posts."""
