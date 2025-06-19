@@ -24,10 +24,23 @@ if __name__ == "__main__":
             exit(1)
         logger.info(f"Found {len(all_game_fanpages)} game fanpages to scrape")
         
-        
+        group_refs_total, page_refs_total, x_refs_total = [], [], []
         for idx, game in enumerate(all_game_fanpages, 1):
             logger.info(f"  ID: {game.get('name_of_game', 'N/A')}")
-            logger.info(f"  Note: {game.get('note', 'N/A')}")
+            note = game.get('note', 'N/A')
+            logger.info(f"  Note: {note}")
+
+            for line in note.split('\n'):
+                if line.startswith("Group_Ref_"):
+                    group_refs_total.append(line[len("Group_Ref_"):])
+                elif line.startswith("Page_Ref_"):
+                    page_refs_total.append(line[len("Page_Ref_"):])
+                elif line.startswith("X_Ref_"):
+                    x_refs_total.append(line[len("X_Ref_"):])
+
+        logger.info(f"group_refs_total: {group_refs_total}")
+        logger.info(f"page_refs_total: {page_refs_total}")
+        logger.info(f"x_refs_total: {x_refs_total}")
 
         run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
 
