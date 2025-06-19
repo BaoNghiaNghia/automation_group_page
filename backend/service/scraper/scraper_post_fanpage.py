@@ -1011,7 +1011,7 @@ def process_game_url(browser, game_fanpages_object, index, all_game_fanpages, en
         
         # Navigate to game page
         browser.get(f"{FB_DEFAULT_URL}/{game_url}")
-        sleep(random.randint(7, 13) if index < len(all_game_fanpages) - 1 else 0)  # Wait for page load
+        sleep(random.randint(70, 130) if index < len(all_game_fanpages) - 1 else 0)  # Wait for page load
         
         all_post_id_scanned = set()
         last_height = browser.execute_script("return document.body.scrollHeight")
