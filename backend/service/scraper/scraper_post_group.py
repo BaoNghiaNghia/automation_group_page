@@ -1097,16 +1097,6 @@ def run_scraper_multiple_groups(group_refs_total, environment, use_cookies=True)
                 return False  # Exit if CAPTCHA handling fails
 
         sleep_time = random.randint(3, 8)
-        logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
-        # sleep(sleep_time)
-            
-        # Add human-like behavior before starting to scrape
-        logger.info("Simulating human-like browsing behavior before scraping...")
-        
-        # Simulate scrolling behavior and get final pause time
-        # final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
-        # sleep(final_pause)
-
 
         # ----------------------- Scraper fanpages ----------------------- #
         # Process each game URL with the same browser session
@@ -1114,12 +1104,6 @@ def run_scraper_multiple_groups(group_refs_total, environment, use_cookies=True)
             if (group_refs_item['status'] == 'active'):
                 logger.info(f"group_refs_item: {group_refs_item}")
                 # process_game_group(browser, group_refs_item, index, group_refs_total, environment)
-
-        # ----------------------- Scan Spam in Group ----------------------- #
-        # scan_spam_in_group(browser, environment)
-        
-        # ----------------------- Crawler member in group competition ----------------------- #
-        # crawl_member_in_group_competition(browser, environment)
 
         return True
 
