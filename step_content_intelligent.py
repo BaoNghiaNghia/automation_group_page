@@ -47,7 +47,7 @@ if __name__ == "__main__":
         logger.info(f"page_refs_total: {page_refs_total}")
         logger.info(f"x_refs_total: {x_refs_total}")
         
-        run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
+        # run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
         run_scraper_multiple_groups(group_refs_total, args.environment)
         run_scraper_multiple_twitter(x_refs_total, args.environment)
         
