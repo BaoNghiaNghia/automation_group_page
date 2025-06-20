@@ -235,42 +235,40 @@ def wait_for_page_load(browser):
 
 
 def get_posts_by_attribute(browser, game_name):
-    """_summary_
+    """Retrieve unique post IDs from a game page."""
 
-    Args:
-        browser (_type_): _description_
-        game_name (_type_): _description_
+    posts_found = set()  # Use a set to automatically handle duplicates
 
-    Returns:
-        _type_: _description_
-    """
-    
-    posts_found = []
     try:
-        # Use the more specific XPath pattern to find post links
-        post_links = browser.find_elements(By.XPATH, "//div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/a | //div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/span/a | //div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/span[@role='link']")
+        # XPath pattern to find post links, combining all XPath expressions into one
+        xpath_pattern = "//div[3]/div[@role='article']//span/div/span[1]/span/a | //div[3]/div[@role='article']//span/div/span[1]/span/span/a | //div[3]/div[@role='article']//span/div/span[1]/span/span[@role='link']"
+        # xpath_pattern = "//div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/a | //div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/span/a | //div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/span[@role='link']"
+        post_links = browser.find_elements(By.XPATH, xpath_pattern)
+        
+        # Loop through post links and extract unique post IDs
         for link in post_links:
             href = link.get_attribute('href')
             post_id = extract_post_id_from_url(href)
-            if post_id and post_id not in posts_found:
-                posts_found.append(post_id)
+            if post_id:
+                posts_found.add(post_id)  # Add post_id to set (duplicates handled)
                 print(f"Post ID: {post_id}")
-                
-        # If no posts found with the specific XPath, fall back to the URL-based approach
+
+        # If no posts found using the XPath, fallback to URL-based extraction
         if not posts_found:
             base_url = f"{FB_DEFAULT_URL}/{game_name}/posts"
             fallback_links = browser.find_elements(By.XPATH, f"//a[starts-with(@href, '{base_url}')]")
-            
             for link in fallback_links:
                 href = link.get_attribute('href')
                 post_id = extract_post_id_from_url(href)
-                if post_id and post_id not in posts_found:
-                    posts_found.append(post_id)
+                if post_id:
+                    posts_found.add(post_id)
                     print(f"Post ID: {post_id}")
-    except Exception as e:
-        print(f"Error retrieving posts")
 
-    return posts_found
+    except Exception as e:
+        print(f"Error retrieving posts: {e}")
+
+    return list(posts_found)  # Return as list (as required)
+
 
 
 def scroll_down(browser):
@@ -993,7 +991,7 @@ def process_game_group(browser, game_fanpages_object, index, all_game_fanpages, 
     try:
         group_url = game_fanpages_object['ref']
         print(f"\n----- Starting to scrape: {group_url} -----")
-        
+        group_name = group_url.rstrip("/").split("/")[-1]
         # Navigate to game page
         browser.get(group_url)
         sleep(random.randint(2, 5))
@@ -1004,9 +1002,18 @@ def process_game_group(browser, game_fanpages_object, index, all_game_fanpages, 
         # Scroll and collect posts
         for attempt in range(50):
             print(f"\n[Scrolling Attempt {attempt + 1}]")
+            current_posts = get_posts_by_attribute(browser, group_name)
+            all_post_id_scanned.update(current_posts)
+            
+            if len(all_post_id_scanned) >= LIMIT_POST_PER_DAY:
+                print("Limit of posts reached.")
+                break
 
-            sleep(random.randint(20, 25))
-
+            # Check if no posts found after 3 attempts
+            if attempt >= 3 and len(all_post_id_scanned) == 0:
+                print("No posts found after 3 attempts, exiting.")
+                break
+            
             # Scroll down to load more posts
             scroll_down(browser)
             new_height = browser.execute_script("return document.body.scrollHeight")
@@ -1076,8 +1083,6 @@ def run_scraper_multiple_groups(group_refs_total, environment, use_cookies=True)
             if not handle_captcha_if_present(browser, username, password):
                 print("CAPTCHA handling failed, exiting.")
                 return False  # Exit if CAPTCHA handling fails
-
-        sleep_time = random.randint(3, 8)
 
         # ----------------------- Scraper fanpages ----------------------- #
         # Process each game URL with the same browser session
