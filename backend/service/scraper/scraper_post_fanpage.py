@@ -986,7 +986,7 @@ def send_member_data_to_api(file_path, group_name, environment):
         logger.warning(f"No batches were successfully sent, keeping file: {file_path}")
 
 
-def process_game_url(browser, game_fanpages_object, index, all_game_fanpages, environment):
+def process_game_fanpage(browser, game_fanpages_object, index, all_game_fanpages, environment):
     """
     Process a single game URL for Facebook scraping
     
@@ -1107,12 +1107,12 @@ def run_fb_scraper_multiple_fanpages(all_game_fanpages, environment, use_cookies
         # final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
         # sleep(final_pause)
 
-        
+
         # ----------------------- Scraper fanpages ----------------------- #
         # Process each game URL with the same browser session
-        for index, game_fanpages_object in enumerate(all_game_fanpages):
-            if (game_fanpages_object['status'] == 'active'):
-                process_game_url(browser, game_fanpages_object, index, all_game_fanpages, environment)
+        for index, game_fanpages_selected in enumerate(all_game_fanpages):
+            if (game_fanpages_selected['status'] == 'active'):
+                process_game_fanpage(browser, game_fanpages_selected, index, all_game_fanpages, environment)
 
         # ----------------------- Scan Spam in Group ----------------------- #
         # scan_spam_in_group(browser, environment)

@@ -37,21 +37,21 @@ if __name__ == "__main__":
 
             for line in note.split('\n'):
                 if line.startswith("Group_Ref_"):
-                    group_refs_total.append(line[len("Group_Ref_"):])
+                    group_refs_total.append({"ref": line[len("Group_Ref_"): ], **game})
                 elif line.startswith("Page_Ref_"):
-                    page_refs_total.append(line[len("Page_Ref_"):])
+                    page_refs_total.append({"ref": line[len("Page_Ref_"):], **game})
                 elif line.startswith("X_Ref_"):
-                    x_refs_total.append(line[len("X_Ref_"):])
+                    x_refs_total.append({"ref": line[len("X_Ref_"):], **game})
 
         logger.info(f"group_refs_total: {group_refs_total}")
         logger.info(f"page_refs_total: {page_refs_total}")
         logger.info(f"x_refs_total: {x_refs_total}")
-
+        
         run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
+        run_scraper_multiple_groups(group_refs_total, args.environment)
+        run_scraper_multiple_twitter(x_refs_total, args.environment)
         
-        run_scraper_multiple_groups(all_game_fanpages, args.environment)
-        
-        run_scraper_multiple_twitter(all_game_fanpages, args.environment)
+
 
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
