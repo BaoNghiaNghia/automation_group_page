@@ -1005,7 +1005,7 @@ def process_game_group(browser, game_fanpages_object, index, all_game_fanpages, 
         for attempt in range(50):
             print(f"\n[Scrolling Attempt {attempt + 1}]")
 
-            sleep(random.randint(2, 5))
+            sleep(random.randint(20, 25))
 
             # Scroll down to load more posts
             scroll_down(browser)
