@@ -988,24 +988,14 @@ def send_member_data_to_api(file_path, group_name, environment):
 
 def process_game_group(browser, game_fanpages_object, index, all_game_fanpages, environment):
     """
-    Process a single game URL for Facebook scraping
-    
-    Args:
-        browser: Selenium browser instance
-        game_url (str): URL of the game fanpage to scrape
-        index (int): Current index in the all_game_fanpages list
-        all_game_fanpages (list): List of all game URLs being processed
-        environment: Environment configuration
+    Process a single game group for Facebook scraping
     """
     try:
-        game_url = game_fanpages_object['fanpage'].split('/')[-1]
-        print(f"\n----- Starting to scrape: {game_url} -----")
-        
-        # Extract game name from URL
-        game_name = game_url.rstrip("/").split("/")[-1]
+        group_url = game_fanpages_object['ref']
+        print(f"\n----- Starting to scrape: {group_url} -----")
         
         # Navigate to game page
-        browser.get(f"{FB_DEFAULT_URL}/{game_url}")
+        browser.get(group_url)
         sleep(random.randint(70, 130) if index < len(all_game_fanpages) - 1 else 0)  # Wait for page load
         
         all_post_id_scanned = set()
@@ -1014,18 +1004,9 @@ def process_game_group(browser, game_fanpages_object, index, all_game_fanpages, 
         # Scroll and collect posts
         for attempt in range(50):
             print(f"\n[Scrolling Attempt {attempt + 1}]")
-            current_posts = get_posts_by_attribute(browser, game_name)
-            all_post_id_scanned.update(current_posts)
-            
-            if len(all_post_id_scanned) >= LIMIT_POST_PER_DAY:
-                print("Limit of posts reached.")
-                break
 
-            # Check if no posts found after 3 attempts
-            if attempt >= 3 and len(all_post_id_scanned) == 0:
-                print("No posts found after 3 attempts, exiting.")
-                break
-            
+            sleep(random.randint(2, 5))
+
             # Scroll down to load more posts
             scroll_down(browser)
             new_height = browser.execute_script("return document.body.scrollHeight")
@@ -1039,36 +1020,36 @@ def process_game_group(browser, game_fanpages_object, index, all_game_fanpages, 
             if attempt == 49:
                 print("Too many scroll attempts, exiting.")
 
-        logger.info(f"Filtered post IDs for {game_name}: {len(all_post_id_scanned)} posts")
-        # Save post IDs
-        post_id_file_path = os.path.join(os.getcwd(), FOLDER_PATH_POST_ID_CRAWLER.strip("/\\"))
-        if not os.path.exists(post_id_file_path):
-            os.makedirs(post_id_file_path)
+        # logger.info(f"Filtered post IDs for {game_name}: {len(all_post_id_scanned)} posts")
+        # # Save post IDs
+        # post_id_file_path = os.path.join(os.getcwd(), FOLDER_PATH_POST_ID_CRAWLER.strip("/\\"))
+        # if not os.path.exists(post_id_file_path):
+        #     os.makedirs(post_id_file_path)
             
-        post_id_file_name = f"facebook_{game_name}_post_ids.txt"
-        post_id_full_path = os.path.join(post_id_file_path, post_id_file_name)
+        # post_id_file_name = f"facebook_{game_name}_post_ids.txt"
+        # post_id_full_path = os.path.join(post_id_file_path, post_id_file_name)
 
 
-        all_post_id_scanned = filter_existing_posts(all_post_id_scanned, game_fanpages_object['id'], environment)
+        # all_post_id_scanned = filter_existing_posts(all_post_id_scanned, game_fanpages_object['id'], environment)
         
-        with open(post_id_full_path, "w", encoding="utf-8") as f:
-            f.write("\n".join(sorted(all_post_id_scanned)))
+        # with open(post_id_full_path, "w", encoding="utf-8") as f:
+        #     f.write("\n".join(sorted(all_post_id_scanned)))
 
-        # Crawl post data
-        crawlPostData(browser, readDataFromFile(post_id_full_path), game_name, environment, all_game_fanpages)
+        # # Crawl post data
+        # crawlPostData(browser, readDataFromFile(post_id_full_path), game_name, environment, all_game_fanpages)
 
-        print(f"----- Done {len(all_post_id_scanned)} posts: Game {game_name} -----")
+        # print(f"----- Done {len(all_post_id_scanned)} posts: Game {game_name} -----")
 
-        # Add random delay after processing all games
-        if index < len(all_game_fanpages) - 1:
-            sleep_time = random.randint(70, 100)
-            logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
-            sleep(sleep_time)
-            simulate_human_behavior_when_scraping_game(browser, environment)
-            sleep(sleep_time)
+        # # Add random delay after processing all games
+        # if index < len(all_game_fanpages) - 1:
+        #     sleep_time = random.randint(70, 100)
+        #     logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
+        #     sleep(sleep_time)
+        #     simulate_human_behavior_when_scraping_game(browser, environment)
+        #     sleep(sleep_time)
         
     except Exception as e:
-        print(f"Error processing {game_url}")
+        print(f"Error processing {group_url}")
 
         return True  # Successfully completed scraping all games
 
@@ -1103,7 +1084,7 @@ def run_scraper_multiple_groups(group_refs_total, environment, use_cookies=True)
         for index, group_refs_item in enumerate(group_refs_total):
             if (group_refs_item['status'] == 'active'):
                 logger.info(f"group_refs_item: {group_refs_item}")
-                # process_game_group(browser, group_refs_item, index, group_refs_total, environment)
+                process_game_group(browser, group_refs_item, index, group_refs_total, environment)
 
         return True
 
