@@ -37,17 +37,15 @@ if __name__ == "__main__":
 
             for line in note.split('\n'):
                 if line.startswith("Group_Ref_"):
-                    url = line[len("Group_Ref_"):]
-                    if url.startswith("https://"):
-                        group_refs_total.append({"ref": url, **game})
+                    # Get text after the first colon
+                    ref_value = line.split(":", 1)[1].strip() if ":" in line else ""
+                    group_refs_total.append({"ref": ref_value, **game})
                 elif line.startswith("Page_Ref_"):
-                    url = line[len("Page_Ref_"):]
-                    if url.startswith("https://"):
-                        page_refs_total.append({"ref": url, **game})
+                    ref_value = line.split(":", 1)[1].strip() if ":" in line else ""
+                    page_refs_total.append({"ref": ref_value, **game})
                 elif line.startswith("X_Ref_"):
-                    url = line[len("X_Ref_"):]
-                    if url.startswith("https://"):
-                        x_refs_total.append({"ref": url, **game})
+                    ref_value = line.split(":", 1)[1].strip() if ":" in line else ""
+                    x_refs_total.append({"ref": ref_value, **game})
 
         logger.info(f"group_refs_total: {group_refs_total}")
         logger.info(f"page_refs_total: {page_refs_total}")
