@@ -234,43 +234,6 @@ def wait_for_page_load(browser):
     print(f"Page has been redirected to: {browser.current_url}")
 
 
-def get_posts_by_attribute(browser, game_name):
-    """Retrieve unique post IDs from a game page."""
-
-    posts_found = set()  # Use a set to automatically handle duplicates
-
-    try:
-        # XPath pattern to find post links, combining all XPath expressions into one
-        xpath_pattern = "//div[3]/div[@role='article']//span/div/span[1]/span/a | //div[3]/div[@role='article']//span/div/span[1]/span/span/a | //div[3]/div[@role='article']//span/div/span[1]/span/span[@role='link']"
-        # xpath_pattern = "//div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/a | //div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/span/a | //div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/span[@role='link']"
-        post_links = browser.find_elements(By.XPATH, xpath_pattern)
-        
-        # Loop through post links and extract unique post IDs
-        for link in post_links:
-            href = link.get_attribute('href')
-            post_id = extract_post_id_from_url(href)
-            if post_id:
-                posts_found.add(post_id)  # Add post_id to set (duplicates handled)
-                print(f"Post ID: {post_id}")
-
-        # If no posts found using the XPath, fallback to URL-based extraction
-        if not posts_found:
-            base_url = f"{FB_DEFAULT_URL}/{game_name}/posts"
-            fallback_links = browser.find_elements(By.XPATH, f"//a[starts-with(@href, '{base_url}')]")
-            for link in fallback_links:
-                href = link.get_attribute('href')
-                post_id = extract_post_id_from_url(href)
-                if post_id:
-                    posts_found.add(post_id)
-                    print(f"Post ID: {post_id}")
-
-    except Exception as e:
-        print(f"Error retrieving posts: {e}")
-
-    return list(posts_found)  # Return as list (as required)
-
-
-
 def scroll_down(browser):
     """Scroll down the page to load more posts."""
     browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")

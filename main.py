@@ -1,12 +1,12 @@
 import time
 import argparse
 from pathlib import Path
-from backend.service.scraper.scraper_post_fanpage import run_fb_scraper_multiple_fanpages
-from backend.constants import FOLDER_PATH_DATA_CRAWLER, ENV_CONFIG, logger
-from backend.utils.index import get_game_fanpages_unique_for_scan
+from backend.utils.index import get_all_game_fanpages
 from backend.service.migrate_db import sync_post_into_database
-from backend.service.llm.text_generate_deepseek import rewrite_paragraph_deepseek
 from backend.service.update_ld_devices import update_ld_devices
+from backend.constants import FOLDER_PATH_DATA_CRAWLER, ENV_CONFIG, logger
+from backend.service.llm.text_generate_deepseek import rewrite_paragraph_deepseek
+from backend.service.scraper.scraper_post_fanpage import run_fb_scraper_multiple_fanpages
 
 
 def run_step(step_num, step_name, func, *args, **kwargs):
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the scraper in local or production mode")
     parser.add_argument("--environment", "-e", choices=["local", "production"], default="production",
                         help="Specify the environment: local or production")
-    parser.add_argument("--pcrunner", "-pc", type=str, default="pc_1",
+    parser.add_argument("--pcrunner", "-pc", type=str, default="pc_2",
                         help="Specify the computer name to sync from")
     args = parser.parse_args()
     
@@ -40,11 +40,33 @@ if __name__ == "__main__":
         base_path.mkdir(parents=True, exist_ok=True)
 
         # Get game URLs to scrape
-        if not (all_game_fanpages := get_game_fanpages_unique_for_scan(args.environment)):
+        if not (all_game_fanpages := get_all_game_fanpages(args.environment, {
+            "page": 1,
+            "limit": 300,
+            "priority": 1        # 0 (normal) and 1 (priority)
+        })):
             logger.error("No game URLs found")
             exit(1)
-            
-        logger.info(f"Found {len(all_game_fanpages)} game URLs")
+        
+        group_refs_total, page_refs_total, x_refs_total = [], [], []
+        for idx, game in enumerate(all_game_fanpages, 1):
+            note = game.get('note')
+            if note is None:
+                logger.warning(f"  Note is None for game: {game.get('name_of_game', 'N/A')}")
+                note = ''
+
+            for line in note.split('\n'):
+                if line.startswith("Group_Ref_"):
+                    # Get text after the first colon
+                    ref_value = line.split(":", 1)[1].strip() if ":" in line else ""
+                    group_refs_total.append({"ref": ref_value, **game})
+                elif line.startswith("Page_Ref_"):
+                    ref_value = line.split(":", 1)[1].strip() if ":" in line else ""
+                    page_refs_total.append({"ref": ref_value, **game})
+                elif line.startswith("X_Ref_"):
+                    ref_value = line.split(":", 1)[1].strip() if ":" in line else ""
+                    x_refs_total.append({"ref": ref_value, **game})
+
 
         # ------------------------ Step 0: Check LDPlayer devices ------------------------
         run_step(0, "Checking LDPlayer devices", update_ld_devices, ENV_CONFIG[args.environment]["CONFIG_LDPLAYER_FOLDER"], args.environment, args.pcrunner)
