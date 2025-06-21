@@ -408,43 +408,48 @@ def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
                     stt += 1
                     download_image_file(img, str(stt), postId, FOLDER_PATH_DATA_CRAWLER, game_name)
                     
-            # Click on the specified element (like button or reaction)
-            try:
-                # Wait for a random time before clicking to simulate human behavior
-                sleep(random.uniform(1.5, 3.0))
-                
-                # Find and click the specified element
-                like_button = driver.find_element(By.XPATH, 
-                    "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[1]/div/span/div/span[2]")
-                
-                
-                # Scroll element into view
-                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", like_button)
-                
-                # Wait a moment after scrolling
-                sleep(random.uniform(0.8, 1.5))
-                
-                # Click the element
-                like_button.click()
-                print(f"Clicked on reaction element for post ID: {id}")
-                
-                # Wait for about 7 seconds after clicking like button
-                sleep_time = random.uniform(6.5, 9.5)
-                print(f"Waiting for {sleep_time:.2f} seconds after clicking like button...")
-                sleep(sleep_time)
-                
-                # Call the function to handle reaction panel
-                handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment)
-
-                
-                # Wait a moment after clicking
-                sleep(random.uniform(1.0, 2.0))
-            except Exception as e:
-                print(f"Could not click on reaction element")
+                # TODO: Stop get friend reaction post
+                # handle_friend_reaction(driver, game_fanpage_id, environment)
 
             sleep(random.randint(12, 14))
         except Exception as e:
             print(f"Error in crawlPostData")
+
+
+def handle_friend_reaction(driver, game_fanpage_id, environment):
+    # Click on the specified element (like button or reaction)
+    try:
+        # Wait for a random time before clicking to simulate human behavior
+        sleep(random.uniform(1.5, 3.0))
+        
+        # Find and click the specified element
+        like_button = driver.find_element(By.XPATH, 
+            "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[4]/div/div/div[1]/div/div[1]/div/div[1]/div/span/div/span[2]")
+        
+        
+        # Scroll element into view
+        driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", like_button)
+        
+        # Wait a moment after scrolling
+        sleep(random.uniform(0.8, 1.5))
+        
+        # Click the element
+        like_button.click()
+        print(f"Clicked on reaction element for post ID: {id}")
+        
+        # Wait for about 7 seconds after clicking like button
+        sleep_time = random.uniform(6.5, 9.5)
+        print(f"Waiting for {sleep_time:.2f} seconds after clicking like button...")
+        sleep(sleep_time)
+        
+        # Call the function to handle reaction panel
+        handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment)
+
+        
+        # Wait a moment after clicking
+        sleep(random.uniform(1.0, 2.0))
+    except Exception as e:
+        print(f"Could not click on reaction element")
 
 # Function to handle reaction panel scrolling and profile extraction
 def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
