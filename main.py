@@ -81,14 +81,14 @@ if __name__ == "__main__":
             print("Step 1 failed. Cannot proceed to step 2.")
             exit(1)
 
-        # ------------------------ Step 2: Rewrite paragraphs with DeepSeek ------------------------
-        rewrite_result = run_step(2, "Rewriting paragraphs with DeepSeek", rewrite_paragraph_deepseek, args.environment)
-        time.sleep(5)  # Delay between steps
+        # # ------------------------ Step 2: Rewrite paragraphs with DeepSeek ------------------------
+        # rewrite_result = run_step(2, "Rewriting paragraphs with DeepSeek", rewrite_paragraph_deepseek, args.environment)
+        # time.sleep(5)  # Delay between steps
 
-        if not rewrite_result:
-            logger.warning("Step 2 failed. Cannot proceed to step 3.")
-            print("Step 2 failed. Cannot proceed to step 3.")
-            exit(1)
+        # if not rewrite_result:
+        #     logger.warning("Step 2 failed. Cannot proceed to step 3.")
+        #     print("Step 2 failed. Cannot proceed to step 3.")
+        #     exit(1)
 
         # ------------------------ Step 3: Insert paragraph to database ------------------------
         run_step(3, "Inserting paragraphs to database", sync_post_into_database, args.environment)
