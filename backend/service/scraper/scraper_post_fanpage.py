@@ -292,12 +292,16 @@ def clonePostContent(driver, postId):
         if len(contentElement):
             content = " ".join([elem.text for elem in contentElement])  # Concatenate text from all elements
         
-
         # Get all image links inside the specific path provided
         linksArr = []
 
+        # Try case 1 first
         image_links = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div//a//img")
         
+        # If case 1 doesn't find any images, try case 2
+        if not image_links:
+            image_links = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div/div[1]/div/div/div/div[1]/a/div[1]/div[1]/div/img")
+ 
         for img in image_links:
             linkImage = img.get_attribute('src')
             if linkImage:
@@ -1049,10 +1053,9 @@ def process_game_fanpage(browser, game_fanpages_object, index, all_game_fanpages
         post_id_file_path = os.path.join(os.getcwd(), FOLDER_PATH_POST_ID_CRAWLER.strip("/\\"))
         if not os.path.exists(post_id_file_path):
             os.makedirs(post_id_file_path)
-            
+        
         post_id_file_name = f"facebook_{game_name}_post_ids.txt"
         post_id_full_path = os.path.join(post_id_file_path, post_id_file_name)
-
 
         all_post_id_scanned = filter_existing_posts(all_post_id_scanned, game_fanpages_object['id'], environment)
         
