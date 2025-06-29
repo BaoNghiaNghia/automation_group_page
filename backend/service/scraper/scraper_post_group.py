@@ -40,7 +40,7 @@ def clear_uc_driver_cache():
         logger.info(f"No undetected-chromedriver cache folder found at {cache_dir}")
 
 
-def init_browser(is_ubuntu=False):
+def init_browser():
     """Initialize Chrome browser with undetected-chromedriver options."""
     options = uc.ChromeOptions()
 
@@ -70,12 +70,7 @@ def init_browser(is_ubuntu=False):
 
     options.add_argument("--disable-blink-features=AutomationControlled")
 
-    if is_ubuntu:
-        options.binary_location = "/usr/bin/chromium"
-        options.add_argument("--headless")
-        browser = uc.Chrome(options=options, browser_executable_path="/usr/bin/chromium", headless=True, version_main=136)
-    else:
-        browser = uc.Chrome(options=options, version_main=136)
+    browser = uc.Chrome(options=options, version_main=136)
 
     # Set user agent
     browser.execute_cdp_cmd('Network.setUserAgentOverride', {
@@ -96,9 +91,9 @@ def init_browser(is_ubuntu=False):
     return browser
 
 
-def login_facebook(username, password, is_ubuntu=False, use_cookies=True, cookies_path=None):
+def login_facebook(username, password, use_cookies=True, cookies_path=None):
     """Login to Facebook using undetected-chromedriver with option to use saved cookies."""
-    browser = init_browser(is_ubuntu)
+    browser = init_browser()
     
     if not cookies_path:
         cookies_dir = os.path.join(os.getcwd(), "facebook_cookies")
@@ -177,12 +172,6 @@ def save_cookies(browser, username, cookies_path=None):
             logger.warning("Cookie file may be empty or not created properly")
     except Exception as e:
         logger.error(f"Error saving cookies")
-
-
-def login_facebook_ubuntu(username, password, use_cookies=True):
-    """Convenience function for Ubuntu login."""
-    cookies_path = os.path.join(os.getcwd(), "facebook_cookies", f"{username}_cookies.pkl")
-    return login_facebook(username, password, is_ubuntu=True, use_cookies=use_cookies, cookies_path=cookies_path)
 
 
 def extract_post_id_from_url(url):
