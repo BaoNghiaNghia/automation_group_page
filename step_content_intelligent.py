@@ -9,12 +9,11 @@ from backend.utils.index import get_all_game_fanpages
 if __name__ == "__main__":
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Run the text generation process")
-    parser.add_argument("--environment", "-e", choices=["local", "production"], default="production",
-                        help="Specify the environment: local or production")
+    parser.add_argument("--environment", "-e", choices=["local", "production"], default="production", help="Specify the environment: local or production")
     args = parser.parse_args()
-    
+
     logger.info(f"Running in {args.environment} environment")
-    
+
     try:
         # Get game URLs to scrape
         if not (all_game_fanpages := get_all_game_fanpages(args.environment, {
@@ -24,7 +23,7 @@ if __name__ == "__main__":
         })):
             logger.error("No game URLs found")
             exit(1)
-        
+
         group_refs_total, page_refs_total, x_refs_total = [], [], []
         for idx, game in enumerate(all_game_fanpages, 1):
             note = game.get('note')
@@ -43,13 +42,10 @@ if __name__ == "__main__":
                 elif line.startswith("X_Ref_"):
                     ref_value = line.split(":", 1)[1].strip() if ":" in line else ""
                     x_refs_total.append({"ref": ref_value, **game})
-        
-        
+
         run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
         # run_scraper_multiple_groups(group_refs_total, args.environment)
         # run_scraper_multiple_twitter(x_refs_total, args.environment)
-        
-
 
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
