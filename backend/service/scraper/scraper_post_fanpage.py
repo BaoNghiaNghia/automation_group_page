@@ -73,7 +73,7 @@ def init_chrome_undetected_chromedriver():
 
         options.add_argument("--disable-blink-features=AutomationControlled")
 
-        browser = uc.Chrome(options=options, version_main=136)
+        browser = uc.Chrome(options=options, version_main=138)
 
         # Set user agent
         browser.execute_cdp_cmd('Network.setUserAgentOverride', {
