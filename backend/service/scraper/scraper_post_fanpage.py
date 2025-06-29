@@ -1105,18 +1105,12 @@ def run_fb_scraper_multiple_fanpages(all_game_fanpages, environment, use_cookies
 
         sleep_time = random.randint(3, 8)
         logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
-        # sleep(sleep_time)
-            
-        # Add human-like behavior before starting to scrape
-        logger.info("Simulating human-like browsing behavior before scraping...")
-        
-        # Simulate scrolling behavior and get final pause time
-        # final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
-        # sleep(final_pause)
 
+        # Simulate scrolling behavior and get final pause time
+        final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
+        sleep(final_pause)
 
         # ----------------------- Scraper fanpages ----------------------- #
-        # Process each game URL with the same browser session
         for index, game_fanpages_selected in enumerate(all_game_fanpages):
             if (game_fanpages_selected['status'] == 'active'):
                 process_game_fanpage(browser, game_fanpages_selected, index, all_game_fanpages, environment)
