@@ -2,6 +2,7 @@ import argparse
 from backend.constants import ENV_CONFIG, logger
 from backend.service.scraper.scraper_post_group import run_scraper_multiple_groups
 from backend.service.scraper.scraper_post_twitter import run_scraper_multiple_twitter
+from backend.service.scraper.scraper_post_fanpage import run_fb_scraper_multiple_fanpages
 from backend.utils.index import get_all_game_fanpages
 
 
@@ -42,11 +43,11 @@ if __name__ == "__main__":
                 elif line.startswith("X_Ref_"):
                     ref_value = line.split(":", 1)[1].strip() if ":" in line else ""
                     x_refs_total.append({"ref": ref_value, **game})
-
         
-        # run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
-        run_scraper_multiple_groups(group_refs_total, args.environment)
-        run_scraper_multiple_twitter(x_refs_total, args.environment)
+        
+        run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
+        # run_scraper_multiple_groups(group_refs_total, args.environment)
+        # run_scraper_multiple_twitter(x_refs_total, args.environment)
         
 
 

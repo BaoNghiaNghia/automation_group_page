@@ -11,14 +11,11 @@ import undetected_chromedriver as uc
 from urllib.parse import urlparse
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from backend.utils.captcha_solver import solve_captcha, get_captcha_result, readDataFromFile, writeFileTxtPost
-from backend.service.simulation_behaviour import simulate_human_behavior_when_scraping_game, simulate_scrolling_behavior_when_init_facebook
-from backend.utils.index import get_all_game_fanpages, filter_existing_posts
 from backend.constants import (
     SCRAPER_FB_ACCOUNT_LIST, 
     FB_DEFAULT_URL, 
@@ -1057,7 +1054,7 @@ def run_scraper_multiple_groups(group_refs_total, environment, use_cookies=True)
         return True
 
     except Exception as e:
-        print(f"Error in main scraper")
+        print(f"Error in main group scraper")
         return False  # Exit if an error occurs during the main scraper execution
 
     finally:

@@ -11,14 +11,13 @@ import undetected_chromedriver as uc
 from urllib.parse import urlparse
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from backend.utils.captcha_solver import solve_captcha, get_captcha_result, readDataFromFile, writeFileTxtPost
 from backend.service.simulation_behaviour import simulate_human_behavior_when_scraping_game, simulate_scrolling_behavior_when_init_facebook
-from backend.utils.index import get_all_game_fanpages, filter_existing_posts
+from backend.utils.index import filter_existing_posts
 from backend.constants import (
     SCRAPER_FB_ACCOUNT_LIST, 
     FB_DEFAULT_URL, 
@@ -234,7 +233,7 @@ def wait_for_page_load(browser):
     print(f"Page has been redirected to: {browser.current_url}")
 
 
-def get_posts_by_attribute(browser, game_name):
+def get_list_post_ID_by_attribute(browser, game_name):
     """_summary_
 
     Args:
@@ -247,8 +246,8 @@ def get_posts_by_attribute(browser, game_name):
     
     posts_found = []
     try:
-        # Use the more specific XPath pattern to find post links
-        post_links = browser.find_elements(By.XPATH, "//div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/a | //div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/span/a | //div[3]/div[@role='article']/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[2]/div/div[2]/div/div[2]/span/div/span[1]/span/span[@role='link']")
+        # Find post links by looking for anchor elements with specific attributes
+        post_links = browser.find_elements(By.XPATH, "//a[@attributionsrc='/privacy_sandbox/' and @role='link']")
         for link in post_links:
             href = link.get_attribute('href')
             post_id = extract_post_id_from_url(href)
@@ -301,7 +300,7 @@ def clonePostContent(driver, postId):
         # If case 1 doesn't find any images, try case 2
         if not image_links:
             image_links = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div/div[1]/div/div/div/div[1]/a/div[1]/div[1]/div/img")
- 
+
         for img in image_links:
             linkImage = img.get_attribute('src')
             if linkImage:
@@ -372,7 +371,7 @@ def download_image_file(image_url, file_number, post_id, folder_path="/data_craw
         print(f"Error downloading image from {image_url}")
 
 
-def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
+def crawlDetailPostData(driver, postIds, game_name, environment, list_game_fanpages):
     """Crawl post data from the post IDs."""
     empty_post_count = 0  # Counter for empty posts
     written_post_count = 0  # Counter for posts written to file
@@ -417,7 +416,7 @@ def crawlPostData(driver, postIds, game_name, environment, list_game_fanpages):
 
             sleep(random.randint(12, 14))
         except Exception as e:
-            print(f"Error in crawlPostData")
+            print(f"Error in crawlDetailPostData")
 
 
 def handle_friend_reaction(driver, game_fanpage_id, environment):
@@ -649,7 +648,7 @@ def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
             # Scroll and collect posts, with a maximum number of attempts
             for attempt in range(50):
                 print(f"\n[Scrolling Attempt {attempt + 1}]")
-                current_posts = get_posts_by_attribute(browser, game_name)
+                current_posts = get_list_post_ID_by_attribute(browser, game_name)
                 
                 all_post_id_scanned.update(current_posts)
                 
@@ -702,7 +701,7 @@ def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
                 f.write("\n".join(sorted(all_post_id_scanned)))
 
             # Crawl and download post data
-            crawlPostData(browser, readDataFromFile(post_id_full_path), game_name)
+            crawlDetailPostData(browser, readDataFromFile(post_id_full_path), game_name)
 
             print(f"----- Done {all_post_id_scanned} posts: Game {game_name} -----")
 
@@ -1023,7 +1022,7 @@ def process_game_fanpage(browser, game_fanpages_object, index, all_game_fanpages
         # Scroll and collect posts
         for attempt in range(50):
             print(f"\n[Scrolling Attempt {attempt + 1}]")
-            current_posts = get_posts_by_attribute(browser, game_name)
+            current_posts = get_list_post_ID_by_attribute(browser, game_name)
             all_post_id_scanned.update(current_posts)
             
             if len(all_post_id_scanned) >= LIMIT_POST_PER_DAY:
@@ -1063,7 +1062,7 @@ def process_game_fanpage(browser, game_fanpages_object, index, all_game_fanpages
             f.write("\n".join(sorted(all_post_id_scanned)))
 
         # Crawl post data
-        crawlPostData(browser, readDataFromFile(post_id_full_path), game_name, environment, all_game_fanpages)
+        crawlDetailPostData(browser, readDataFromFile(post_id_full_path), game_name, environment, all_game_fanpages)
 
         print(f"----- Done {len(all_post_id_scanned)} posts: Game {game_name} -----")
 
@@ -1122,16 +1121,10 @@ def run_fb_scraper_multiple_fanpages(all_game_fanpages, environment, use_cookies
             if (game_fanpages_selected['status'] == 'active'):
                 process_game_fanpage(browser, game_fanpages_selected, index, all_game_fanpages, environment)
 
-        # ----------------------- Scan Spam in Group ----------------------- #
-        # scan_spam_in_group(browser, environment)
-        
-        # ----------------------- Crawler member in group competition ----------------------- #
-        # crawl_member_in_group_competition(browser, environment)
-
         return True
 
     except Exception as e:
-        print(f"Error in main scraper")
+        print(f"Error in main fanpage scraper")
         return False  # Exit if an error occurs during the main scraper execution
 
     finally:

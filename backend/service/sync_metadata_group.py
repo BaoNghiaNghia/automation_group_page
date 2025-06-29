@@ -444,7 +444,7 @@ def run_sync_metadata_group(environment, use_cookies=True):
         return True
 
     except Exception as e:
-        print(f"Error in main scraper")
+        print(f"Error in main twitter scraper")
         return False
 
     finally:
