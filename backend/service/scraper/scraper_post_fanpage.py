@@ -184,17 +184,63 @@ def save_cookies(browser, username, cookies_path=None):
         logger.error(f"Error saving cookies")
 
 
-def extract_post_id_from_url(url):
+def extract_facebook_post_or_video_id(url):
+    """
+    Extract the post or video ID from a Facebook URL and detect its type.
+
+    Returns:
+        (id, type): 
+            id (str or None): The extracted ID, or None if not found.
+            type (str): 'post', 'video', or None.
+    """
     try:
         path = urlparse(url).path
+        # Detect video link
+        if "/videos/" in path:
+            parts = path.split("/videos/")
+            if len(parts) > 1:
+                id_part = parts[1].split("/")[0].split("?")[0]
+                if id_part.isdigit():
+                    return id_part, "video"
+        # Detect post link by /posts/ or /permalink/
         if "/posts/" in path:
-            return path.split("/posts/")[1].split("?")[0]
-        elif "/permalink/" in path:
-            return path.split("/permalink/")[1].split("?")[0]
-        elif "story_fbid=" in url:
-            return url.split("story_fbid=")[1].split("&")[0]
+            post_id = path.split("/posts/")[1].split("?")[0]
+            if post_id.isdigit():
+                return post_id, "post"
+        if "/permalink/" in path:
+            post_id = path.split("/permalink/")[1].split("?")[0]
+            if post_id.isdigit():
+                return post_id, "post"
+        # Detect post link by story_fbid param
+        if "story_fbid=" in url:
+            post_id = url.split("story_fbid=")[1].split("&")[0]
+            if post_id.isdigit():
+                return post_id, "post"
     except Exception as e:
-        print(f"Failed to extract post ID from {url}")
+        print(f"Failed to extract post or video ID from {url}")
+    return None, None
+
+
+def extract_facebook_video_id(url):
+    """
+    Extract the video ID from a Facebook video URL.
+    Example: https://www.facebook.com/ChaosZeroNightmareEN/videos/1149253179828050
+    Returns: '1149253179828050'
+    """
+    try:
+        path = urlparse(url).path
+        # Look for '/videos/<id>' in the path
+        if "/videos/" in path:
+            parts = path.split("/videos/")
+            if len(parts) > 1:
+                # The part after '/videos/' may contain the ID and possibly a trailing slash
+                id_part = parts[1].split("/")[0]
+                # Remove any query parameters if present
+                id_part = id_part.split("?")[0]
+                if id_part.isdigit():
+                    return id_part
+    except Exception as e:
+        print(f"Failed to extract video ID from {url}")
     return None
 
 
@@ -241,37 +287,37 @@ def get_list_post_ID_by_attribute(browser, game_name):
         _type_: _description_
     """
     
-    posts_found = []
+    all_ids_found = []
     try:
         # Find post links by looking for anchor elements with specific attributes
-        post_links = browser.find_elements(By.XPATH, "//a[@attributionsrc='/privacy_sandbox/' and @role='link']")
+        post_links = browser.find_elements(By.XPATH, "//a[starts-with(@attributionsrc, '/privacy_sandbox') and @role='link']")
         # INSERT_YOUR_CODE
         logger.info(f"Found {len(post_links)} post links for game: {game_name}")
         for link in post_links:
             # INSERT_YOUR_CODE
-            logger.info(f"Processing link: {link}")
             href = link.get_attribute('href')
-            post_id = extract_post_id_from_url(href)
-            if post_id and post_id not in posts_found:
-                posts_found.append(post_id)
+            logger.info(f"Processing link: {href}")
+            found_id, type_id = extract_facebook_post_or_video_id(href)
+            if post_id and post_id not in all_ids_found:
+                all_ids_found.append(post_id)
                 print(f"Post ID: {post_id}")
                 
         # If no posts found with the specific XPath, fall back to the URL-based approach
-        if not posts_found:
+        if not all_ids_found:
             base_url = f"{FB_DEFAULT_URL}/{game_name}/posts"
             fallback_links = browser.find_elements(By.XPATH, f"//a[starts-with(@href, '{base_url}')]")
             
             for link in fallback_links:
                 href = link.get_attribute('href')
-                post_id = extract_post_id_from_url(href)
+                post_id = extract_facebook_post_or_video_id(href)
 
-                if post_id and post_id not in posts_found:
-                    posts_found.append(post_id)
+                if post_id and post_id not in all_ids_found:
+                    all_ids_found.append(post_id)
                     print(f"Post ID: {post_id}")
     except Exception as e:
         print(f"Error retrieving posts")
 
-    return posts_found
+    return all_ids_found
 
 
 def scroll_down(browser):
