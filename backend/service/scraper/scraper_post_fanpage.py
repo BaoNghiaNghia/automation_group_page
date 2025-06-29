@@ -194,7 +194,18 @@ def extract_facebook_post_or_video_id(url):
             type (str): 'post', 'video', or None.
     """
     try:
-        path = urlparse(url).path
+        # Handle WebElement objects by getting their href attribute
+        if hasattr(url, 'get_attribute'):
+            url = url.get_attribute('href')
+        
+        # Ensure url is a string
+        if not isinstance(url, str):
+            logger.error(f"Invalid URL type: {type(url)}")
+            return None, None
+            
+        parsed_url = urlparse(url)
+        logger.debug(f"Parsing Facebook URL path: {parsed_url}")
+        path = parsed_url.path
         # Detect video link
         if "/videos/" in path:
             parts = path.split("/videos/")
@@ -202,11 +213,17 @@ def extract_facebook_post_or_video_id(url):
                 id_part = parts[1].split("/")[0].split("?")[0]
                 if id_part.isdigit():
                     return id_part, "video"
-        # Detect post link by /posts/ or /permalink/
+        # Detect reel link by /reels/
+        if "/reels/" in path:
+            parts = path.split("/reels/")
+            if len(parts) > 1:
+                id_part = parts[1].split("/")[0].split("?")[0]
+                if id_part.isdigit():
+                    return id_part, "reel"
+        # Detect post link by /posts/
         if "/posts/" in path:
-            post_id = path.split("/posts/")[1].split("?")[0]
-            if post_id.isdigit():
-                return post_id, "post"
+            return path.split("/posts/")[1].split("?")[0], "post"
+        # Detect post link by /permalink/
         if "/permalink/" in path:
             post_id = path.split("/permalink/")[1].split("?")[0]
             if post_id.isdigit():
@@ -217,7 +234,7 @@ def extract_facebook_post_or_video_id(url):
             if post_id.isdigit():
                 return post_id, "post"
     except Exception as e:
-        print(f"Failed to extract post or video ID from {url}")
+        logger.error(f"Failed to extract post or video ID from {url}: {str(e)}")
     return None, None
 
 
@@ -291,13 +308,9 @@ def get_list_post_ID_by_attribute(browser, game_name):
     try:
         # Find post links by looking for anchor elements with specific attributes
         post_links = browser.find_elements(By.XPATH, "//a[starts-with(@attributionsrc, '/privacy_sandbox') and @role='link']")
-        # INSERT_YOUR_CODE
-        logger.info(f"Found {len(post_links)} post links for game: {game_name}")
         for link in post_links:
-            # INSERT_YOUR_CODE
             href = link.get_attribute('href')
-            logger.info(f"Processing link: {href}")
-            found_id, type_id = extract_facebook_post_or_video_id(href)
+            found_id, type_id = extract_facebook_post_or_video_id(link)
             if found_id and f"{found_id}|{type_id}" not in all_ids_found:
                 all_ids_found.append(f"{found_id}|{type_id}")
                 print(f"Post ID: {found_id}")
@@ -309,7 +322,7 @@ def get_list_post_ID_by_attribute(browser, game_name):
             
             for link in fallback_links:
                 href = link.get_attribute('href')
-                found_id, type_id = extract_facebook_post_or_video_id(href)
+                found_id, type_id = extract_facebook_post_or_video_id(link)
                 if found_id and f"{found_id}|{type_id}" not in all_ids_found:
                     all_ids_found.append(f"{found_id}|{type_id}")
                     print(f"Post ID: {found_id}")
@@ -1062,7 +1075,7 @@ def process_game_fanpage(browser, game_fanpages_object, index, all_game_fanpages
         
         # Navigate to game page
         browser.get(f"{FB_DEFAULT_URL}/{game_url}")
-        sleep(random.randint(10, 15) if index < len(all_game_fanpages) - 1 else 0)  # Wait for page load
+        sleep(random.randint(5, 7) if index < len(all_game_fanpages) - 1 else 0)  # Wait for page load
         
         all_post_id_scanned = set()
         last_height = browser.execute_script("return document.body.scrollHeight")
