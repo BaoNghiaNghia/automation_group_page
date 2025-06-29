@@ -263,6 +263,7 @@ def get_list_post_ID_by_attribute(browser, game_name):
             for link in fallback_links:
                 href = link.get_attribute('href')
                 post_id = extract_post_id_from_url(href)
+
                 if post_id and post_id not in posts_found:
                     posts_found.append(post_id)
                     print(f"Post ID: {post_id}")
@@ -1061,18 +1062,19 @@ def process_game_fanpage(browser, game_fanpages_object, index, all_game_fanpages
         with open(post_id_full_path, "w", encoding="utf-8") as f:
             f.write("\n".join(sorted(all_post_id_scanned)))
 
-        # Crawl post data
-        crawlDetailPostData(browser, readDataFromFile(post_id_full_path), game_name, environment, all_game_fanpages)
 
-        print(f"----- Done {len(all_post_id_scanned)} posts: Game {game_name} -----")
+        # # Crawl post data
+        # crawlDetailPostData(browser, readDataFromFile(post_id_full_path), game_name, environment, all_game_fanpages)
 
-        # Add random delay after processing all games
-        if index < len(all_game_fanpages) - 1:
-            sleep_time = random.randint(70, 100)
-            logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
-            sleep(sleep_time)
-            simulate_human_behavior_when_scraping_game(browser, environment)
-            sleep(sleep_time)
+        # print(f"----- Done {len(all_post_id_scanned)} posts: Game {game_name} -----")
+
+        # # Add random delay after processing all games
+        # if index < len(all_game_fanpages) - 1:
+        #     sleep_time = random.randint(70, 100)
+        #     logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
+        #     sleep(sleep_time)
+        #     simulate_human_behavior_when_scraping_game(browser, environment)
+        #     sleep(sleep_time)
         
     except Exception as e:
         print(f"Error processing {game_url}")
