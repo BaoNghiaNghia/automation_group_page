@@ -40,7 +40,7 @@ def clear_uc_driver_cache():
         logger.info(f"No undetected-chromedriver cache folder found at {cache_dir}")
 
 
-def init_browser():
+def init_chrome_undetected_chromedriver():
     """Initialize Chrome browser with undetected-chromedriver options."""
     options = uc.ChromeOptions()
 
@@ -93,7 +93,7 @@ def init_browser():
 
 def login_facebook(username, password, use_cookies=True, cookies_path=None):
     """Login to Facebook using undetected-chromedriver with option to use saved cookies."""
-    browser = init_browser()
+    browser = init_chrome_undetected_chromedriver()
     
     if not cookies_path:
         cookies_dir = os.path.join(os.getcwd(), "facebook_cookies")
