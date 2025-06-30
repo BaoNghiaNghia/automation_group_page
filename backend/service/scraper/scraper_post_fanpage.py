@@ -317,7 +317,7 @@ def get_list_post_ID_by_attribute(browser, game_name):
             found_id, type_id = extract_facebook_post_or_video_id(link)
             if found_id and f"{found_id}|{type_id}" not in all_ids_found:
                 all_ids_found.append(f"{found_id}|{type_id}")
-                print(f"Post ID: {found_id}")
+                print(f"{type_id} ID: {found_id}")
                 
         # If no posts found with the specific XPath, fall back to the URL-based approach
         if not all_ids_found:
@@ -329,7 +329,7 @@ def get_list_post_ID_by_attribute(browser, game_name):
                 found_id, type_id = extract_facebook_post_or_video_id(link)
                 if found_id and f"{found_id}|{type_id}" not in all_ids_found:
                     all_ids_found.append(f"{found_id}|{type_id}")
-                    print(f"Post ID: {found_id}")
+                    print(f"{type_id} ID: {found_id}")
                     logger.info(f"Processing fallback link: {href}")
     except Exception as e:
         print(f"Error retrieving posts")
