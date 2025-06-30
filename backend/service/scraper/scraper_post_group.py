@@ -28,6 +28,10 @@ from backend.constants import (
     logger
 )
 
+from backend.utils.index import (
+    get_chrome_version_main
+)
+
 def clear_uc_driver_cache():
     cache_dir = os.path.expandvars(r'%APPDATA%\undetected_chromedriver')
     if os.path.exists(cache_dir):
@@ -70,7 +74,8 @@ def init_chrome_undetected_chromedriver():
 
     options.add_argument("--disable-blink-features=AutomationControlled")
 
-    browser = uc.Chrome(options=options, version_main=138)
+    ver = get_chrome_version_main()
+    browser = uc.Chrome(version_main=int(ver), options=options)
 
     # Set user agent
     browser.execute_cdp_cmd('Network.setUserAgentOverride', {
