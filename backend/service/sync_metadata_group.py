@@ -331,55 +331,81 @@ def run_sync_metadata_group(environment, use_cookies=True):
                 except Exception as e:
                     logger.error(f"Error navigating to news feed")
                 
+                # Group name
                 try:
-                    # Try first XPath
-                    try:
-                        group_name_element = WebDriverWait(browser, 3).until(
-                            EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[1]/h1/span/a"))
-                        )
-                    except:
-                        # If first XPath fails, try second XPath
-                        group_name_element = WebDriverWait(browser, 3).until(
-                            EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[1]/h1/span/a"))
-                        )
+                    group_name_element = None
+                    group_name_xpaths = [
+                        "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[1]/h1/span/a",
+                        "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[1]/h1/span/a",
+                    ]
+
+                    for xpath in group_name_xpaths:
+                        try:
+                            # Try to find the element with a short timeout
+                            group_name_element = WebDriverWait(browser, 1.5).until(
+                                EC.presence_of_element_located((By.XPATH, xpath))
+                            )
+                            if group_name_element:
+                                break  # Exit loop if element is found
+                        except Exception:
+                            continue # Try next XPath
                     
+                    if not group_name_element:
+                        raise Exception("Group name element not found with any XPath.")
+
                     group_name = group_name_element.text
                     logger.info(f"Group name: {group_name}")
                 except Exception as e:
                     logger.error(f"Error getting group name")
 
+                # Group member
                 try:
-                    try:
-                        group_members_element = WebDriverWait(browser, 3).until(
-                            EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[2]/span/div/div/span/div/div[3]/a"))
-                        )
-                    except:
-                        # If first XPath fails, try second XPath
-                        group_members_element = WebDriverWait(browser, 3).until(
-                            EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[2]/span/div/div/span/div/div[3]/a"))
-                        )
+                    group_members_element = None
+                    group_members_xpaths = [
+                        "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[2]/span/div/div/span/div/div[3]/a",
+                        "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[2]/span/div/div/span/div/div[3]/a",
+                        "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div[1]/div[2]/div/div/div/div/div[1]/div/div/div/div/div/div[2]/span/div/div/span/div/div[3]/a"
+                    ]
+
+                    for xpath in group_members_xpaths:
+                        try:
+                            group_members_element = WebDriverWait(browser, 3).until(
+                                EC.presence_of_element_located((By.XPATH, xpath))
+                            )
+                            if group_members_element:
+                                break  # Exit loop if element is found
+                        except Exception:
+                            continue  # Try next XPath
                     
+                    if not group_members_element:
+                        raise Exception("Group members element not found with any XPath.")
+
                     group_members = group_members_element.text
                     logger.info(f"Group members: {group_members}")
                 except Exception as e:
                     logger.error(f"Error getting group members")
                     
-                try:
-                    # Try first XPath
-                    group_image_element = WebDriverWait(browser, 3).until(
-                        EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div[1]/div[1]/div/div/div/div/div[2]/div/a/div[1]/div/div/div/img"))
-                    )
-                except:
+                group_image_element = None
+                group_image_xpaths = [
+                    "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div[1]/div[1]/div/div/div/div/div[2]/div/a/div[1]/div/div/div/img",
+                    "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[1]/div/div/div/div/div[2]/div/a/div[1]/div/div/div/div/img",
+                    "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[1]/div/div/div/div/div[2]/div/a/div[1]/div/div/div/img",
+                    '//img[@data-imgperflogname="profileCoverPhoto"]'
+                ]
+
+                for xpath in group_image_xpaths:
                     try:
-                        # Try second XPath
                         group_image_element = WebDriverWait(browser, 3).until(
-                            EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[1]/div/div/div/div/div[2]/div/a/div[1]/div/div/div/div/img"))
+                            EC.presence_of_element_located((By.XPATH, xpath))
                         )
-                    except:
-                        # Try third XPath
-                        group_image_element = WebDriverWait(browser, 3).until(
-                            EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div[2]/div/div/div[1]/div[1]/div/div/div/div/div[2]/div/a/div[1]/div/div/div/img"))
-                        )
+                        if group_image_element:
+                            break  # Exit loop if element is found
+                    except Exception:
+                        continue  # Try next XPath
+                
+                if not group_image_element:
+                    raise Exception("Group image element not found with any XPath.")
+
                 image_url = group_image_element.get_attribute('src')
 
                 if image_url:
