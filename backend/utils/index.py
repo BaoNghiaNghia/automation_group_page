@@ -1,5 +1,6 @@
 import os
 import re, subprocess
+import sys
 import random
 import requests
 from cryptography.fernet import Fernet
@@ -107,3 +108,41 @@ def filter_existing_posts(all_post_id_scanned, game_fanpage_id, environment):
         return all_post_id_scanned
     except Exception as e:
         return all_post_id_scanned
+    
+def get_chrome_version_main():
+    ver = None
+
+    # 1. Thử đọc từ Registry trên Windows
+    if sys.platform.startswith("win"):
+        try:
+            import winreg
+            # HKEY_CURRENT_USER cho Chrome user installs
+            key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Google\Chrome\BLBeacon")
+            full_ver, _ = winreg.QueryValueEx(key, "version")
+            ver = full_ver.split(".")[0]
+            winreg.CloseKey(key)
+            return ver
+        except Exception:
+            pass
+
+        # cũng có thể thử dưới HKLM nếu cài cho tất cả user
+        try:
+            key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Google\Chrome\BLBeacon")
+            full_ver, _ = winreg.QueryValueEx(key, "version")
+            ver = full_ver.split(".")[0]
+            winreg.CloseKey(key)
+            return ver
+        except Exception:
+            pass
+
+    # 2. Fallback: thử một loạt tên lệnh trên Linux / Mac
+    for cmd in ("google-chrome", "chrome", "chromium-browser", "chromium", "Google Chrome"):
+        try:
+            out = subprocess.check_output([cmd, "--version"], stderr=subprocess.DEVNULL).decode()
+            m = re.search(r"(\d+)\.", out)
+            if m:
+                return m.group(1)
+        except Exception:
+            continue
+
+    return None

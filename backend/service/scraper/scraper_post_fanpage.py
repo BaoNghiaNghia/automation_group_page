@@ -18,7 +18,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from backend.utils.captcha_solver import solve_captcha, get_captcha_result, readDataFromFile, writeFileTxtPost
 from backend.service.simulation_behaviour import simulate_human_behavior_when_scraping_game, simulate_scrolling_behavior_when_init_facebook
 from backend.utils.index import (
-    filter_existing_posts
+    filter_existing_posts,
+    get_chrome_version_main
 )
 from backend.constants import (
     SCRAPER_FB_ACCOUNT_LIST, 
@@ -75,7 +76,8 @@ def init_chrome_undetected_chromedriver():
 
         options.add_argument("--disable-blink-features=AutomationControlled")
 
-        browser = uc.Chrome(options=options)
+        ver = get_chrome_version_main()
+        browser = uc.Chrome(version_main=int(ver), options=options)
 
         # Set user agent
         browser.execute_cdp_cmd('Network.setUserAgentOverride', {
