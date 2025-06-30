@@ -1,4 +1,5 @@
 import os
+import re, subprocess
 import random
 import requests
 from cryptography.fernet import Fernet
@@ -106,3 +107,9 @@ def filter_existing_posts(all_post_id_scanned, game_fanpage_id, environment):
         return all_post_id_scanned
     except Exception as e:
         return all_post_id_scanned
+    
+def get_chrome_version_main():
+    # Trên Windows: dùng đường dẫn tới chrome.exe nếu cần
+    out = subprocess.check_output(["chrome", "--version"], stderr=subprocess.DEVNULL).decode()
+    m = re.search(r"(\d+)\.", out)
+    return m.group(1) if m else None

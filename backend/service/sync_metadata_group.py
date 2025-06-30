@@ -63,7 +63,7 @@ def init_chrome_undetected_chromedriver():
 
     options.add_argument("--disable-blink-features=AutomationControlled")
 
-    browser = uc.Chrome(options=options, version_main=136) 
+    browser = uc.Chrome(options=options, version_main=138) 
 
     # Set user agent
     browser.execute_cdp_cmd('Network.setUserAgentOverride', {
@@ -113,12 +113,12 @@ def login_facebook(username, password, use_cookies=True, cookies_path=None):
             logger.error(f"Error loading cookies")
 
     browser.get(FB_DEFAULT_URL)
-    sleep(random.randint(6, 12))
+    sleep(random.randint(3, 5))
     WebDriverWait(browser, 3).until(EC.presence_of_element_located((By.ID, "email")))
     browser.find_element(By.ID, "email").send_keys(username)
     browser.find_element(By.ID, "pass").send_keys(password)
     browser.find_element(By.ID, "pass").send_keys(Keys.ENTER)
-    sleep(random.randint(5, 10))
+    sleep(random.randint(2, 4))
 
     if is_logged_in(browser):
         logger.info(f"Successfully logged in with credentials for {username}")

@@ -17,7 +17,10 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from backend.utils.captcha_solver import solve_captcha, get_captcha_result, readDataFromFile, writeFileTxtPost
 from backend.service.simulation_behaviour import simulate_human_behavior_when_scraping_game, simulate_scrolling_behavior_when_init_facebook
-from backend.utils.index import filter_existing_posts
+from backend.utils.index import (
+    filter_existing_posts,
+    get_chrome_version_main
+)
 from backend.constants import (
     SCRAPER_FB_ACCOUNT_LIST, 
     FB_DEFAULT_URL, 
@@ -73,7 +76,8 @@ def init_chrome_undetected_chromedriver():
 
         options.add_argument("--disable-blink-features=AutomationControlled")
 
-        browser = uc.Chrome(options=options, version_main=138)
+        ver = get_chrome_version_main()
+        browser = uc.Chrome(options=options, version_main=int(ver) if ver else None)
 
         # Set user agent
         browser.execute_cdp_cmd('Network.setUserAgentOverride', {
@@ -204,8 +208,8 @@ def extract_facebook_post_or_video_id(url):
             return None, None
             
         parsed_url = urlparse(url)
-        logger.debug(f"Parsing Facebook URL path: {parsed_url}")
         path = parsed_url.path
+        logger.debug(f"Parsing Facebook URL path: {path}")
         # Detect video link
         if "/videos/" in path:
             parts = path.split("/videos/")
@@ -217,7 +221,7 @@ def extract_facebook_post_or_video_id(url):
         if "/reels/" in path:
             parts = path.split("/reels/")
             if len(parts) > 1:
-                id_part = parts[1].split("/")[0].split("?")[0]
+                id_part = parts[1].split("?")[0].split("/")[0]
                 if id_part.isdigit():
                     return id_part, "reel"
         # Detect post link by /posts/
