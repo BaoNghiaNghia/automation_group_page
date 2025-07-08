@@ -43,7 +43,7 @@ if __name__ == "__main__":
                     ref_value = line.split(":", 1)[1].strip() if ":" in line else ""
                     x_refs_total.append({"ref": ref_value, **game})
 
-        run_fb_scraper_multiple_fanpages(all_game_fanpages, args.environment)
+        run_fb_scraper_multiple_fanpages(page_refs_total, args.environment)
         # run_scraper_multiple_groups(group_refs_total, args.environment)
         # run_scraper_multiple_twitter(x_refs_total, args.environment)
 

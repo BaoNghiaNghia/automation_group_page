@@ -101,10 +101,10 @@ def update_ld_devices(config_folder, environment, pcrunner):
                     data["basicSettings.standaloneSysVmdk"] = False  # Enable standalone system (false -> true)
                     # Update resolution and DPI settings for better automation compatibility
                     data["advancedSettings.resolution"] = {
-                        "width": 540,
-                        "height": 960
+                        "width": 720,
+                        "height": 1280
                     }
-                    data["advancedSettings.resolutionDpi"] = 240
+                    data["advancedSettings.resolutionDpi"] = 320
 
                     # Write the updated config back to the file
                     with open(file_path, 'w', encoding='utf-8') as file:

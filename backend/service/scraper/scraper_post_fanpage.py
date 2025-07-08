@@ -1177,6 +1177,7 @@ def run_fb_scraper_multiple_fanpages(all_game_fanpages, environment, use_cookies
         # sleep(final_pause)
 
         # ----------------------- Scraper fanpages ----------------------- #
+        logger.info(f"Total fanpages to scrape: {len(all_game_fanpages)}")
         for index, game_fanpages_selected in enumerate(all_game_fanpages):
             if (game_fanpages_selected['status'] == 'active'):
                 process_game_fanpage(browser, game_fanpages_selected, index, all_game_fanpages, environment)
