@@ -5,7 +5,6 @@ from backend.utils.index import get_all_game_fanpages
 from backend.service.migrate_db import sync_post_into_database
 from backend.service.update_ld_devices import update_ld_devices
 from backend.constants import FOLDER_PATH_DATA_CRAWLER, ENV_CONFIG, logger
-from backend.service.llm.text_generate_deepseek import rewrite_paragraph_deepseek
 from backend.service.scraper.scraper_post_fanpage import run_fb_scraper_multiple_fanpages
 
 

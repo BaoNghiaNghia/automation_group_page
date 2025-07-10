@@ -1,7 +1,6 @@
 import os
 import json
 import time
-import logging
 import requests
 import datetime
 from backend.constants import ENV_CONFIG, logger
