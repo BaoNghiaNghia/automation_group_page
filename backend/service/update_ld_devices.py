@@ -6,9 +6,10 @@ import datetime
 from backend.constants import ENV_CONFIG, logger
 
 
-def extract_player_names(config_folder, key):
+def extract_player_names(config_folder):
     """Extract player names from LDPlayer config files"""
     player_names = []
+    key_to_search = "statusSettings.playerName"
     
     try:
         # Loop through all files in the directory
@@ -22,8 +23,8 @@ def extract_player_names(config_folder, key):
                 with open(file_path, 'r', encoding='utf-8') as file:
                     data = json.load(file)
                     
-                    if key in data:
-                        device_name = data[key].strip()
+                    if key_to_search in data:
+                        device_name = data[key_to_search].strip()
                         # Only add non-empty device names and ignore those with "(banned)"
                         if device_name and "(banned)" not in device_name:
                             player_names.append(device_name)
@@ -213,13 +214,11 @@ def update_ld_devices(config_folder, environment, pcrunner):
         pcrunner (str): Name of the computer running the sync
     """
     # Main execution flow
-    key_to_search = "statusSettings.playerName"
-    
     update_config_file(config_folder)
     
 
     # Extract player names from all .config files in the specified folder
-    local_player_names = extract_player_names(config_folder, key_to_search)
+    local_player_names = extract_player_names(config_folder)
     
     logger.info(f"Found {len(local_player_names)} local devices")
 
