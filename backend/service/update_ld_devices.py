@@ -36,7 +36,8 @@ def extract_player_names(config_folder):
         logger.error(f"Error reading config directory: {str(e)}")
         
     return player_names
-    
+
+
 def update_config_file(config_folder):
     """
     Update a specific key in a device's .config file
@@ -47,6 +48,8 @@ def update_config_file(config_folder):
     Returns:
         bool: True if update was successful, False otherwise
     """
+    
+    logger.info(f"Start updated config files ldplayer instance")
     updated_count = 0
     try:
         # Loop through all files in the directory with .config extension
@@ -137,6 +140,7 @@ def update_config_file(config_folder):
     except Exception as e:
         logger.error(f"Error updating config files: {str(e)}")
         return False
+
 
 def create_new_device_batch(device_names, batch_size=10, pcrunner="pc_1", environment="production"):
     """Create new devices in the database in batches"""
