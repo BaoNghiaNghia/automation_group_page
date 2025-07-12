@@ -222,17 +222,9 @@ def mark_missing_devices_as_banned(database_device, local_player_names, environm
         # Nếu device không tồn tại trên local -> update status
         if device_name not in local_set:
             try:
-                # Chuẩn bị payload cập nhật, chỉ thay đổi trường status
+                # Chỉ cập nhật device_name và status
                 updated_payload = {
-                    "device_name": device.get("device_name", ""),
-                    "device_id": device.get("device_id", ""),
-                    "device_model": device.get("device_model", "Samsung Galaxy S10"),
-                    "android_version": device.get("android_version", "12"),
-                    "serial_number": device.get("serial_number", ""),
-                    "udid": device.get("udid", ""),
-                    "imei": device.get("imei", ""),
-                    "last_run": device.get("last_run", ""),
-                    "count_today": device.get("count_today", 0),
+                    "device_name": device_name,
                     "status": "facebook_banned"
                 }
 
