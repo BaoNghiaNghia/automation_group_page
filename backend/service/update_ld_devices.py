@@ -52,7 +52,6 @@ def update_config_file(config_folder):
     logger.info(f"Start updated config files ldplayer instance")
     updated_count = 0
     try:
-        # Loop through all files in the directory with .config extension
         for filename in os.listdir(config_folder):
             if not filename.endswith(".config"):
                 continue
@@ -60,26 +59,20 @@ def update_config_file(config_folder):
             file_path = os.path.join(config_folder, filename)
 
             try:
-                # Read the current config
                 with open(file_path, 'r', encoding='utf-8') as file:
                     data = json.load(file)
 
-                # Update essential settings for automation
-                # Convert from default values to automation-ready values
-                data["basicSettings.adbDebug"] = 1  # Enable ADB debugging (0 -> 1)
-                data["basicSettings.rootMode"] = True  # Enable root mode (false -> true)
-                data["basicSettings.standaloneSysVmdk"] = False  # Enable standalone system (false -> true)
+                data["basicSettings.adbDebug"] = 1
+                data["basicSettings.rootMode"] = True
+                data["basicSettings.standaloneSysVmdk"] = False
                 data["advancedSettings.cpuCount"] = 4
                 data["advancedSettings.memorySize"] = 4096
-                
-                # Update resolution and DPI settings for better automation compatibility
                 data["advancedSettings.resolution"] = {
                     "width": 720,
                     "height": 1280
                 }
                 data["advancedSettings.resolutionDpi"] = 240
 
-                # Write the updated config back to the file
                 with open(file_path, 'w', encoding='utf-8') as file:
                     json.dump(data, file, indent=2)
 
