@@ -204,59 +204,83 @@ def fetch_device_names_from_api(environment):
         return []
 
 
+def mark_missing_devices_as_banned(database_device_names, local_player_names, environment):
+    banned_count = 0
+    for device_name in database_device_names:
+        if device_name not in local_player_names:
+            try:
+                service_url = ENV_CONFIG[environment]['SERVICE_URL']
+                url = f"{service_url}/ldplayer_devices/update/{device_name}"
+                headers = {"Content-Type": "application/json"}
+                payload = {"status": "facebook_banned"}
+
+                response = requests.put(url, headers=headers, json=payload, timeout=10)
+                if response.status_code in [200, 201]:
+                    logger.info(f"Banned {device_name}")
+                    banned_count += 1
+            except Exception as e:
+                logger.error(f"Update failed for {device_name}: {str(e)}")
+    return banned_count
+
+
 def update_ld_devices(config_folder, environment, pcrunner):
     """
-    Main function to synchronize LDPlayer devices between local config files and database.
-    
-    Args:
-        config_folder (str): Path to the folder containing LDPlayer config files
-        environment (str): Environment to use (local or production)
-        pcrunner (str): Name of the computer running the sync
+    Đồng bộ thông tin thiết bị LDPlayer giữa local và database:
+    - Cập nhật config file
+    - Đăng thiết bị mới nếu thiếu trong DB
+    - Đánh dấu thiết bị đã mất khỏi local là 'facebook_banned'
     """
-    # Main execution flow
+    logger.info("🔄 Bắt đầu đồng bộ thiết bị LDPlayer...")
+
+    # Bước 1: Cập nhật config files
     update_config_file(config_folder)
-    
 
-    # Extract player names from all .config files in the specified folder
+    # Bước 2: Lấy danh sách tên thiết bị local
     local_player_names = extract_player_names(config_folder)
-    
-    logger.info(f"Found {len(local_player_names)} local devices")
+    logger.info(f"📱 Tìm thấy {len(local_player_names)} thiết bị local từ folder {config_folder}")
 
-    # Fetch device names from the API
+    # Bước 3: Lấy danh sách thiết bị từ database
     database_device_names = fetch_device_names_from_api(environment)
-    logger.info(f"Found {len(database_device_names)} devices in database")
+    logger.info(f"🗄️  Tìm thấy {len(database_device_names)} thiết bị trong database")
 
-    # Find devices that are not in the database
-    missing_devices = [device for device in local_player_names if device not in database_device_names]
-    logger.info(f"Found {len(missing_devices)} devices missing from database")
-    
-    # Merged print statements
-    print(f"Tổng cộng: {len(local_player_names)} thiết bị trên máy {pcrunner}\n"
-        f"Tổng cộng: {len(database_device_names)} thiết bị trong Database\n"
-        f"Số lượng thiết bị bổ sung: {len(missing_devices)}")
+    # Bước 4: Thiết bị có local nhưng chưa có trong DB
+    missing_devices = list(set(local_player_names) - set(database_device_names))
+    logger.info(f"🆕 Có {len(missing_devices)} thiết bị chưa có trong database")
 
-    # Process all missing devices in batches
+    print(f"Tổng cộng local: {len(local_player_names)} | DB: {len(database_device_names)} | Thiết bị mới cần thêm: {len(missing_devices)}")
+
     if missing_devices:
-        print("Tạo thiết bị mới trong Database...")
+        print("🚀 Đang thêm thiết bị mới vào database...")
         success_count = 0
-        total_devices = len(missing_devices)
         batch_size = 20
-        
-        for i in range(0, total_devices, batch_size):
-            batch = missing_devices[i:i+batch_size]
-            if batch:
-                success_count += create_new_device_batch(batch, batch_size, pcrunner, environment)
-                
-                # Calculate and show progress percentage
-                processed = min(i + batch_size, total_devices)
-                percentage = (processed / total_devices) * 100
-                print(f"Progress: {percentage:.1f}% ({processed}/{total_devices})")
-                
-                # Add a small delay between batches to avoid overwhelming the API
-                time.sleep(1)
-        
-        logger.info(f"Created {success_count} out of {total_devices} missing devices")
-        print(f"Created {success_count} out of {total_devices} missing devices")
+        for i in range(0, len(missing_devices), batch_size):
+            batch = missing_devices[i:i + batch_size]
+            success_count += create_new_device_batch(batch, batch_size, pcrunner, environment)
+            progress = min(i + batch_size, len(missing_devices)) / len(missing_devices) * 100
+            print(f"Progress: {progress:.1f}% ({i + batch_size}/{len(missing_devices)})")
+            time.sleep(1)
+        print(f"✅ Đã thêm {success_count}/{len(missing_devices)} thiết bị vào database")
+
     else:
-        logger.info("No missing devices to create")
-        print("No missing devices to create")
+        print("✅ Không có thiết bị nào cần thêm vào database")
+
+    # Bước 5: Đánh dấu thiết bị đã bị xóa khỏi local là 'facebook_banned'
+    banned_count = 0
+    for device_name in database_device_names:
+        if device_name not in local_player_names:
+            try:
+                service_url = ENV_CONFIG[environment]['SERVICE_URL']
+                url = f"{service_url}/ldplayer_devices/update/{device_name}"
+                headers = {"Content-Type": "application/json"}
+                payload = {"status": "facebook_banned"}
+
+                response = requests.put(url, headers=headers, json=payload, timeout=10)
+                if response.status_code in [200, 201]:
+                    logger.info(f"⚠️ Thiết bị '{device_name}' bị đánh dấu là facebook_banned")
+                    banned_count += 1
+                else:
+                    logger.warning(f"❌ Lỗi cập nhật {device_name}, status_code: {response.status_code}")
+            except Exception as e:
+                logger.error(f"‼️ Exception khi cập nhật {device_name}: {str(e)}")
+
+    print(f"📛 Đã cập nhật {banned_count} thiết bị thành facebook_banned do không tìm thấy trên local")
