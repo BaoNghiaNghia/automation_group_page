@@ -205,49 +205,55 @@ def fetch_device_names_from_api(environment):
 
 
 def mark_missing_devices_as_banned(database_device_names, local_player_names, environment):
+    """Đánh dấu những thiết bị trong database nhưng không còn trong local là 'facebook_banned'"""
     banned_count = 0
-    for device_name in database_device_names:
-        if device_name not in local_player_names:
-            try:
-                service_url = ENV_CONFIG[environment]['SERVICE_URL']
-                url = f"{service_url}/ldplayer_devices/update/{device_name}"
-                headers = {"Content-Type": "application/json"}
-                payload = {"status": "facebook_banned"}
+    missing_in_local = set(database_device_names) - set(local_player_names)
 
-                response = requests.put(url, headers=headers, json=payload, timeout=10)
-                if response.status_code in [200, 201]:
-                    logger.info(f"Banned {device_name}")
-                    banned_count += 1
-            except Exception as e:
-                logger.error(f"Update failed for {device_name}: {str(e)}")
+    for device_name in missing_in_local:
+        try:
+            service_url = ENV_CONFIG[environment]['SERVICE_URL']
+            url = f"{service_url}/ldplayer_devices/update/{device_name}"
+            headers = {"Content-Type": "application/json"}
+            payload = {"status": "facebook_banned"}
+
+            response = requests.put(url, headers=headers, json=payload, timeout=10)
+            if response.status_code in [200, 201]:
+                logger.info(f"⚠️ Thiết bị '{device_name}' bị đánh dấu là facebook_banned")
+                banned_count += 1
+            else:
+                logger.warning(f"❌ Không cập nhật được {device_name}, mã lỗi: {response.status_code}")
+        except Exception as e:
+            logger.error(f"‼️ Lỗi cập nhật thiết bị {device_name}: {str(e)}")
+    
     return banned_count
+
 
 
 def update_ld_devices(config_folder, environment, pcrunner):
     """
-    Đồng bộ thông tin thiết bị LDPlayer giữa local và database:
-    - Cập nhật config file
-    - Đăng thiết bị mới nếu thiếu trong DB
-    - Đánh dấu thiết bị đã mất khỏi local là 'facebook_banned'
+    Đồng bộ thiết bị LDPlayer giữa local và database:
+    - Cập nhật file config
+    - Tạo thiết bị mới nếu thiếu trong DB
+    - Đánh dấu thiết bị mất trên local là 'facebook_banned'
     """
     logger.info("🔄 Bắt đầu đồng bộ thiết bị LDPlayer...")
 
-    # Bước 1: Cập nhật config files
+    # Bước 1: Cập nhật file cấu hình
     update_config_file(config_folder)
 
-    # Bước 2: Lấy danh sách tên thiết bị local
+    # Bước 2: Đọc danh sách thiết bị local
     local_player_names = extract_player_names(config_folder)
-    logger.info(f"📱 Tìm thấy {len(local_player_names)} thiết bị local từ folder {config_folder}")
+    logger.info(f"📱 Tìm thấy {len(local_player_names)} thiết bị local")
 
-    # Bước 3: Lấy danh sách thiết bị từ database
+    # Bước 3: Đọc danh sách thiết bị từ DB
     database_device_names = fetch_device_names_from_api(environment)
     logger.info(f"🗄️  Tìm thấy {len(database_device_names)} thiết bị trong database")
 
-    # Bước 4: Thiết bị có local nhưng chưa có trong DB
+    # Bước 4: Tìm thiết bị cần tạo mới
     missing_devices = list(set(local_player_names) - set(database_device_names))
-    logger.info(f"🆕 Có {len(missing_devices)} thiết bị chưa có trong database")
+    logger.info(f"🆕 Có {len(missing_devices)} thiết bị cần thêm vào database")
 
-    print(f"Tổng cộng local: {len(local_player_names)} | DB: {len(database_device_names)} | Thiết bị mới cần thêm: {len(missing_devices)}")
+    print(f"Tổng cộng local: {len(local_player_names)} | DB: {len(database_device_names)} | Thiết bị mới: {len(missing_devices)}")
 
     if missing_devices:
         print("🚀 Đang thêm thiết bị mới vào database...")
@@ -260,27 +266,9 @@ def update_ld_devices(config_folder, environment, pcrunner):
             print(f"Progress: {progress:.1f}% ({i + batch_size}/{len(missing_devices)})")
             time.sleep(1)
         print(f"✅ Đã thêm {success_count}/{len(missing_devices)} thiết bị vào database")
-
     else:
-        print("✅ Không có thiết bị nào cần thêm vào database")
+        print("✅ Không có thiết bị mới cần thêm")
 
-    # Bước 5: Đánh dấu thiết bị đã bị xóa khỏi local là 'facebook_banned'
-    banned_count = 0
-    for device_name in database_device_names:
-        if device_name not in local_player_names:
-            try:
-                service_url = ENV_CONFIG[environment]['SERVICE_URL']
-                url = f"{service_url}/ldplayer_devices/update/{device_name}"
-                headers = {"Content-Type": "application/json"}
-                payload = {"status": "facebook_banned"}
-
-                response = requests.put(url, headers=headers, json=payload, timeout=10)
-                if response.status_code in [200, 201]:
-                    logger.info(f"⚠️ Thiết bị '{device_name}' bị đánh dấu là facebook_banned")
-                    banned_count += 1
-                else:
-                    logger.warning(f"❌ Lỗi cập nhật {device_name}, status_code: {response.status_code}")
-            except Exception as e:
-                logger.error(f"‼️ Exception khi cập nhật {device_name}: {str(e)}")
-
-    print(f"📛 Đã cập nhật {banned_count} thiết bị thành facebook_banned do không tìm thấy trên local")
+    # Bước 5: Cập nhật trạng thái 'facebook_banned' cho thiết bị không còn trong local
+    banned_count = mark_missing_devices_as_banned(database_device_names, local_player_names, environment)
+    print(f"📛 Đã cập nhật {banned_count} thiết bị thành 'facebook_banned' vì không còn xuất hiện trên local")
