@@ -179,15 +179,18 @@ def create_new_device_batch(device_names, batch_size=10, pcrunner="pc_1", enviro
         return 0
     
     
-def fetch_device_names_from_api(environment):
-    """Fetch device names from the API and return as a list"""
+def fetch_device_by_pc_runner_from_api(environment, pcrunner=None):
+    """Fetch device names from the API and return as a list. Optionally filter by pc_runner."""
     try:
         # Construct the API URL
         service_url = ENV_CONFIG[environment]['SERVICE_URL']
         api_url = f"{service_url}/ldplayer_devices/all"
+        params = {}
+        if pcrunner:
+            params['pc_runner'] = pcrunner
 
         # Make the API request
-        response = requests.get(api_url, timeout=30)
+        response = requests.get(api_url, params=params, timeout=30)
         if response.status_code in [200, 201]:
             data = response.json()
             
@@ -260,7 +263,7 @@ def update_ld_devices(config_folder, environment, pcrunner):
     logger.info(f"📱 Tìm thấy {len(local_player_names)} thiết bị local")
 
     # Bước 3: Đọc danh sách thiết bị từ DB
-    database_device = fetch_device_names_from_api(environment)
+    database_device = fetch_device_by_pc_runner_from_api(environment, pcrunner)
     database_device_names = [item['device_name'] for item in database_device]
     logger.info(f"🗄️  Tìm thấy {len(database_device_names)} thiết bị trong database")
 
