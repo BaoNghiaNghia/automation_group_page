@@ -246,7 +246,7 @@ def mark_missing_devices_as_banned(database_device, local_player_names, environm
                     banned_count += 1
                 else:
                     logger.warning(
-                        f"❌ Không cập nhật được {device_name}, mã lỗi: {response.status_code}, payload: {updated_payload}"
+                        f"❌ Không cập nhật được {device_name}, mã lỗi: {response.status_code}, payload: {url}"
                     )
             except Exception as e:
                 logger.error(f"‼️ Lỗi khi cập nhật thiết bị {device_name}: {str(e)}")
