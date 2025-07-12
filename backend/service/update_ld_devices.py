@@ -71,8 +71,8 @@ def update_config_file(config_folder):
                 data["basicSettings.standaloneSysVmdk"] = False  # Enable standalone system (false -> true)
                 # Update resolution and DPI settings for better automation compatibility
                 data["advancedSettings.resolution"] = {
-                    "width": 540,
-                    "height": 960
+                    "width": 720,
+                    "height": 1280
                 }
                 data["advancedSettings.resolutionDpi"] = 240
 
