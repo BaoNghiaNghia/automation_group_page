@@ -223,9 +223,19 @@ def mark_missing_devices_as_banned(database_device, local_player_names, environm
         # Nếu device không tồn tại trên local -> update status
         if device_name not in local_set:
             try:
-                # Chuẩn bị payload cập nhật
-                updated_payload = device.copy()
-                updated_payload["status"] = "facebook_banned"
+                # Only accept and send the allowed fields
+                updated_payload = {
+                    "device_name": device.get("device_name"),
+                    "device_id": device.get("device_id"),
+                    "device_model": device.get("device_model"),
+                    "android_version": device.get("android_version"),
+                    "serial_number": device.get("serial_number"),
+                    "udid": device.get("udid"),
+                    "imei": device.get("imei"),
+                    "last_run": device.get("last_run"),
+                    "count_today": device.get("count_today"),
+                    "status": "facebook_banned"
+                }
 
                 service_url = ENV_CONFIG[environment]['SERVICE_URL']
                 url = f"{service_url}/ldplayer_devices/update/{device.get('id')}"
