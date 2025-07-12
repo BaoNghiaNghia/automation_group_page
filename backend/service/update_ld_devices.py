@@ -206,37 +206,39 @@ def fetch_device_names_from_api(environment):
 
 def mark_missing_devices_as_banned(database_device, local_player_names, environment):
     """
-    Đánh dấu thiết bị trong database nhưng không có trên local là 'facebook_banned',
-    bằng cách gửi toàn bộ dữ liệu thiết bị và cập nhật lại status.
+    Với mỗi thiết bị trong database, nếu không có trong danh sách local thì cập nhật status = 'facebook_banned'
+    Gửi toàn bộ thông tin thiết bị lên, chỉ thay đổi trường status.
     """
     banned_count = 0
-    database_device_names = [item['device_name'] for item in database_device]
-    missing_in_local = set(database_device_names) - set(local_player_names)
+    local_set = set(local_player_names)
 
     for device in database_device:
         device_name = device.get('device_name')
-        if device_name not in missing_in_local:
+        if not device_name:
             continue
 
-        try:
-            service_url = ENV_CONFIG[environment]['SERVICE_URL']
-            url = f"{service_url}/ldplayer_devices/update/{device_name}"
-            headers = {"Content-Type": "application/json"}
+        # Nếu device không tồn tại trên local -> update status
+        if device_name not in local_set:
+            try:
+                # Chuẩn bị payload cập nhật
+                updated_payload = device.copy()
+                updated_payload["status"] = "facebook_banned"
 
-            # Sao chép toàn bộ dữ liệu và cập nhật status
-            payload = device.copy()
-            payload["status"] = "facebook_banned"
+                service_url = ENV_CONFIG[environment]['SERVICE_URL']
+                url = f"{service_url}/ldplayer_devices/update/{device_name}"
+                headers = {"Content-Type": "application/json"}
 
-            response = requests.put(url, headers=headers, json=payload, timeout=10)
-            if response.status_code in [200, 201]:
-                logger.info(f"⚠️ Đã đánh dấu thiết bị '{device_name}' là facebook_banned")
-                banned_count += 1
-            else:
-                logger.warning(f"❌ Không cập nhật được {device_name}, mã lỗi: {response.status_code}")
-        except Exception as e:
-            logger.error(f"‼️ Lỗi khi cập nhật {device_name}: {str(e)}")
+                response = requests.put(url, headers=headers, json=updated_payload, timeout=10)
+                if response.status_code in [200, 201]:
+                    logger.info(f"⚠️ Thiết bị '{device_name}' bị đánh dấu là facebook_banned")
+                    banned_count += 1
+                else:
+                    logger.warning(f"❌ Không cập nhật được {device_name}, mã lỗi: {response.status_code}")
+            except Exception as e:
+                logger.error(f"‼️ Lỗi khi cập nhật thiết bị {device_name}: {str(e)}")
 
     return banned_count
+
 
 
 
