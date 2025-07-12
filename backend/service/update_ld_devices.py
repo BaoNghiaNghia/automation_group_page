@@ -228,10 +228,8 @@ def mark_missing_devices_as_banned(database_device, local_player_names, environm
                 updated_payload["status"] = "facebook_banned"
 
                 service_url = ENV_CONFIG[environment]['SERVICE_URL']
-                url = f"{service_url}/ldplayer_devices/update/{device_name}"
+                url = f"{service_url}/ldplayer_devices/update/{device.get('id')}"
                 headers = {"Content-Type": "application/json"}
-                
-                logger.debug(f"Updating device '{device_name}' with payload: {updated_payload}")
 
                 response = requests.put(url, headers=headers, json=updated_payload, timeout=10)
                 if response.status_code in [200, 201]:
