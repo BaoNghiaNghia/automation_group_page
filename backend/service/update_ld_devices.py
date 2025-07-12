@@ -69,6 +69,9 @@ def update_config_file(config_folder):
                 data["basicSettings.adbDebug"] = 1  # Enable ADB debugging (0 -> 1)
                 data["basicSettings.rootMode"] = True  # Enable root mode (false -> true)
                 data["basicSettings.standaloneSysVmdk"] = False  # Enable standalone system (false -> true)
+                data["advancedSettings.cpuCount"] = 4
+                data["advancedSettings.memorySize"] = 4096
+                
                 # Update resolution and DPI settings for better automation compatibility
                 data["advancedSettings.resolution"] = {
                     "width": 720,
