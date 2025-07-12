@@ -230,9 +230,9 @@ def mark_missing_devices_as_banned(database_device, local_player_names, environm
 
                 service_url = ENV_CONFIG[environment]['SERVICE_URL']
                 url = f"{service_url}/ldplayer_devices/update/{device.get('id')}"
-                headers = {"Content-Type": "application/json"}
 
-                response = requests.put(url, headers=headers, json=updated_payload, timeout=10)
+                response = requests.put(url, headers={"Content-Type": "application/json"}, json=updated_payload, timeout=30)
+                logger.debug(f"Response from update API for device '{device_name}': {response.status_code} - {response.text}")
                 if response.status_code in [200, 201]:
                     logger.info(f"⚠️ Thiết bị '{device_name}' bị đánh dấu là facebook_banned")
                     banned_count += 1
