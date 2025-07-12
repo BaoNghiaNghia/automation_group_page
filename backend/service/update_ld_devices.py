@@ -210,7 +210,6 @@ def fetch_device_by_pc_runner_from_api(environment, pcrunner=None):
 def mark_missing_devices_as_banned(database_device, local_player_names, environment):
     """
     Với mỗi thiết bị trong database, nếu không có trong danh sách local thì cập nhật status = 'facebook_banned'
-    Gửi toàn bộ thông tin thiết bị lên, chỉ thay đổi trường status.
     """
     banned_count = 0
     local_set = set(local_player_names)
@@ -223,17 +222,17 @@ def mark_missing_devices_as_banned(database_device, local_player_names, environm
         # Nếu device không tồn tại trên local -> update status
         if device_name not in local_set:
             try:
-                # Only accept and send the allowed fields
+                # Chuẩn bị payload cập nhật, chỉ thay đổi trường status
                 updated_payload = {
-                    "device_name": device.get("device_name"),
-                    "device_id": device.get("device_id"),
-                    "device_model": device.get("device_model"),
-                    "android_version": device.get("android_version"),
-                    "serial_number": device.get("serial_number"),
-                    "udid": device.get("udid"),
-                    "imei": device.get("imei"),
-                    "last_run": device.get("last_run"),
-                    "count_today": device.get("count_today"),
+                    "device_name": device.get("device_name", ""),
+                    "device_id": device.get("device_id", ""),
+                    "device_model": device.get("device_model", "Samsung Galaxy S10"),
+                    "android_version": device.get("android_version", "12"),
+                    "serial_number": device.get("serial_number", ""),
+                    "udid": device.get("udid", ""),
+                    "imei": device.get("imei", ""),
+                    "last_run": device.get("last_run", ""),
+                    "count_today": device.get("count_today", 0),
                     "status": "facebook_banned"
                 }
 
@@ -246,7 +245,9 @@ def mark_missing_devices_as_banned(database_device, local_player_names, environm
                     logger.info(f"⚠️ Thiết bị '{device_name}' bị đánh dấu là facebook_banned")
                     banned_count += 1
                 else:
-                    logger.warning(f"❌ Không cập nhật được {device_name}, mã lỗi: {response.status_code}, {updated_payload}")
+                    logger.warning(
+                        f"❌ Không cập nhật được {device_name}, mã lỗi: {response.status_code}, payload: {updated_payload}"
+                    )
             except Exception as e:
                 logger.error(f"‼️ Lỗi khi cập nhật thiết bị {device_name}: {str(e)}")
 
