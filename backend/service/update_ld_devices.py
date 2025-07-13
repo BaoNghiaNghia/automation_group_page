@@ -71,7 +71,7 @@ def update_config_file(config_folder):
                     "width": 720,
                     "height": 1280
                 }
-                data["advancedSettings.resolutionDpi"] = 240
+                data["advancedSettings.resolutionDpi"] = 320
 
                 with open(file_path, 'w', encoding='utf-8') as file:
                     json.dump(data, file, indent=2)
@@ -247,9 +247,6 @@ def mark_missing_devices_as_banned(database_device, local_player_names, environm
                 logger.error(f"‼️ Lỗi khi cập nhật thiết bị {device_name}: {str(e)}")
 
     return banned_count
-
-
-
 
 
 def update_ld_devices(config_folder, environment, pcrunner):
