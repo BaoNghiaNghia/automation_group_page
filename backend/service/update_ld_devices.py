@@ -103,7 +103,7 @@ def update_config_file(config_folder):
                 # Read the config to get the player name
                 with open(file_path, 'r', encoding='utf-8') as file:
                     data = json.load(file)
-                
+
                 # Get player name from config
                 if "statusSettings.playerName" in data:
                     player_name = data["statusSettings.playerName"].strip()
@@ -117,11 +117,10 @@ def update_config_file(config_folder):
                             except Exception as e:
                                 logger.error(f"Failed to create folder for player {player_name}: {str(e)}")
                                 continue
-                        
+
                         # Update the sharedPictures setting in the config using forward slashes
-                        player_folder_formatted = player_folder.replace("\\", "/")
-                        data["statusSettings.sharedPictures"] = player_folder_formatted
-                        
+                        data["statusSettings.sharedPictures"] = player_folder.replace("\\", "/")
+
                         # Write the updated config back to the file
                         with open(file_path, 'w', encoding='utf-8') as file:
                             json.dump(data, file, indent=2)
