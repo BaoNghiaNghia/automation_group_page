@@ -15,8 +15,15 @@ LIMIT_SCROLL_FRIEND_REACTION_POST = 5
 
 API_KEY_CAPTCHA = 'point_3d0bd505d511c336b6279f4815057b9a'
 FB_DEFAULT_URL = "https://www.facebook.com"
+TWITTER_DEFAULT_URL = "https://x.com"
+
+
 SCRAPER_FB_ACCOUNT_LIST = [
     ("0399988593", "p6+p7N&r%M$#B5b"),
+]
+
+SCRAPER_TWITTER_ACCOUNT_LIST = [
+    ("baonghia.ios@gmail.com", "BaoNghia123@@"),
 ]
 
 # Environment-specific configurations
