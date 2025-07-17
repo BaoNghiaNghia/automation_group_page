@@ -1144,7 +1144,7 @@ def run_scraper_multiple_twitter(x_refs_total, environment, use_cookies=True):
                 browser_running.get(game_ref.get('ref'))
                 time.sleep(random.uniform(4, 6))
                 
-                all_anchor_elements = set()
+                all_anchor_records = dict()  # key: href, value: record (can be dict or just href)
                 max_scrolls = 50
                 last_height = browser_running.execute_script("return document.body.scrollHeight")
                 for scroll_count in range(max_scrolls):
@@ -1155,8 +1155,10 @@ def run_scraper_multiple_twitter(x_refs_total, environment, use_cookies=True):
                     logger.info(f"Scroll {scroll_count+1}/{max_scrolls}: Found {len(anchor_elements)} <a> tags matching Twitter status pattern.")
                     for a in anchor_elements:
                         href = a.get_attribute("href")
-                        if href:
-                            all_anchor_elements.add(href)
+                        if href and href not in all_anchor_records:
+                            # You can expand this record as needed, e.g. with tweet id, text, etc.
+                            record = {"href": href}
+                            all_anchor_records[href] = record
                             logger.info(f"Found tweet link: {href}")
                     scroll_down(browser_running)
                     new_height = browser_running.execute_script("return document.body.scrollHeight")
@@ -1164,9 +1166,9 @@ def run_scraper_multiple_twitter(x_refs_total, environment, use_cookies=True):
                         logger.info(f"Reached the bottom of the page after {scroll_count+1} scrolls.")
                         break
                     last_height = new_height
-                logger.info(f"Total unique tweet links found after {scroll_count+1} scrolls: {len(all_anchor_elements)}")
+                logger.info(f"Total unique tweet records found after {scroll_count+1} scrolls: {len(all_anchor_records)}")
 
-                time.sleep(random.uniform(500, 600))
+                time.sleep(random.uniform(1, 2))
             except Exception as e:
                 logger.error(f"Error processing Twitter game")
         
