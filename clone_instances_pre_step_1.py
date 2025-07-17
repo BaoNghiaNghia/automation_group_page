@@ -39,12 +39,29 @@ def generate():
     template = load_template()
     for i in range(START_INDEX, END_INDEX + 1):
         config = template.copy()
+
+        # Random hóa device identity
         config["propertySettings.phoneIMEI"] = random_imei()
         config["propertySettings.phoneIMSI"] = random_imsi()
         config["propertySettings.phoneSimSerial"] = random_sim_serial()
         config["propertySettings.phoneAndroidId"] = random_android_id()
         config["propertySettings.macAddress"] = random_mac()
+
+        # Gán tên instance
         config["statusSettings.playerName"] = f"leidian{i}"
+
+        # Thêm các cấu hình tối ưu hóa
+        config["basicSettings.rootMode"] = True
+        config["statusSettings.closeOption"] = 1
+        config["basicSettings.heightFrameRate"] = False
+        config["basicSettings.adbDebug"] = 1
+        config["advancedSettings.resolution"] = {
+            "width": 720,
+            "height": 1280
+        }
+        config["advancedSettings.resolutionDpi"] = 320
+        config["advancedSettings.cpuCount"] = 2
+        config["advancedSettings.memorySize"] = 4096
 
         save_config(i, config)
 
