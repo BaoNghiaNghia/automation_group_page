@@ -1,21 +1,18 @@
 @echo off
 setlocal
 
+set PYTHON_EXE=python
+set SCRIPT_PY=generate_config_files.py
 set TEMPLATE_FOLDER=D:\LDPlayer\LDPlayer9\vms\leidian0
 set TARGET_FOLDER=D:\LDPlayer\LDPlayer9\vms
-set CONFIG_FOLDER=D:\LDPlayer\LDPlayer9\vms\config
 
 for /L %%i in (1,1,340) do (
-    echo ========================
-    echo Tạo instance leidian%%i
-
-    rem Copy thư mục VM template
+    echo [COPY] -> leidian%%i
     xcopy "%TEMPLATE_FOLDER%" "%TARGET_FOLDER%\leidian%%i" /E /Y /I
-
-    rem Copy file cấu hình .config
-    copy /Y "%CONFIG_FOLDER%\leidian0.config" "%CONFIG_FOLDER%\leidian%%i.config"
-
-    timeout /t 7 /nobreak >nul
+    timeout /t 5 /nobreak >nul
 )
+
+echo [GENERATE CONFIG FILES]
+%PYTHON_EXE% "%SCRIPT_PY%"
 
 pause
