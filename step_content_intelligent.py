@@ -19,7 +19,7 @@ if __name__ == "__main__":
         if not (all_game_fanpages := get_all_game_fanpages(args.environment, {
             "page": 1,
             "limit": 300,
-            "priority": 1        # 0 (normal) and 1 (priority)
+            "priority": 2        # 2 is highest priority
         })):
             logger.error("No game URLs found")
             exit(1)
@@ -42,7 +42,7 @@ if __name__ == "__main__":
                 elif line.startswith("X_Ref_"):
                     ref_value = line.split(":", 1)[1].strip() if ":" in line else ""
                     x_refs_total.append({"ref": ref_value, **game})
-        # logger.info(f"x_refs_total: {x_refs_total}")
+        logger.info(f"x_refs_total: {x_refs_total}")
 
         # run_fb_scraper_multiple_fanpages(page_refs_total, args.environment)
         # run_scraper_multiple_groups(group_refs_total, args.environment)
