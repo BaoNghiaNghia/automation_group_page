@@ -343,7 +343,7 @@ def authentication_google_account(account, position_type="topright", proxy=None)
         
         browser.get("https://accounts.google.com/ServiceLogin")
         
-        time.sleep(random.randint(2, 4))
+        time.sleep(random.randint(1, 2))
         
         # Username input
         WebDriverWait(browser, 2).until(
@@ -370,8 +370,7 @@ def authentication_google_account(account, position_type="topright", proxy=None)
             password_input.send_keys(account["password"])
             password_input.send_keys(Keys.RETURN)
 
-        time.sleep(random.randint(30, 36))
-        
+        time.sleep(random.randint(2, 4))
         
         # Find and click the element
         if element_option_recovery_email := browser.find_element(By.XPATH, "/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div/form/span/section[2]/div/div/section/div/div/div/ul/li[3]/div"):

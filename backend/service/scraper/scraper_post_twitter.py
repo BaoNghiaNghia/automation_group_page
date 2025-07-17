@@ -1140,9 +1140,23 @@ def run_scraper_multiple_twitter(x_refs_total, environment, use_cookies=True):
         for game_ref in x_refs_total:
             try:
                 # INSERT_YOUR_CODE
-                logger.info(f"Processing Twitter game_ref: {game_ref}")
+                # logger.info(f"Processing Twitter game_ref: {game_ref}")
                 browser_running.get(game_ref.get('ref'))
-                time.sleep(random.uniform(20, 40))
+                time.sleep(random.uniform(4, 6))
+                
+                anchor_elements = browser_running.find_elements(
+                    By.XPATH,
+                    '//a[@dir="ltr" and @role="link" and starts-with(@href, "/") and contains(@href, "/status/")]'
+                )
+
+                logger.info(f"Found {len(anchor_elements)} <a> tags matching Twitter status pattern.")
+
+                # Optionally, print their hrefs for debugging
+                for a in anchor_elements:
+                    href = a.get_attribute("href")
+                    logger.info(f"Found tweet link: {href}")
+
+                time.sleep(random.uniform(500, 600))
             except Exception as e:
                 logger.error(f"Error processing Twitter game")
         
