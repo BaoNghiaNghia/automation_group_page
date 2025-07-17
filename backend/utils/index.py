@@ -1,12 +1,14 @@
 import os
 import re, subprocess
 import psutil
-import logger
 import sys
 import random
 import requests
 from cryptography.fernet import Fernet
-from backend.constants import ENV_CONFIG
+from backend.constants import (
+    logger,
+    ENV_CONFIG
+)
 
 
 # Generate a key (do this once and save it securely)
