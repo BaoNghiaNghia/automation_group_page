@@ -1160,7 +1160,7 @@ def run_scraper_multiple_twitter(x_refs_total, environment, use_cookies=True):
                     scroll_down(browser_running)
                     new_height = browser_running.execute_script("return document.body.scrollHeight")
                     if new_height == last_height:
-                        logger.info(f"Reached the bottom of the page after {scroll_count+1} scrolls.")
+                        # logger.info(f"Reached the bottom of the page after {scroll_count+1} scrolls.")
                         break
                     last_height = new_height
                 logger.info(f"Total unique tweet records found after {scroll_count+1} scrolls: {len(all_anchor_records)}")
