@@ -18,6 +18,10 @@ FB_DEFAULT_URL = "https://www.facebook.com"
 TWITTER_DEFAULT_URL = "https://x.com"
 
 
+BASE_PROFILE_DIR = os.path.join(os.getcwd(), "Profile_Google")
+
+GMAIL_TWITTER = [{ "baonghia.ios@gmail.com", "BaoNghia123@@" }]
+
 SCRAPER_FB_ACCOUNT_LIST = [
     ("0399988593", "p6+p7N&r%M$#B5b"),
 ]

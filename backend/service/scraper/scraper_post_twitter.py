@@ -1,27 +1,40 @@
 import os
 import json
+import time
 import random
 import shutil
 import pickle
+
 import requests
+from requests.exceptions import RequestException
+
 from PIL import Image
 from io import BytesIO
-from time import sleep
 import undetected_chromedriver as uc
 from urllib.parse import urlparse
+
+
+from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from backend.utils.captcha_solver import solve_captcha, get_captcha_result, readDataFromFile, writeFileTxtPost
-from backend.service.simulation_behaviour import simulate_human_behavior_when_scraping_game, simulate_scrolling_behavior_when_init_facebook
+from backend.utils.captcha_solver import (
+    solve_captcha,
+    get_captcha_result,
+    readDataFromFile,
+    writeFileTxtPost
+)
 from backend.utils.index import (
     filter_existing_posts,
-    get_chrome_version_main
+    get_chrome_version_main,
+    close_remote_debug_port
 )
 from backend.constants import (
+    logger,
     SCRAPER_TWITTER_ACCOUNT_LIST, 
     FB_DEFAULT_URL, 
     FOLDER_PATH_DATA_CRAWLER, 
@@ -30,8 +43,14 @@ from backend.constants import (
     ENV_CONFIG,
     LIST_COMPETIOR_GROUP_LINK,
     LIMIT_SCROLL_FRIEND_REACTION_POST,
-    logger
+    GMAIL_TWITTER,
+    TWITTER_DEFAULT_URL
 )
+
+from backend.service.scraper.init_undetected_chromedriver import (
+    authentication_google_account
+)
+
 
 def clear_uc_driver_cache():
     cache_dir = os.path.expandvars(r'%APPDATA%\undetected_chromedriver')
@@ -296,7 +315,7 @@ def get_list_post_ID_by_attribute(browser, game_name):
 def scroll_down(browser):
     """Scroll down the page to load more posts."""
     browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    sleep(random.randint(5, 9))  # Wait for content to load
+    time.sleep(random.randint(5, 9))  # Wait for content to load
 
 
 def clonePostContent(driver, postId):
@@ -435,7 +454,7 @@ def crawlDetailPostData(driver, postIds, game_name, environment, list_game_fanpa
                 # TODO: Stop get friend reaction post
                 # handle_friend_reaction(driver, game_fanpage_id, environment)
 
-            sleep(random.randint(12, 14))
+            time.sleep(random.randint(12, 14))
         except Exception as e:
             print(f"Error in crawlDetailPostData")
 
@@ -444,7 +463,7 @@ def handle_friend_reaction(driver, game_fanpage_id, environment):
     # Click on the specified element (like button or reaction)
     try:
         # Wait for a random time before clicking to simulate human behavior
-        sleep(random.uniform(1.5, 3.0))
+        time.sleep(random.uniform(1.5, 3.0))
         
         # Find and click the specified element
         like_button = driver.find_element(By.XPATH, 
@@ -455,7 +474,7 @@ def handle_friend_reaction(driver, game_fanpage_id, environment):
         driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", like_button)
         
         # Wait a moment after scrolling
-        sleep(random.uniform(0.8, 1.5))
+        time.sleep(random.uniform(0.8, 1.5))
         
         # Click the element
         like_button.click()
@@ -464,14 +483,14 @@ def handle_friend_reaction(driver, game_fanpage_id, environment):
         # Wait for about 7 seconds after clicking like button
         sleep_time = random.uniform(6.5, 9.5)
         print(f"Waiting for {sleep_time:.2f} seconds after clicking like button...")
-        sleep(sleep_time)
+        time.sleep(sleep_time)
         
         # Call the function to handle reaction panel
         handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment)
 
         
         # Wait a moment after clicking
-        sleep(random.uniform(1.0, 2.0))
+        time.sleep(random.uniform(1.0, 2.0))
     except Exception as e:
         print(f"Could not click on reaction element")
 
@@ -508,7 +527,7 @@ def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
         # Only proceed if we found a reaction panel
         if reaction_panel:
             # Add a random sleep to ensure the panel is fully loaded
-            sleep(random.uniform(1.0, 2.0))
+            time.sleep(random.uniform(1.0, 2.0))
 
             try:
                 panel_container = driver.find_element(By.XPATH, f"{panel_xpath_used}/div/div/div/div[2]/div[2]/div/div/div[2]")
@@ -530,7 +549,7 @@ def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
                 while current_bottom_diff > 5 and scroll_rounds < LIMIT_SCROLL_FRIEND_REACTION_POST:
                     action = ActionChains(driver)
                     action.click_and_hold(drag_element)
-                    sleep(random.uniform(1, 3))  # Hold for a moment
+                    time.sleep(random.uniform(1, 3))  # Hold for a moment
                     
                     # Adjust scroll distance based on difference
                     scroll_distance = min(100, current_bottom_diff)
@@ -538,7 +557,7 @@ def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
                     action.release()
                     action.perform()
                     
-                    sleep(random.uniform(1, 3))
+                    time.sleep(random.uniform(1, 3))
                     scroll_rounds += 1
                     
                     # Update positions after scrolling
@@ -554,7 +573,7 @@ def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
                 
                 # Click on panel container to finish interaction
                 ActionChains(driver).move_to_element(panel_container).click().perform()
-                sleep(random.uniform(0.3, 0.7))
+                time.sleep(random.uniform(0.3, 0.7))
                 
             except Exception as scroll_error:
                 print(f"Error during scroll attempt: {str(scroll_error)}")
@@ -625,7 +644,7 @@ def handle_get_friend_reaction_post_panel(driver, game_fanpage_id, environment):
                                         print(f"API request failed: status {response.status_code}, response: {response.text}")
                                         
                                     # Add a 500ms delay between API requests
-                                    sleep(0.5)
+                                    time.sleep(0.5)
                                 except requests.exceptions.RequestException as req_err:
                                     print(f"Request error sending batch {i//batch_size + 1}: {req_err}")
                                     
@@ -652,7 +671,7 @@ def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
         cookies_path = os.path.join(os.getcwd(), "facebook_cookies", f"{username}_cookies.pkl")
         browser = login_twitter(username, password, use_cookies=use_cookies, cookies_path=cookies_path)
 
-        sleep(random.randint(2, 5))
+        time.sleep(random.randint(2, 5))
 
         # Handle CAPTCHA if present
         if handle_captcha_if_present(browser, username, password):
@@ -681,7 +700,7 @@ def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
                 # Check if no posts found after 3 attempts
                 if attempt >= 3 and len(all_post_id_scanned) == 0:
                     print("No posts found after 3 attempts, exiting.")
-                    sleep(random.randint(10, 15))
+                    time.sleep(random.randint(10, 15))
                     browser.quit()
                     return
 
@@ -690,10 +709,10 @@ def run_fb_scraper_single_fanpage_posts(game_name, use_cookies=True):
                 while scheight < 10.0:
                     browser.execute_script("window.scrollTo(0, document.body.scrollHeight/%s);" % scheight)
                     scheight += 0.01
-                    sleep(0.01)  # Small pause between scroll increments
+                    time.sleep(0.01)  # Small pause between scroll increments
                 
                 # Add a small pause after smooth scrolling
-                sleep(random.uniform(1.0, 2.0))
+                time.sleep(random.uniform(1.0, 2.0))
                 
                 new_height = browser.execute_script("return document.body.scrollHeight")
 
@@ -781,7 +800,7 @@ def handle_captcha_if_present(browser, username, password):
 
             # Click the "Continue" button to proceed
             submit_captcha(browser)
-            sleep(random.randint(5, 9))
+            time.sleep(random.randint(5, 9))
 
             # Try to re-login if necessary
             try:
@@ -849,7 +868,7 @@ def scan_spam_in_group(browser, environment):
             
             # Navigate to the group members page
             browser.get(group_link)
-            sleep(random.randint(3, 6))
+            time.sleep(random.randint(3, 6))
             
             # Wait for the page to load
             WebDriverWait(browser, 20).until(
@@ -870,7 +889,7 @@ def scan_spam_in_group(browser, environment):
             # Random sleep between processing groups
             sleep_time = random.randint(5, 10)
             logger.info(f"Sleeping for {sleep_time} seconds before processing next group...")
-            sleep(sleep_time)
+            time.sleep(sleep_time)
         
         # Second loop: Send data to API for all collected groups
         for group_link in LIST_COMPETIOR_GROUP_LINK:
@@ -883,7 +902,7 @@ def scan_spam_in_group(browser, environment):
                 
                 sleep_time = random.randint(2, 5)
                 logger.info(f"Sleeping for {sleep_time} seconds before processing next API request...")
-                sleep(sleep_time)
+                time.sleep(sleep_time)
 
     except Exception as e:
         logger.error(f"Error while crawling members from competitor groups")
@@ -910,7 +929,7 @@ def collect_member_links(browser):
     while len(member_links) < target_member_count and scroll_count < max_scroll_attempts:
         # Scroll down to load more members
         browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        sleep(random.randint(2, 4))
+        time.sleep(random.randint(2, 4))
         scroll_count += 1
         
         # Try to find member links
@@ -1003,7 +1022,7 @@ def send_member_data_to_api(file_path, group_name, environment):
                 logger.error(f"API request failed: status {response.status_code}, response: {response.text}")
                 
             # Add a 500ms delay between API requests
-            sleep(0.5)
+            time.sleep(0.5)
         except requests.exceptions.RequestException as req_err:
             logger.error(f"Request error sending batch {i//batch_size + 1}: {req_err}")
     
@@ -1035,7 +1054,7 @@ def process_game_fanpage(browser, game_fanpages_object, index, all_game_fanpages
         
         # Navigate to game page
         browser.get(f"{FB_DEFAULT_URL}/{game_url}")
-        sleep(random.randint(5, 7) if index < len(all_game_fanpages) - 1 else 0)  # Wait for page load
+        time.sleep(random.randint(5, 7) if index < len(all_game_fanpages) - 1 else 0)  # Wait for page load
         
         all_post_id_scanned = set()
         last_height = browser.execute_script("return document.body.scrollHeight")
@@ -1092,9 +1111,9 @@ def process_game_fanpage(browser, game_fanpages_object, index, all_game_fanpages
         # if index < len(all_game_fanpages) - 1:
         #     sleep_time = random.randint(70, 100)
         #     logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
-        #     sleep(sleep_time)
+        #     time.sleep(sleep_time)
         #     simulate_human_behavior_when_scraping_game(browser, environment)
-        #     sleep(sleep_time)
+        #     time.sleep(sleep_time)
         
     except Exception as e:
         print(f"Error processing {game_url}")
@@ -1103,45 +1122,31 @@ def process_game_fanpage(browser, game_fanpages_object, index, all_game_fanpages
 
 
 def run_scraper_multiple_twitter(all_game_fanpages, environment, use_cookies=True):
-    """
-    Run Facebook scraper for multiple fanpages using a single browser session
-    
-    Args:
-        all_game_fanpages (list): List of game URLs to scrape
-        use_cookies (bool): Whether to use saved cookies for login
-        
-    Returns:
-        bool: True if scraping completed successfully, False otherwise
-    """
     try:
-        # Choose a random account and login
-        username, password = random.choice(SCRAPER_TWITTER_ACCOUNT_LIST)
-        browser = login_twitter(username, password)
+        # Log in to Google and launch the browser
+        gmail_twitter = random.sample(GMAIL_TWITTER, len(GMAIL_TWITTER))
+        browser_running, remote_debug_port = authentication_google_account(gmail_twitter, position_type="topleft")
 
-        sleep_time = random.randint(2, 4)
-        logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
+        # Ensure browser is running before proceeding
+        if browser_running is None:
+            logger.error("Browser instance is None")
+            raise Exception("Browser instance is None")
 
-        # Simulate scrolling behavior and get final pause time
-        # final_pause = simulate_scrolling_behavior_when_init_facebook(browser)
-        # sleep(final_pause)
-
-        # ----------------------- Scraper fanpages ----------------------- #
-        logger.info(f"Total fanpages to scrape: {len(all_game_fanpages)}")
-        for index, game_fanpages_selected in enumerate(all_game_fanpages):
-            if (game_fanpages_selected['status'] == 'active'):
-                process_game_fanpage(browser, game_fanpages_selected, index, all_game_fanpages, environment)
-
-        return True
-
+        time.sleep(random.uniform(1, 2))
+        browser_running.get(TWITTER_DEFAULT_URL)
+        
+    except (RequestException, WebDriverException) as e:
+        logger.error(
+            f"🚨 Connection/WebDriver error on account {gmail_twitter['username']}. "
+            "Closing browser and moving to next account."
+        )
     except Exception as e:
-        print(f"Error in main fanpage scraper")
-        return False  # Exit if an error occurs during the main scraper execution
-
+        logger.error(f"Unexpected error during Sora processing")
+    
     finally:
-        # Close browser after processing all games
-        try:
-            browser.quit()
-            print("Browser closed successfully.")
-        except Exception as e:
-            print(f"Error closing browser")
+        if browser_running:
+            browser_running.quit()
 
+        # Close the remote debug port if it's still open
+        if remote_debug_port:
+            close_remote_debug_port(remote_debug_port)

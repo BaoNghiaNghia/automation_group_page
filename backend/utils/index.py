@@ -1,5 +1,7 @@
 import os
 import re, subprocess
+import psutil
+import logger
 import sys
 import random
 import requests
@@ -146,3 +148,26 @@ def get_chrome_version_main():
             continue
 
     return None
+
+
+def close_remote_debug_port(remote_debug_port):
+    try:
+        for proc in psutil.process_iter(attrs=['pid', 'name']):
+            # Check if the process is a Chrome browser instance
+            if proc.info['name'] == 'chrome.exe':  # Modify for other browsers if necessary
+                try:
+                    # Only access connections if they are available
+                    connections = proc.connections(kind='inet')
+                    for conn in connections:
+                        if conn.laddr.port == remote_debug_port:
+                            proc.kill()  # Kill the process using the remote debug port
+                            logger.info(f"Successfully killed the process using port {remote_debug_port}.")
+                            break
+                except psutil.NoSuchProcess:
+                    logger.error("Process has already terminated.")
+                    continue
+                except psutil.AccessDenied:
+                    logger.warning("Access denied to process connections.")
+                    continue
+    except Exception as e:
+        logger.error(f"Error closing remote debug port: {str(e)}")
