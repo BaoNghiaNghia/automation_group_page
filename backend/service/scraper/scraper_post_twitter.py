@@ -1136,15 +1136,13 @@ def run_scraper_multiple_twitter(x_refs_total, environment, use_cookies=True):
         
         time.sleep(random.uniform(4, 6))
         
-        # INSERT_YOUR_CODE
         for game_ref in x_refs_total:
             try:
-                # INSERT_YOUR_CODE
-                # logger.info(f"Processing Twitter game_ref: {game_ref}")
+                logger.info(f"----------- Đang chạy: {game_ref.get('name_of_game')} -----------")
                 browser_running.get(game_ref.get('ref'))
                 time.sleep(random.uniform(4, 6))
                 
-                all_anchor_records = dict()  # key: href, value: record (can be dict or just href)
+                all_anchor_records = dict()
                 max_scrolls = 50
                 last_height = browser_running.execute_script("return document.body.scrollHeight")
                 for scroll_count in range(max_scrolls):
@@ -1156,7 +1154,6 @@ def run_scraper_multiple_twitter(x_refs_total, environment, use_cookies=True):
                     for a in anchor_elements:
                         href = a.get_attribute("href")
                         if href and href not in all_anchor_records:
-                            # You can expand this record as needed, e.g. with tweet id, text, etc.
                             record = {"href": href}
                             all_anchor_records[href] = record
                             logger.info(f"Found tweet link: {href}")

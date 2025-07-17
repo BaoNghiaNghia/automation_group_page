@@ -286,12 +286,6 @@ def init_chrome_undetected_chromedriver(account, position_type="topleft", driver
                     browser_pid = proc.info['pid']
                     break
 
-        if browser_pid:
-            logger.info(f"Chrome process PID: {browser_pid}")
-        else:
-            logger.warning("Could not find Chrome process PID.")
-
-        # Capture the Chrome process command line to get the used port
         process = psutil.Process(browser_pid)  # Get process details using psutil
 
         # Find the remote debugging port in the command line
@@ -461,6 +455,6 @@ def authentication_google_account(account, position_type="topright", proxy=None)
             logger.warning(f"Failed to log into Google account: {account['username']}")
 
     except Exception as e:
-        logger.error(f"---------- Login failed for {account['username']}")
+        pass
     
     return browser, remote_debug_port
