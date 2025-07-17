@@ -5,16 +5,19 @@ import requests
 API_URL = "https://boostgamemobile.com/service/ldplayer_devices/all"
 CONFIG_DIR = r"D:\LDPlayer\LDPlayer9\vms\config"
 
-# Các cấu hình bổ sung cần thêm (dưới dạng key-value chuỗi)
+# Các cấu hình bổ sung cần thêm nếu chưa có
 EXTRA_CONFIGS = {
-    "basicSettings.rootMode": "true",
-    "statusSettings.closeOption": "1",
-    "basicSettings.heightFrameRate": "false",
-    "basicSettings.adbDebug": "1",
-    "advancedSettings.resolution": json.dumps({"width": 720, "height": 1280}),
-    "advancedSettings.resolutionDpi": "320",
-    "advancedSettings.cpuCount": "2",
-    "advancedSettings.memorySize": "4096",
+    "basicSettings.rootMode": True,
+    "statusSettings.closeOption": 1,
+    "basicSettings.heightFrameRate": False,
+    "basicSettings.adbDebug": 1,
+    "advancedSettings.resolution": {
+        "width": 720,
+        "height": 1280
+    },
+    "advancedSettings.resolutionDpi": 320,
+    "advancedSettings.cpuCount": 2,
+    "advancedSettings.memorySize": 4096,
 }
 
 def fetch_device_mapping():
@@ -41,34 +44,46 @@ def fetch_device_mapping():
         print(f"[!] Lỗi khi gọi API: {e}")
         return {}
 
+def parse_key_value_file(path):
+    config = {}
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key, value = key.strip(), value.strip()
+            try:
+                # Parse JSON nếu có thể (vd: object, number, bool)
+                config[key] = json.loads(value)
+            except:
+                config[key] = value
+    return config
+
 def update_config_file(config_path, player_name):
     if not os.path.exists(config_path):
         print(f"[!] Không tìm thấy: {config_path}")
         return
 
-    config_dict = {}
+    try:
+        config_dict = parse_key_value_file(config_path)
+    except Exception as e:
+        print(f"[!] Không thể đọc file {config_path}: {e}")
+        return
 
-    # Đọc file hiện có
-    with open(config_path, "r", encoding="utf-8") as f:
-        for line in f:
-            if "=" in line:
-                key, value = line.strip().split("=", 1)
-                config_dict[key] = value
-
-    # Cập nhật hoặc thêm playerName
+    # Cập nhật playerName
     config_dict["statusSettings.playerName"] = player_name
 
-    # Thêm các config còn thiếu
+    # Thêm các cấu hình còn thiếu
     for key, value in EXTRA_CONFIGS.items():
         if key not in config_dict:
             config_dict[key] = value
 
-    # Ghi đè lại toàn bộ file
+    # Ghi lại dưới dạng JSON đẹp
     with open(config_path, "w", encoding="utf-8") as f:
-        for key, value in config_dict.items():
-            f.write(f"{key}={value}\n")
+        json.dump(config_dict, f, ensure_ascii=False, indent=4)
 
-    print(f"[✓] {os.path.basename(config_path)} -> playerName = {player_name}")
+    print(f"[✓] {os.path.basename(config_path)} đã chuyển sang JSON -> playerName = {player_name}")
 
 def main():
     mapping = fetch_device_mapping()
