@@ -1146,6 +1146,7 @@ def run_scraper_multiple_twitter(x_refs_total, environment, use_cookies=True):
                 
                 all_anchor_elements = set()
                 max_scrolls = 50
+                last_height = browser_running.execute_script("return document.body.scrollHeight")
                 for scroll_count in range(max_scrolls):
                     anchor_elements = browser_running.find_elements(
                         By.XPATH,
@@ -1158,7 +1159,12 @@ def run_scraper_multiple_twitter(x_refs_total, environment, use_cookies=True):
                             all_anchor_elements.add(href)
                             logger.info(f"Found tweet link: {href}")
                     scroll_down(browser_running)
-                logger.info(f"Total unique tweet links found after {max_scrolls} scrolls: {len(all_anchor_elements)}")
+                    new_height = browser_running.execute_script("return document.body.scrollHeight")
+                    if new_height == last_height:
+                        logger.info(f"Reached the bottom of the page after {scroll_count+1} scrolls.")
+                        break
+                    last_height = new_height
+                logger.info(f"Total unique tweet links found after {scroll_count+1} scrolls: {len(all_anchor_elements)}")
 
                 time.sleep(random.uniform(500, 600))
             except Exception as e:
