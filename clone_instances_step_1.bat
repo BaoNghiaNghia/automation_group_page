@@ -1,5 +1,5 @@
 @echo off
-set TEMPLATE=D:\LDPlayer\LDPlayer9\vms\leidian1
+set TEMPLATE=D:\LDPlayer\LDPlayer9\vms\leidian0
 set TARGET=D:\LDPlayer\LDPlayer9\vms
 
 for /L %%i in (0,1,340) do (
