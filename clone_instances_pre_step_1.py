@@ -47,12 +47,14 @@ def generate():
         config["propertySettings.phoneAndroidId"] = random_android_id()
         config["propertySettings.macAddress"] = random_mac()
 
-        # Gán tên instance
-        config["statusSettings.playerName"] = f"leidian{i}"
+        # Đảm bảo field statusSettings tồn tại rồi cập nhật playerName
+        if "statusSettings" not in config:
+            config["statusSettings"] = {}
+        config["statusSettings"]["playerName"] = f"leidian{i}"
 
         # Thêm các cấu hình tối ưu hóa
         config["basicSettings.rootMode"] = True
-        config["statusSettings.closeOption"] = 1
+        config["statusSettings"]["closeOption"] = 1
         config["basicSettings.heightFrameRate"] = False
         config["basicSettings.adbDebug"] = 1
         config["advancedSettings.resolution"] = {
