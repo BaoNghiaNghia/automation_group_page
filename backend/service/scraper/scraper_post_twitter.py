@@ -1156,7 +1156,7 @@ def run_scraper_multiple_twitter(x_refs_total, environment, use_cookies=True):
                         if href and href not in all_anchor_records:
                             record = {"href": href}
                             all_anchor_records[href] = record
-                            logger.info(f"Found tweet link: {href}")
+                            # logger.info(f"Found tweet link: {href}")
                     scroll_down(browser_running)
                     new_height = browser_running.execute_script("return document.body.scrollHeight")
                     if new_height == last_height:
