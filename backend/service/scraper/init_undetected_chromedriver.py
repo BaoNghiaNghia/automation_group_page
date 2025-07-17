@@ -17,12 +17,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from backend.utils.index import (
     get_chrome_version_main
 )
-
-
 from backend.constants import (
     logger,
     BASE_PROFILE_DIR
 )
+
 
 def close_all_alerts(browser):
     """Đóng tất cả alert popup nếu có."""
@@ -371,7 +370,7 @@ def authentication_google_account(account, position_type="topright", proxy=None)
             password_input.send_keys(account["password"])
             password_input.send_keys(Keys.RETURN)
 
-        time.sleep(random.randint(4, 6))
+        time.sleep(random.randint(30, 36))
         
         
         # Find and click the element

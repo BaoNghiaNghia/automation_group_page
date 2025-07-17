@@ -1034,15 +1034,15 @@ def send_member_data_to_api(file_path, group_name, environment):
         logger.warning(f"No batches were successfully sent, keeping file: {file_path}")
 
 
-def process_game_fanpage(browser, game_fanpages_object, index, all_game_fanpages, environment):
+def process_game_fanpage(browser, game_fanpages_object, index, x_refs_total, environment):
     """
     Process a single game URL for Facebook scraping
     
     Args:
         browser: Selenium browser instance
         game_url (str): URL of the game fanpage to scrape
-        index (int): Current index in the all_game_fanpages list
-        all_game_fanpages (list): List of all game URLs being processed
+        index (int): Current index in the x_refs_total list
+        x_refs_total (list): List of all game URLs being processed
         environment: Environment configuration
     """
     try:
@@ -1054,7 +1054,7 @@ def process_game_fanpage(browser, game_fanpages_object, index, all_game_fanpages
         
         # Navigate to game page
         browser.get(f"{FB_DEFAULT_URL}/{game_url}")
-        time.sleep(random.randint(5, 7) if index < len(all_game_fanpages) - 1 else 0)  # Wait for page load
+        time.sleep(random.randint(5, 7) if index < len(x_refs_total) - 1 else 0)  # Wait for page load
         
         all_post_id_scanned = set()
         last_height = browser.execute_script("return document.body.scrollHeight")
@@ -1103,12 +1103,12 @@ def process_game_fanpage(browser, game_fanpages_object, index, all_game_fanpages
 
 
         # # Crawl post data
-        # crawlDetailPostData(browser, readDataFromFile(post_id_full_path), game_name, environment, all_game_fanpages)
+        # crawlDetailPostData(browser, readDataFromFile(post_id_full_path), game_name, environment, x_refs_total)
 
         # print(f"----- Done {len(all_post_id_scanned)} posts: Game {game_name} -----")
 
         # # Add random delay after processing all games
-        # if index < len(all_game_fanpages) - 1:
+        # if index < len(x_refs_total) - 1:
         #     sleep_time = random.randint(70, 100)
         #     logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
         #     time.sleep(sleep_time)
@@ -1121,10 +1121,9 @@ def process_game_fanpage(browser, game_fanpages_object, index, all_game_fanpages
         return True  # Successfully completed scraping all games
 
 
-def run_scraper_multiple_twitter(all_game_fanpages, environment, use_cookies=True):
+def run_scraper_multiple_twitter(x_refs_total, environment, use_cookies=True):
     try:
-        # Log in to Google and launch the browser
-        gmail_twitter = random.sample(GMAIL_TWITTER, len(GMAIL_TWITTER))
+        gmail_twitter = GMAIL_TWITTER[0]
         browser_running, remote_debug_port = authentication_google_account(gmail_twitter, position_type="topleft")
 
         # Ensure browser is running before proceeding
@@ -1135,13 +1134,27 @@ def run_scraper_multiple_twitter(all_game_fanpages, environment, use_cookies=Tru
         time.sleep(random.uniform(1, 2))
         browser_running.get(TWITTER_DEFAULT_URL)
         
+        time.sleep(random.uniform(4, 6))
+        
+        # INSERT_YOUR_CODE
+        for game_ref in x_refs_total:
+            try:
+                # INSERT_YOUR_CODE
+                logger.info(f"Processing Twitter game_ref: {game_ref}")
+                browser_running.get(game_ref.get('ref'))
+                time.sleep(random.uniform(20, 40))
+            except Exception as e:
+                logger.error(f"Error processing Twitter game")
+        
+        time.sleep(random.uniform(100, 200))
+        
     except (RequestException, WebDriverException) as e:
         logger.error(
             f"🚨 Connection/WebDriver error on account {gmail_twitter['username']}. "
             "Closing browser and moving to next account."
         )
     except Exception as e:
-        logger.error(f"Unexpected error during Sora processing")
+        logger.error(f"Unexpected error during Twitter processing")
     
     finally:
         if browser_running:
