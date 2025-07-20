@@ -44,9 +44,9 @@ if __name__ == "__main__":
                     x_refs_total.append({"ref": ref_value, **game})
         # logger.info(f"x_refs_total: {x_refs_total}")
 
-        # run_fb_scraper_multiple_fanpages(page_refs_total, args.environment)
+        run_fb_scraper_multiple_fanpages(page_refs_total, args.environment)
         # run_scraper_multiple_groups(group_refs_total, args.environment)
-        run_scraper_multiple_twitter(x_refs_total, args.environment)
+        # run_scraper_multiple_twitter(x_refs_total, args.environment)
 
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
