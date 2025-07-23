@@ -6,6 +6,7 @@ API_URL = "https://boostgamemobile.com/service/ldplayer_devices/all"
 CONFIG_DIR = r"D:\LDPlayer\LDPlayer9\vms\config"
 START_INDEX = 338
 END_INDEX = 635
+LOG_MAPPING_FILE = "log_device_mapping.txt"
 
 # Cấu hình tối ưu hóa mặc định nếu chưa có
 EXTRA_CONFIGS = {
@@ -61,7 +62,7 @@ def parse_key_value_file(path):
                 config[key] = value
     return config
 
-def update_config_file(config_path, player_name=None):
+def update_config_file(config_path, player_name=None, log_file=None):
     if not os.path.exists(config_path):
         print(f"[!] Không tìm thấy: {config_path}")
         return False
@@ -78,13 +79,17 @@ def update_config_file(config_path, player_name=None):
         print(f"[!] Không thể đọc file {config_path}: {e}")
         return False
 
-    # Nếu có player_name từ API thì cập nhật
+    # Cập nhật playerName nếu có từ API
     if player_name:
         if "statusSettings" not in config_dict:
             config_dict["statusSettings"] = {}
         config_dict["statusSettings"]["playerName"] = player_name
+        msg = f"[MAP] {os.path.basename(config_path)} → {player_name}"
+        print(msg)
+        if log_file:
+            log_file.write(msg + "\n")
 
-    # Thêm các cấu hình còn thiếu
+    # Thêm các cấu hình tối ưu còn thiếu
     for key, value in EXTRA_CONFIGS.items():
         if key not in config_dict:
             config_dict[key] = value
@@ -103,14 +108,19 @@ def main():
     mapping = fetch_device_mapping()
     updated_count = 0
 
-    for i in range(START_INDEX, END_INDEX + 1):
-        file_name = f"leidian{i}.config"
-        full_path = os.path.join(CONFIG_DIR, file_name)
-        player_name = mapping.get(file_name)
-        if update_config_file(full_path, player_name):
-            updated_count += 1
+    with open(LOG_MAPPING_FILE, "w", encoding="utf-8") as log_file:
+        log_file.write("Danh sách mapping leidian → device_name\n")
+        log_file.write("="*40 + "\n")
+
+        for i in range(START_INDEX, END_INDEX + 1):
+            file_name = f"leidian{i}.config"
+            full_path = os.path.join(CONFIG_DIR, file_name)
+            player_name = mapping.get(file_name)
+            if update_config_file(full_path, player_name, log_file):
+                updated_count += 1
 
     print(f"\n✅ Đã cập nhật {updated_count} file từ leidian{START_INDEX}.config đến leidian{END_INDEX}.config")
+    print(f"📄 Log mapping được lưu tại: {LOG_MAPPING_FILE}")
 
 if __name__ == "__main__":
     main()
