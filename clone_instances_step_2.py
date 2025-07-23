@@ -62,47 +62,44 @@ def parse_key_value_file(path):
                 config[key] = value
     return config
 
-def update_config_file(config_path, player_name=None, log_file=None):
+def update_config_file(config_path, player_name):
     if not os.path.exists(config_path):
         print(f"[!] Không tìm thấy: {config_path}")
-        return False
+        return
 
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
-            first_char = f.read(1)
-            f.seek(0)
-            if first_char == "{":
-                config_dict = json.load(f)
-            else:
-                config_dict = parse_key_value_file(config_path)
+        config_dict = parse_key_value_file(config_path)
     except Exception as e:
         print(f"[!] Không thể đọc file {config_path}: {e}")
-        return False
+        return
 
-    # Cập nhật playerName nếu có từ API
+    # Đảm bảo tồn tại statusSettings
+    if "statusSettings" not in config_dict or not isinstance(config_dict["statusSettings"], dict):
+        config_dict["statusSettings"] = {}
+
+    # Nếu player_name từ API bị thiếu → fallback từ tên file
+    base_name = os.path.basename(config_path)
+    default_player_name = base_name.replace(".config", "")
+    final_player_name = player_name if player_name else default_player_name
+    config_dict["statusSettings"]["playerName"] = final_player_name
+
+    # Log nếu là từ API
     if player_name:
-        if "statusSettings" not in config_dict:
-            config_dict["statusSettings"] = {}
-        config_dict["statusSettings"]["playerName"] = player_name
-        msg = f"[MAP] {os.path.basename(config_path)} → {player_name}"
-        print(msg)
-        if log_file:
-            log_file.write(msg + "\n")
+        print(f"[MAP] {base_name} → {player_name}")
 
     # Thêm các cấu hình tối ưu còn thiếu
     for key, value in EXTRA_CONFIGS.items():
         if key not in config_dict:
             config_dict[key] = value
 
-    # Ghi lại dưới dạng JSON
+    # Ghi lại file dưới dạng JSON
     try:
         with open(config_path, "w", encoding="utf-8") as f:
             json.dump(config_dict, f, ensure_ascii=False, indent=4)
-        print(f"[✓] Đã cập nhật: {os.path.basename(config_path)}")
-        return True
+        print(f"[✓] {base_name} đã chuyển sang JSON -> playerName = {final_player_name}")
     except Exception as e:
-        print(f"[!] Lỗi ghi file {config_path}: {e}")
-        return False
+        print(f"[!] Lỗi khi ghi file {config_path}: {e}")
+
 
 def main():
     mapping = fetch_device_mapping()
