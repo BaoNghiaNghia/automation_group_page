@@ -4,6 +4,8 @@ import requests
 
 API_URL = "https://boostgamemobile.com/service/ldplayer_devices/all"
 CONFIG_DIR = r"D:\LDPlayer\LDPlayer9\vms\config"
+START_INDEX = 338
+END_INDEX = 635
 
 # Cấu hình tối ưu hóa mặc định nếu chưa có
 EXTRA_CONFIGS = {
@@ -62,7 +64,7 @@ def parse_key_value_file(path):
 def update_config_file(config_path, player_name=None):
     if not os.path.exists(config_path):
         print(f"[!] Không tìm thấy: {config_path}")
-        return
+        return False
 
     try:
         with open(config_path, "r", encoding="utf-8") as f:
@@ -74,7 +76,7 @@ def update_config_file(config_path, player_name=None):
                 config_dict = parse_key_value_file(config_path)
     except Exception as e:
         print(f"[!] Không thể đọc file {config_path}: {e}")
-        return
+        return False
 
     # Nếu có player_name từ API thì cập nhật
     if player_name:
@@ -92,19 +94,23 @@ def update_config_file(config_path, player_name=None):
         with open(config_path, "w", encoding="utf-8") as f:
             json.dump(config_dict, f, ensure_ascii=False, indent=4)
         print(f"[✓] Đã cập nhật: {os.path.basename(config_path)}")
+        return True
     except Exception as e:
         print(f"[!] Lỗi ghi file {config_path}: {e}")
+        return False
 
 def main():
     mapping = fetch_device_mapping()
-    all_files = [f for f in os.listdir(CONFIG_DIR) if f.endswith(".config")]
+    updated_count = 0
 
-    for file_name in all_files:
+    for i in range(START_INDEX, END_INDEX + 1):
+        file_name = f"leidian{i}.config"
         full_path = os.path.join(CONFIG_DIR, file_name)
-        player_name = mapping.get(file_name)  # Có thể là None
-        update_config_file(full_path, player_name)
+        player_name = mapping.get(file_name)
+        if update_config_file(full_path, player_name):
+            updated_count += 1
 
-    print(f"\n✅ Đã hoàn tất cập nhật {len(all_files)} file cấu hình.")
+    print(f"\n✅ Đã cập nhật {updated_count} file từ leidian{START_INDEX}.config đến leidian{END_INDEX}.config")
 
 if __name__ == "__main__":
     main()
