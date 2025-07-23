@@ -24,7 +24,7 @@ for /L %%i in (%START%,1,%END%) do (
     :: Bỏ qua nếu đã tồn tại
     if exist "%TARGET%\leidian%%i" (
         echo leidian%%i đã tồn tại. Bỏ qua.
-        goto :continue_loop
+        goto :after_each_loop
     )
 
     :: Copy thư mục template
@@ -42,17 +42,16 @@ for /L %%i in (%START%,1,%END%) do (
     set /A percent=done*100/TOTAL
     echo Đang xử lý: %%i/%END%  (%%percent%% %%)
 
-    :: Nghỉ 3 giây mỗi lần
+    :after_each_loop
+    :: Nghỉ 10 giây giữa mỗi lần
     timeout /T 10 /NOBREAK >nul
 
-    :: Nghỉ 20 giây sau mỗi 20 instance
-    set /A mod=done %% 20
+    :: Nghỉ 25 giây sau mỗi 20 instance
+    set /A mod=%%i %% 20
     if !mod! EQU 0 (
-        echo ======= Nghỉ 20 giây sau mỗi 20 instance =======
+        echo ======= Nghỉ 25 giây sau mỗi 20 instance =======
         timeout /T 25 /NOBREAK >nul
     )
-
-    :continue_loop
 )
 
 echo =====================================
