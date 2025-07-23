@@ -36,15 +36,25 @@ def fetch_device_mapping():
             print("[!] Không có thiết bị nào được trả về từ API.")
             return {}
 
-        return {
-            f"leidian{index + 1}.config": item["device_name"]
-            for index, item in enumerate(items)
-            if "device_name" in item
-        }
+        # Gán từ leidian338.config đến leidian635.config
+        if len(items) > (END_INDEX - START_INDEX + 1):
+            print(f"[!] Số lượng thiết bị trả về ({len(items)}) vượt quá phạm vi cho phép.")
+            items = items[:END_INDEX - START_INDEX + 1]
+
+        mapping = {}
+        for i, item in enumerate(items):
+            index = START_INDEX + i
+            file_name = f"leidian{index}.config"
+            player_name = item.get("device_name")
+            if player_name:
+                mapping[file_name] = player_name
+
+        return mapping
 
     except Exception as e:
         print(f"[!] Lỗi khi gọi API: {e}")
         return {}
+
 
 def parse_key_value_file(path):
     config = {}
