@@ -98,16 +98,17 @@ def update_config_file(config_path, player_name):
 
 def main():
     mapping = fetch_device_mapping()
-    updated_count = 0
+    print("[DEBUG] Device mapping:", mapping)
+    # updated_count = 0
 
-    for i in range(START_INDEX, END_INDEX + 1):
-        file_name = f"leidian{i}.config"
-        full_path = os.path.join(CONFIG_DIR, file_name)
-        player_name = mapping.get(file_name)
-        if update_config_file(full_path, player_name):
-            updated_count += 1
+    # for i in range(START_INDEX, END_INDEX + 1):
+    #     file_name = f"leidian{i}.config"
+    #     full_path = os.path.join(CONFIG_DIR, file_name)
+    #     player_name = mapping.get(file_name)
+    #     if update_config_file(full_path, player_name):
+    #         updated_count += 1
 
-    print(f"\n✅ Đã cập nhật {updated_count} file từ leidian{START_INDEX}.config đến leidian{END_INDEX}.config")
+    # print(f"\n✅ Đã cập nhật {updated_count} file từ leidian{START_INDEX}.config đến leidian{END_INDEX}.config")
 
 if __name__ == "__main__":
     main()
