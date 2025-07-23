@@ -43,13 +43,13 @@ for /L %%i in (%START%,1,%END%) do (
     echo Đang xử lý: %%i/%END%  (%%percent%% %%)
 
     :: Nghỉ 3 giây mỗi lần
-    timeout /T 3 /NOBREAK >nul
+    timeout /T 10 /NOBREAK >nul
 
     :: Nghỉ 20 giây sau mỗi 20 instance
     set /A mod=done %% 20
     if !mod! EQU 0 (
         echo ======= Nghỉ 20 giây sau mỗi 20 instance =======
-        timeout /T 20 /NOBREAK >nul
+        timeout /T 25 /NOBREAK >nul
     )
 
     :continue_loop
