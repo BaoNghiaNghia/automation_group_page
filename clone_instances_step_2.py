@@ -5,7 +5,7 @@ import requests
 API_URL = "https://boostgamemobile.com/service/ldplayer_devices/all"
 CONFIG_DIR = r"D:\LDPlayer\LDPlayer9\vms\config"
 
-# Các cấu hình bổ sung cần thêm nếu chưa có
+# Cấu hình tối ưu hóa mặc định nếu chưa có
 EXTRA_CONFIGS = {
     "basicSettings.rootMode": True,
     "statusSettings.closeOption": 1,
@@ -23,7 +23,7 @@ EXTRA_CONFIGS = {
 def fetch_device_mapping():
     try:
         response = requests.get(API_URL, params={
-            "pc_runner": "pc_2",
+            "pc_runner": "pc_1",
             "status": "active"
         }, timeout=10)
         response.raise_for_status()
@@ -54,42 +54,57 @@ def parse_key_value_file(path):
             key, value = line.split("=", 1)
             key, value = key.strip(), value.strip()
             try:
-                # Parse JSON nếu có thể (vd: object, number, bool)
                 config[key] = json.loads(value)
             except:
                 config[key] = value
     return config
 
-def update_config_file(config_path, player_name):
+def update_config_file(config_path, player_name=None):
     if not os.path.exists(config_path):
         print(f"[!] Không tìm thấy: {config_path}")
         return
 
     try:
-        config_dict = parse_key_value_file(config_path)
+        with open(config_path, "r", encoding="utf-8") as f:
+            first_char = f.read(1)
+            f.seek(0)
+            if first_char == "{":
+                config_dict = json.load(f)
+            else:
+                config_dict = parse_key_value_file(config_path)
     except Exception as e:
         print(f"[!] Không thể đọc file {config_path}: {e}")
         return
 
-    # Cập nhật playerName
-    config_dict["statusSettings.playerName"] = player_name
+    # Nếu có player_name từ API thì cập nhật
+    if player_name:
+        if "statusSettings" not in config_dict:
+            config_dict["statusSettings"] = {}
+        config_dict["statusSettings"]["playerName"] = player_name
 
     # Thêm các cấu hình còn thiếu
     for key, value in EXTRA_CONFIGS.items():
         if key not in config_dict:
             config_dict[key] = value
 
-    # Ghi lại dưới dạng JSON đẹp
-    with open(config_path, "w", encoding="utf-8") as f:
-        json.dump(config_dict, f, ensure_ascii=False, indent=4)
-
-    print(f"[✓] {os.path.basename(config_path)} đã chuyển sang JSON -> playerName = {player_name}")
+    # Ghi lại dưới dạng JSON
+    try:
+        with open(config_path, "w", encoding="utf-8") as f:
+            json.dump(config_dict, f, ensure_ascii=False, indent=4)
+        print(f"[✓] Đã cập nhật: {os.path.basename(config_path)}")
+    except Exception as e:
+        print(f"[!] Lỗi ghi file {config_path}: {e}")
 
 def main():
     mapping = fetch_device_mapping()
-    for config_filename, player_name in mapping.items():
-        config_path = os.path.join(CONFIG_DIR, config_filename)
-        update_config_file(config_path, player_name)
+    all_files = [f for f in os.listdir(CONFIG_DIR) if f.endswith(".config")]
+
+    for file_name in all_files:
+        full_path = os.path.join(CONFIG_DIR, file_name)
+        player_name = mapping.get(file_name)  # Có thể là None
+        update_config_file(full_path, player_name)
+
+    print(f"\n✅ Đã hoàn tất cập nhật {len(all_files)} file cấu hình.")
 
 if __name__ == "__main__":
     main()
