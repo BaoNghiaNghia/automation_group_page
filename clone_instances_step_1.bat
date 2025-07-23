@@ -21,28 +21,25 @@ for /L %%i in (%START%,1,%END%) do (
     echo --------------------------
     echo Tạo instance leidian%%i...
 
-    :: Bỏ qua nếu đã tồn tại
     if exist "%TARGET%\leidian%%i" (
         echo leidian%%i đã tồn tại. Bỏ qua.
-        goto :after_each_loop
+    ) else (
+        :: Copy thư mục template
+        robocopy "%TEMPLATE%" "%TARGET%\leidian%%i" /MIR /NFL /NDL /NJH /NJS >nul
+
+        :: Copy file config
+        copy /Y "%CONFIG_TEMPLATE%" "%CONFIG_TARGET%\leidian%%i.config" >nul
+
+        :: Log & thông báo
+        echo Đã tạo leidian%%i và sao chép config
+        echo leidian%%i - %TIME% >> log_create_instances.txt
     )
-
-    :: Copy thư mục template
-    robocopy "%TEMPLATE%" "%TARGET%\leidian%%i" /MIR /NFL /NDL /NJH /NJS >nul
-
-    :: Copy file config
-    copy /Y "%CONFIG_TEMPLATE%" "%CONFIG_TARGET%\leidian%%i.config" >nul
-
-    :: Log & thông báo
-    echo Đã tạo leidian%%i và sao chép config
-    echo leidian%%i - %TIME% >> log_create_instances.txt
 
     :: Tiến độ %
     set /A done=%%i - %START% + 1
     set /A percent=done*100/TOTAL
     echo Đang xử lý: %%i/%END%  (%%percent%% %%)
 
-    :after_each_loop
     :: Nghỉ 10 giây giữa mỗi lần
     timeout /T 10 /NOBREAK >nul
 
