@@ -2,57 +2,38 @@
 chcp 65001 >nul
 setlocal enabledelayedexpansion
 
-:: Đường dẫn gốc của instance template
-set "TEMPLATE=D:\LDPlayer\LDPlayer9\vms\leidian0"
-set "TARGET=D:\LDPlayer\LDPlayer9\vms"
-set "CONFIG_TEMPLATE=D:\LDPlayer\LDPlayer9\vms\config\leidian0.config"
-set "CONFIG_TARGET=D:\LDPlayer\LDPlayer9\vms\config"
+:: Cấu hình đường dẫn
+set TEMPLATE=D:\LDPlayer\LDPlayer9\vms\leidian0
+set TARGET=D:\LDPlayer\LDPlayer9\vms
+set CONFIG_TEMPLATE=D:\LDPlayer\LDPlayer9\vms\config\leidian0.config
+set CONFIG_TARGET=D:\LDPlayer\LDPlayer9\vms\config
 
-:: Giới hạn từ leidian338 đến leidian635
-set "START=338"
-set "END=635"
-set /A TOTAL=%END% - %START% + 1
+:: Tổng số instance cần tạo
+set MAX_INSTANCE=340
 
-echo ==============================================
-echo BẮT ĐẦU TẠO INSTANCE LDPLAYER TỪ %START% ĐẾN %END%
-echo ==============================================
+:: Lặp từ 1 đến MAX_INSTANCE
+for /L %%i in (338,1,635) do (
+    echo ========================
+    echo Tạo instance leidian%%i
 
-for /L %%i in (%START%,1,%END%) do (
-    echo --------------------------
-    echo Tạo instance leidian%%i...
+    :: Tạo thư mục clone từ template
+    xcopy "%TEMPLATE%" "%TARGET%\leidian%%i" /E /Y /I >nul
 
-    if exist "%TARGET%\leidian%%i" (
-        echo leidian%%i đã tồn tại. Bỏ qua.
-    ) else (
-        :: Copy thư mục template
-        robocopy "%TEMPLATE%" "%TARGET%\leidian%%i" /MIR /NFL /NDL /NJH /NJS >nul
+    :: Copy file config
+    copy /Y "%CONFIG_TEMPLATE%" "%CONFIG_TARGET%\leidian%%i.config" >nul
 
-        :: Copy file config
-        copy /Y "%CONFIG_TEMPLATE%" "%CONFIG_TARGET%\leidian%%i.config" >nul
+    echo Đã tạo leidian%%i và sao chép config
 
-        :: Log & thông báo
-        echo Đã tạo leidian%%i và sao chép config
-        echo leidian%%i - %TIME% >> log_create_instances.txt
-    )
-
-    :: Tiến độ %
-    set /A done=%%i - %START% + 1
-    set /A percent=done*100/TOTAL
-    echo Đang xử lý: %%i/%END%  (%%percent%% %%)
-
-    :: Nghỉ 10 giây giữa mỗi lần
+    :: Nghỉ 10 giây
     timeout /T 10 /NOBREAK >nul
 
-    :: Nghỉ 25 giây sau mỗi 20 instance
+    :: Sau mỗi 20 lần thì nghỉ 25s
     set /A mod=%%i %% 20
     if !mod! EQU 0 (
-        echo ======= Nghỉ 25 giây sau mỗi 20 instance =======
+        echo ====== Nghỉ 25s sau 20 instances ======
         timeout /T 25 /NOBREAK >nul
     )
 )
 
-echo =====================================
-echo ĐÃ HOÀN TẤT TẠO %TOTAL% INSTANCE LDPLAYER
-echo File log: log_create_instances.txt
-echo =====================================
+echo Hoàn tất tạo tất cả instances!
 pause
