@@ -3,7 +3,7 @@ import time
 import json
 import requests
 from backend.utils.index import get_all_game_fanpages
-from backend.constants import SERVICE_URL, ENV_CONFIG, logger
+from backend.constants import ENV_CONFIG, logger
 
 def sync_post_into_database(environment):
 

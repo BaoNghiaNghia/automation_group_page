@@ -51,7 +51,6 @@ ENV_CONFIG = {
 ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
 
 # Set the appropriate configuration based on environment
-SERVICE_URL = os.getenv("SERVICE_URL", ENV_CONFIG[ENVIRONMENT]["SERVICE_URL"])
 CONFIG_LDPLAYER_FOLDER = ENV_CONFIG[ENVIRONMENT]["CONFIG_LDPLAYER_FOLDER"]
 
 DOMAIN_CAPTCHA = "https://captcha69.com"

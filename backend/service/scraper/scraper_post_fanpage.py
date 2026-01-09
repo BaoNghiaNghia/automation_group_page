@@ -1169,7 +1169,7 @@ def run_fb_scraper_multiple_fanpages(all_game_fanpages, environment, use_cookies
                 print("CAPTCHA handling failed, exiting.")
                 return False  # Exit if CAPTCHA handling fails
 
-        sleep_time = random.randint(2, 4)
+        sleep_time = random.randint(70, 100)
         logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
 
         # Simulate scrolling behavior and get final pause time
