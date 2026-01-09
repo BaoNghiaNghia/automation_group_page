@@ -136,7 +136,7 @@ def login_facebook(username, password, use_cookies=True, cookies_path=None):
         browser.find_element(By.ID, "email").send_keys(username)
         browser.find_element(By.ID, "pass").send_keys(password)
         browser.find_element(By.ID, "pass").send_keys(Keys.ENTER)
-        sleep(random.randint(5, 10))
+        sleep(random.randint(70, 100))
 
         if is_logged_in(browser):
             logger.info(f"Successfully logged in with credentials for {username}")
@@ -1169,7 +1169,7 @@ def run_fb_scraper_multiple_fanpages(all_game_fanpages, environment, use_cookies
                 print("CAPTCHA handling failed, exiting.")
                 return False  # Exit if CAPTCHA handling fails
 
-        sleep_time = random.randint(70, 100)
+        sleep_time = random.randint(2, 4)
         logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
 
         # Simulate scrolling behavior and get final pause time
