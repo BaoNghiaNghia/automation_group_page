@@ -136,7 +136,7 @@ def login_facebook(username, password, use_cookies=True, cookies_path=None):
         browser.find_element(By.ID, "email").send_keys(username)
         browser.find_element(By.ID, "pass").send_keys(password)
         browser.find_element(By.ID, "pass").send_keys(Keys.ENTER)
-        sleep(random.randint(70, 100))
+        sleep(random.randint(3, 5))
 
         if is_logged_in(browser):
             logger.info(f"Successfully logged in with credentials for {username}")
