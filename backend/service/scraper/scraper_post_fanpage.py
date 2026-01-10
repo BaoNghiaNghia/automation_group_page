@@ -1127,18 +1127,18 @@ def process_game_fanpage(browser, game_fanpages_object, index, all_game_fanpages
             f.write("\n".join(sorted(all_post_id_scanned)))
 
 
-        # # Crawl post data
-        # crawlDetailPostData(browser, readDataFromFile(post_id_full_path), game_name, environment, all_game_fanpages)
+        # Crawl post data
+        crawlDetailPostData(browser, readDataFromFile(post_id_full_path), game_name, environment, all_game_fanpages)
 
-        # print(f"----- Done {len(all_post_id_scanned)} posts: Game {game_name} -----")
+        print(f"----- Done {len(all_post_id_scanned)} posts: Game {game_name} -----")
 
-        # # Add random delay after processing all games
-        # if index < len(all_game_fanpages) - 1:
-        #     sleep_time = random.randint(70, 100)
-        #     logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
-        #     sleep(sleep_time)
-        #     simulate_human_behavior_when_scraping_game(browser, environment)
-        #     sleep(sleep_time)
+        # Add random delay after processing all games
+        if index < len(all_game_fanpages) - 1:
+            sleep_time = random.randint(70, 100)
+            logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
+            sleep(sleep_time)
+            simulate_human_behavior_when_scraping_game(browser, environment)
+            sleep(sleep_time)
         
     except Exception as e:
         print(f"Error processing {game_url}")
