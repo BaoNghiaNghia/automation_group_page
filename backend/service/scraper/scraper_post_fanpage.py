@@ -1138,7 +1138,7 @@ def process_game_fanpage(browser, game_fanpages_object, index, all_game_fanpages
 
         # Add random delay after processing all games
         if index < len(all_game_fanpages) - 1:
-            sleep_time = random.randint(70, 100)
+            sleep_time = random.randint(30, 60)
             logger.info(f":::::: Sleeping for {sleep_time} seconds after scraping all games...")
             sleep(sleep_time)
             simulate_human_behavior_when_scraping_game(browser, environment)
