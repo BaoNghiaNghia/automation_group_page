@@ -453,9 +453,11 @@ def crawlDetailPostData(driver, postIds, game_name, environment, list_game_fanpa
     game_fanpage_id = game_fanpages_id_map.get(game_name)
 
     for id in postIds:
-        print(f"Post ID lấy từ file: {id}")
+        id = id.strip()
+        formated_id = id.split("|", 1)[0]
+
         try:
-            dataPost = clonePostContent(driver, id)
+            dataPost = clonePostContent(driver, formated_id)
             if dataPost:
                 postId = str(dataPost['post_id'])
                 postContent = str(dataPost['content'])
