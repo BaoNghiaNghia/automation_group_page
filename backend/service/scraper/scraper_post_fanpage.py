@@ -453,6 +453,7 @@ def crawlDetailPostData(driver, postIds, game_name, environment, list_game_fanpa
     game_fanpage_id = game_fanpages_id_map.get(game_name)
 
     for id in postIds:
+        print(f"Post ID lấy từ file: {id}")
         try:
             dataPost = clonePostContent(driver, id)
             if dataPost:
@@ -1126,6 +1127,7 @@ def process_game_fanpage(browser, game_fanpages_object, index, all_game_fanpages
         with open(post_id_full_path, "w", encoding="utf-8") as f:
             f.write("\n".join(sorted(all_post_id_scanned)))
 
+        
 
         # Crawl post data
         crawlDetailPostData(browser, readDataFromFile(post_id_full_path), game_name, environment, all_game_fanpages)
