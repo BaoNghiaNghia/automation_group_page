@@ -42,7 +42,7 @@ if __name__ == "__main__":
         if not (all_game_fanpages := get_all_game_fanpages(args.environment, {
             "page": 1,
             "limit": 300,
-            "priority": 1        # 0 (normal) and 1 (priority)
+            "priority": 2        # 0 (normal) and 1 (priority)
         })):
             logger.error("No game URLs found")
             exit(1)
