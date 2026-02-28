@@ -1,7 +1,7 @@
 import os
 import json
-import time
 import random
+import time
 import shutil
 import pickle
 import requests
@@ -347,44 +347,52 @@ def scroll_down(browser):
 
 
 def clonePostContent(driver, postId):
-    """
-    Clone content + images from a Facebook post
-    Stable version (multi-layout support)
-    """
-
     try:
         driver.get(f"{FB_DEFAULT_URL}/{postId}")
 
         wait = WebDriverWait(driver, 20)
 
-        # ===== WAIT POST LOAD =====
         wait.until(
             EC.presence_of_element_located((By.XPATH, "//div[@role='article']"))
         )
 
-        # small delay for images lazy load
         time.sleep(random.uniform(2, 4))
 
         post = driver.find_element(By.XPATH, "//div[@role='article']")
 
         # ==============================
-        # ===== GET POST CONTENT =======
+        # ===== GET CONTENT (NEW WAY) ==
         # ==============================
 
         content = ""
 
-        content_xpaths = [
-            ".//div[@data-ad-preview='message']",
-            ".//div[contains(@class,'xdj266r')]//span",
-            ".//div[contains(@class,'x1iorvi4')]//span"
-        ]
+        # Cách 1: data-ad-preview
+        elements = post.find_elements(
+            By.XPATH,
+            ".//div[@data-ad-preview='message']"
+        )
 
-        for xpath in content_xpaths:
-            elements = post.find_elements(By.XPATH, xpath)
-            if elements:
-                content = " ".join([el.text for el in elements if el.text.strip()])
-                if content.strip():
-                    break
+        # Cách 2: fallback bắt text theo dir="auto"
+        if not elements:
+            elements = post.find_elements(
+                By.XPATH,
+                ".//div[@dir='auto']"
+            )
+
+        # Cách 3: fallback span
+        if not elements:
+            elements = post.find_elements(
+                By.XPATH,
+                ".//span[@dir='auto']"
+            )
+
+        texts = []
+        for el in elements:
+            txt = el.text.strip()
+            if txt and len(txt) > 5:  # tránh bắt text rác kiểu "Like", "Comment"
+                texts.append(txt)
+
+        content = " ".join(texts)
 
         # ==============================
         # ===== GET IMAGES =============
@@ -393,37 +401,36 @@ def clonePostContent(driver, postId):
         image_elements = post.find_elements(By.XPATH, ".//img")
 
         image_links = []
+
         for img in image_elements:
             src = img.get_attribute("src")
-
             if not src:
                 continue
 
-            # lọc ảnh thật của post
             if "scontent" in src and "profile" not in src:
                 image_links.append(src)
 
-        # remove duplicate images
         image_links = list(set(image_links))
 
         # ==============================
-        # ===== RETURN DATA ============
+        # ===== FINAL CHECK ============
         # ==============================
 
-        postData = {
+        if not content.strip():
+            print(f"Post {postId} has no text content")
+
+        return {
             "post_id": postId,
             "content": content.strip(),
             "images": image_links
         }
 
-        return postData
-
     except TimeoutException:
-        print("Timeout waiting for post to load")
+        print(f"Timeout loading post {postId}")
         return False
 
     except Exception as e:
-        print(f"Error in clonePostContent: {e}")
+        print(f"Error cloning {postId}: {e}")
         return False
 
 
