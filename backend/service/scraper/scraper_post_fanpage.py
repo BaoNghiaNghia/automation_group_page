@@ -1,7 +1,6 @@
 import os
 import json
 import random
-import time
 import shutil
 import pickle
 import requests
@@ -15,8 +14,6 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
-from selenium.common.exceptions import TimeoutException
 
 from backend.utils.captcha_solver import solve_captcha, get_captcha_result, readDataFromFile, writeFileTxtPost
 from backend.service.simulation_behaviour import simulate_human_behavior_when_scraping_game, simulate_scrolling_behavior_when_init_facebook
@@ -347,92 +344,67 @@ def scroll_down(browser):
 
 
 def clonePostContent(driver, postId):
+    """Clone the post content and images from the post ID."""
     try:
-        driver.get(f"{FB_DEFAULT_URL}/{postId}")
+        driver.get(f"{FB_DEFAULT_URL}/{str(postId)}")
+        
+        # ==============================
+        # ===== GET CONTENT ============
+        # ==============================
 
-        wait = WebDriverWait(driver, 20)
-
-        wait.until(
-            EC.presence_of_element_located((By.XPATH, "//div[@role='article']"))
+        # Case 1
+        contentElement = driver.find_elements(
+            By.XPATH,
+            "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]"
         )
 
-        time.sleep(random.uniform(2, 4))
-
-        post = driver.find_element(By.XPATH, "//div[@role='article']")
-
-        # ==============================
-        # ===== GET CONTENT (NEW WAY) ==
-        # ==============================
+        # Case 2 (NEW - bạn yêu cầu thêm)
+        if not contentElement:
+            contentElement = driver.find_elements(
+                By.XPATH,
+                "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div/div/div/span"
+            )
 
         content = ""
+        if len(contentElement):
+            content = " ".join([elem.text for elem in contentElement if elem.text.strip()])
 
-        # Cách 1: data-ad-preview
-        elements = post.find_elements(
-            By.XPATH,
-            ".//div[@data-ad-preview='message']"
-        )
-
-        # Cách 2: fallback bắt text theo dir="auto"
-        if not elements:
-            elements = post.find_elements(
-                By.XPATH,
-                ".//div[@dir='auto']"
-            )
-
-        # Cách 3: fallback span
-        if not elements:
-            elements = post.find_elements(
-                By.XPATH,
-                ".//span[@dir='auto']"
-            )
-
-        texts = []
-        for el in elements:
-            txt = el.text.strip()
-            if txt and len(txt) > 5:  # tránh bắt text rác kiểu "Like", "Comment"
-                texts.append(txt)
-
-        content = " ".join(texts)
 
         # ==============================
         # ===== GET IMAGES =============
         # ==============================
 
-        image_elements = post.find_elements(By.XPATH, ".//img")
+        linksArr = []
 
-        image_links = []
+        # Case 1
+        image_links = driver.find_elements(
+            By.XPATH,
+            "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div//a//img"
+        )
 
-        for img in image_elements:
-            src = img.get_attribute("src")
-            if not src:
-                continue
+        # Case 2
+        if not image_links:
+            image_links = driver.find_elements(
+                By.XPATH, 
+                "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div/div[1]/div/div/div/div[1]/a/div[1]/div[1]/div/img"
+            )
 
-            if "scontent" in src and "profile" not in src:
-                image_links.append(src)
+        for img in image_links:
+            linkImage = img.get_attribute('src')
+            if linkImage:
+                linksArr.append(linkImage)
 
-        image_links = list(set(image_links))
-
-        # ==============================
-        # ===== FINAL CHECK ============
-        # ==============================
-
-        if not content.strip():
-            print(f"Post {postId} has no text content")
-
-        return {
+        postData = {
             "post_id": postId,
-            "content": content.strip(),
-            "images": image_links
+            "content": content,
+            "images": linksArr
         }
 
-    except TimeoutException:
-        print(f"Timeout loading post {postId}")
-        return False
+        return postData
 
     except Exception as e:
-        print(f"Error cloning {postId}: {e}")
+        print(f"Error in clonePostContent: {e}")
         return False
-
 
 # Function to download image and save with the correct extension
 def download_image_file(image_url, file_number, post_id, folder_path="/data_crawl/", game_name=""):
