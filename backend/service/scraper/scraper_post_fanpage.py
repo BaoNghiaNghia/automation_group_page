@@ -3,6 +3,7 @@ import json
 import random
 import shutil
 import pickle
+import time
 import requests
 from PIL import Image
 from io import BytesIO
@@ -13,6 +14,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
 
 from backend.utils.captcha_solver import solve_captcha, get_captcha_result, readDataFromFile, writeFileTxtPost
@@ -343,72 +345,217 @@ def scroll_down(browser):
     sleep(random.randint(5, 9))  # Wait for content to load
 
 
-def clonePostContent(driver, postId):
-    """Clone the post content and images from the post ID."""
+# def clonePostContent(driver, postId):
+#     """Clone the post content and images from the post ID."""
+#     try:
+#         driver.get(f"{FB_DEFAULT_URL}/{str(postId)}")
+        
+#         # ============================== 
+#         # ===== GET CONTENT ============ 
+#         # ============================== 
+
+#         # Case 1
+#         contentElement = driver.find_elements(
+#             By.XPATH,
+#             "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]"
+#         )
+
+#         # Case 2
+#         if not contentElement:
+#             contentElement = driver.find_elements(
+#                 By.XPATH,
+#                 "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div/div/div/span"
+#             )
+
+#         # ✅ Case 3 (NEW - bạn yêu cầu thêm)
+#         if not contentElement:
+#             contentElement = driver.find_elements(
+#                 By.XPATH,
+#                 "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[2]/div/div/div/div[1]/div/div/div[2]/div[1]/div[5]"
+#             )
+
+#         content = ""
+#         if len(contentElement):
+#             content = " ".join(
+#                 [elem.text for elem in contentElement if elem.text.strip()]
+#             )
+
+#         # ==============================
+#         # ===== GET IMAGES =============
+#         # ==============================
+
+#         linksArr = []
+
+#         # Case 1
+#         image_links = driver.find_elements(
+#             By.XPATH,
+#             "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div//a//img"
+#         )
+
+#         # Case 2
+#         if not image_links:
+#             image_links = driver.find_elements(
+#                 By.XPATH, 
+#                 "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div/div[1]/div/div/div/div[1]/a/div[1]/div[1]/div/img"
+#             ) 
+ 
+#         for img in image_links: 
+#             linkImage = img.get_attribute('src') 
+#             if linkImage: 
+#                 linksArr.append(linkImage) 
+ 
+#         postData = { 
+#             "post_id": postId, 
+#             "content": content, 
+#             "images": linksArr
+#         }
+
+#         return postData
+
+#     except Exception as e:
+#         print(f"Error in clonePostContent: {e}")
+#         return False
+# ```
+
+
+def clonePostContent(driver, postId, smart_mode=True):
+    """
+    Clone the post content and images from the post ID.
+
+    Args:
+        driver: Selenium driver
+        postId: Facebook post id
+        smart_mode: if True -> auto pick longest text block
+
+    Returns:
+        dict or False
+    """
+
     try:
         driver.get(f"{FB_DEFAULT_URL}/{str(postId)}")
-        
-        # ==============================
-        # ===== GET CONTENT ============
-        # ==============================
+        time.sleep(random.uniform(2.5, 4.0))
 
-        # Case 1
-        contentElement = driver.find_elements(
-            By.XPATH,
-            "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]"
-        )
+        # ======================================================
+        # SELECTOR CONFIG
+        # ======================================================
 
-        # Case 2
-        if not contentElement:
-            contentElement = driver.find_elements(
-                By.XPATH,
-                "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div/div/div/span"
-            )
+        CONTENT_SELECTORS = [
+            (By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]"),
+            (By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div/div/div/span"),
+            (By.XPATH, "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[2]/div/div/div/div[1]/div/div/div[2]/div[1]/div[5]"),
+            (By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div/div/div/div/span/div")
+        ]
 
-        # ✅ Case 3 (NEW - bạn yêu cầu thêm)
-        if not contentElement:
-            contentElement = driver.find_elements(
-                By.XPATH,
-                "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[2]/div/div/div/div[1]/div/div/div[2]/div[1]/div[5]"
+        IMAGE_SELECTORS = [
+            (By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div//a//img"),
+            (By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div/div[1]/div/div/div/div[1]/a/div[1]/div[1]/div/img")
+        ]
+
+        # ======================================================
+        # INTERNAL FINDER
+        # ======================================================
+
+        def find_first_match(selectors, timeout=0, must_have_text=False):
+            for by, value in selectors:
+                try:
+                    if timeout > 0:
+                        try:
+                            WebDriverWait(driver, timeout).until(
+                                EC.presence_of_element_located((by, value))
+                            )
+                        except TimeoutException:
+                            continue
+
+                    elements = driver.find_elements(by, value)
+
+                    if must_have_text:
+                        elements = [
+                            el for el in elements
+                            if el.text and el.text.strip()
+                        ]
+
+                    if elements:
+                        print(f"[MATCH] {value}")
+                        return elements
+
+                except Exception:
+                    continue
+
+            return []
+
+        def find_best_text_block(selectors):
+            best_elements = []
+            max_length = 0
+
+            for by, value in selectors:
+                try:
+                    elements = driver.find_elements(by, value)
+                    for el in elements:
+                        text = el.text.strip()
+                        if len(text) > max_length:
+                            max_length = len(text)
+                            best_elements = [el]
+                except Exception:
+                    continue
+
+            return best_elements
+
+        # ======================================================
+        # GET CONTENT
+        # ======================================================
+
+        if smart_mode:
+            content_elements = find_best_text_block(CONTENT_SELECTORS)
+            print("[MODE] SMART TEXT SCORING")
+        else:
+            content_elements = find_first_match(
+                CONTENT_SELECTORS,
+                timeout=3,
+                must_have_text=True
             )
 
         content = ""
-        if len(contentElement):
+        if content_elements:
             content = " ".join(
-                [elem.text for elem in contentElement if elem.text.strip()]
+                el.text.strip()
+                for el in content_elements
+                if el.text.strip()
             )
 
-        # ==============================
-        # ===== GET IMAGES =============
-        # ==============================
+        # ======================================================
+        # GET IMAGES
+        # ======================================================
 
-        linksArr = []
-
-        # Case 1
-        image_links = driver.find_elements(
-            By.XPATH,
-            "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div//a//img"
+        image_elements = find_first_match(
+            IMAGE_SELECTORS,
+            timeout=2
         )
 
-        # Case 2
-        if not image_links:
-            image_links = driver.find_elements(
-                By.XPATH, 
-                "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div/div[1]/div/div/div/div[1]/a/div[1]/div[1]/div/img"
-            )
+        linksArr = []
+        for img in image_elements:
+            try:
+                src = img.get_attribute("src")
+                if (
+                    src
+                    and "profile" not in src
+                    and "emoji" not in src
+                ):
+                    linksArr.append(src)
+            except Exception:
+                continue
 
-        for img in image_links:
-            linkImage = img.get_attribute('src')
-            if linkImage:
-                linksArr.append(linkImage)
+        # Remove duplicate
+        linksArr = list(set(linksArr))
 
-        postData = {
+        # ======================================================
+        # RETURN
+        # ======================================================
+
+        return {
             "post_id": postId,
             "content": content,
             "images": linksArr
         }
-
-        return postData
 
     except Exception as e:
         print(f"Error in clonePostContent: {e}")
