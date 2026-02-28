@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import random
 import shutil
 import pickle
@@ -14,6 +15,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
+from selenium.common.exceptions import TimeoutException
 
 from backend.utils.captcha_solver import solve_captcha, get_captcha_result, readDataFromFile, writeFileTxtPost
 from backend.service.simulation_behaviour import simulate_human_behavior_when_scraping_game, simulate_scrolling_behavior_when_init_facebook
@@ -344,39 +347,85 @@ def scroll_down(browser):
 
 
 def clonePostContent(driver, postId):
-    """Clone the post content and images from the post ID."""
+    """
+    Clone content + images from a Facebook post
+    Stable version (multi-layout support)
+    """
+
     try:
-        driver.get(f"{FB_DEFAULT_URL}/{str(postId)}")
-        
-        # Find the content element containing all the text
-        contentElement = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]")
-        
+        driver.get(f"{FB_DEFAULT_URL}/{postId}")
+
+        wait = WebDriverWait(driver, 20)
+
+        # ===== WAIT POST LOAD =====
+        wait.until(
+            EC.presence_of_element_located((By.XPATH, "//div[@role='article']"))
+        )
+
+        # small delay for images lazy load
+        time.sleep(random.uniform(2, 4))
+
+        post = driver.find_element(By.XPATH, "//div[@role='article']")
+
+        # ==============================
+        # ===== GET POST CONTENT =======
+        # ==============================
+
         content = ""
-        # Get all text from contentElement
-        if len(contentElement):
-            content = " ".join([elem.text for elem in contentElement])  # Concatenate text from all elements
-        
-        # Get all image links inside the specific path provided
-        linksArr = []
 
-        # Try case 1 first
-        image_links = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[2]/div//a//img")
-        
-        # If case 1 doesn't find any images, try case 2
-        if not image_links:
-            image_links = driver.find_elements(By.XPATH, "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div/div[1]/div/div/div/div[1]/a/div[1]/div[1]/div/img")
+        content_xpaths = [
+            ".//div[@data-ad-preview='message']",
+            ".//div[contains(@class,'xdj266r')]//span",
+            ".//div[contains(@class,'x1iorvi4')]//span"
+        ]
 
-        for img in image_links:
-            linkImage = img.get_attribute('src')
-            if linkImage:
-                linksArr.append(linkImage)
+        for xpath in content_xpaths:
+            elements = post.find_elements(By.XPATH, xpath)
+            if elements:
+                content = " ".join([el.text for el in elements if el.text.strip()])
+                if content.strip():
+                    break
 
-        postData = {"post_id": postId, "content": content, "images": linksArr}
+        # ==============================
+        # ===== GET IMAGES =============
+        # ==============================
+
+        image_elements = post.find_elements(By.XPATH, ".//img")
+
+        image_links = []
+        for img in image_elements:
+            src = img.get_attribute("src")
+
+            if not src:
+                continue
+
+            # lọc ảnh thật của post
+            if "scontent" in src and "profile" not in src:
+                image_links.append(src)
+
+        # remove duplicate images
+        image_links = list(set(image_links))
+
+        # ==============================
+        # ===== RETURN DATA ============
+        # ==============================
+
+        postData = {
+            "post_id": postId,
+            "content": content.strip(),
+            "images": image_links
+        }
 
         return postData
-    except Exception as e:
-        print(f"Error in clonePostContent")
+
+    except TimeoutException:
+        print("Timeout waiting for post to load")
         return False
+
+    except Exception as e:
+        print(f"Error in clonePostContent: {e}")
+        return False
+
 
 # Function to download image and save with the correct extension
 def download_image_file(image_url, file_number, post_id, folder_path="/data_crawl/", game_name=""):
