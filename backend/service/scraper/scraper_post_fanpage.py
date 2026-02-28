@@ -358,17 +358,25 @@ def clonePostContent(driver, postId):
             "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]"
         )
 
-        # Case 2 (NEW - bạn yêu cầu thêm)
+        # Case 2
         if not contentElement:
             contentElement = driver.find_elements(
                 By.XPATH,
                 "/html/body/div[1]/div/div[1]/div/div[5]/div/div/div[2]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div/div[13]/div/div/div[3]/div[1]/div/div/div/span"
             )
 
+        # ✅ Case 3 (NEW - bạn yêu cầu thêm)
+        if not contentElement:
+            contentElement = driver.find_elements(
+                By.XPATH,
+                "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[2]/div/div/div/div[1]/div/div/div[2]/div[1]/div[5]"
+            )
+
         content = ""
         if len(contentElement):
-            content = " ".join([elem.text for elem in contentElement if elem.text.strip()])
-
+            content = " ".join(
+                [elem.text for elem in contentElement if elem.text.strip()]
+            )
 
         # ==============================
         # ===== GET IMAGES =============
@@ -405,6 +413,7 @@ def clonePostContent(driver, postId):
     except Exception as e:
         print(f"Error in clonePostContent: {e}")
         return False
+
 
 # Function to download image and save with the correct extension
 def download_image_file(image_url, file_number, post_id, folder_path="/data_crawl/", game_name=""):
